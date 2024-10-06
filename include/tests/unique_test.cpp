@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "ft_unique_ptr.hpp" // Assume the ft_unique_ptr implementation is in this file
+#include "UniquePtr.hpp" // Assume the UniquePtr implementation is in this file
 
 // A simple class for testing
 class TestClass {
@@ -15,18 +15,18 @@ private:
 };
 
 void test_single_object() {
-    std::cout << "Testing single object ft_unique_ptr:\n";
+    std::cout << "Testing single object UniquePtr:\n";
     
     // Test constructor and destructor
     {
-        ft_unique_ptr<TestClass> ptr(new TestClass(10));
+        UniquePtr<TestClass> ptr(new TestClass(10));
         assert(ptr->getValue() == 10);
     }
     std::cout << "Constructor and destructor test passed\n";
 
     // Test reset
     {
-        ft_unique_ptr<TestClass> ptr(new TestClass(10));
+        UniquePtr<TestClass> ptr(new TestClass(10));
         ptr.reset(new TestClass(20));
         assert(ptr->getValue() == 20);
         ptr.reset();
@@ -36,7 +36,7 @@ void test_single_object() {
 
     // Test release
     {
-        ft_unique_ptr<TestClass> ptr(new TestClass(30));
+        UniquePtr<TestClass> ptr(new TestClass(30));
         TestClass* raw_ptr = ptr.release();
         assert(!ptr);
         assert(raw_ptr->getValue() == 30);
@@ -46,8 +46,8 @@ void test_single_object() {
 
     // Test boolean conversion
     {
-        ft_unique_ptr<TestClass> ptr1(new TestClass());
-        ft_unique_ptr<TestClass> ptr2;
+        UniquePtr<TestClass> ptr1(new TestClass());
+        UniquePtr<TestClass> ptr2;
         assert(ptr1);
         assert(!ptr2);
     }
@@ -56,15 +56,15 @@ void test_single_object() {
     // Test get
     {
         TestClass* raw_ptr = new TestClass(40);
-        ft_unique_ptr<TestClass> ptr(raw_ptr);
+        UniquePtr<TestClass> ptr(raw_ptr);
         assert(ptr.get() == raw_ptr);
     }
     std::cout << "Get test passed\n";
 
     // Test swap
     {
-        ft_unique_ptr<TestClass> ptr1(new TestClass(50));
-        ft_unique_ptr<TestClass> ptr2(new TestClass(60));
+        UniquePtr<TestClass> ptr1(new TestClass(50));
+        UniquePtr<TestClass> ptr2(new TestClass(60));
         swap(ptr1, ptr2);
         assert(ptr1->getValue() == 60);
         assert(ptr2->getValue() == 50);
@@ -73,11 +73,11 @@ void test_single_object() {
 }
 
 void test_array() {
-    std::cout << "\nTesting array ft_unique_ptr:\n";
+    std::cout << "\nTesting array UniquePtr:\n";
     
     // Test constructor and destructor
     {
-        ft_unique_ptr<int[]> ptr(new int[5]);
+        UniquePtr<int[]> ptr(new int[5]);
         for (int i = 0; i < 5; ++i) {
             ptr[i] = i * 10;
         }
@@ -87,7 +87,7 @@ void test_array() {
 
     // Test reset
     {
-        ft_unique_ptr<int[]> ptr(new int[3]);
+        UniquePtr<int[]> ptr(new int[3]);
         ptr.reset(new int[4]);
         ptr[3] = 40;
         assert(ptr[3] == 40);
@@ -98,7 +98,7 @@ void test_array() {
 
     // Test release
     {
-        ft_unique_ptr<int[]> ptr(new int[3]);
+        UniquePtr<int[]> ptr(new int[3]);
         int* raw_ptr = ptr.release();
         assert(!ptr);
         delete[] raw_ptr;
@@ -107,8 +107,8 @@ void test_array() {
 
     // Test boolean conversion and get
     {
-        ft_unique_ptr<int[]> ptr1(new int[3]);
-        ft_unique_ptr<int[]> ptr2;
+        UniquePtr<int[]> ptr1(new int[3]);
+        UniquePtr<int[]> ptr2;
         assert(ptr1);
         assert(!ptr2);
         assert(ptr1.get() != nullptr);
@@ -118,8 +118,8 @@ void test_array() {
 
     // Test swap
     {
-        ft_unique_ptr<int[]> ptr1(new int[1]);
-        ft_unique_ptr<int[]> ptr2(new int[1]);
+        UniquePtr<int[]> ptr1(new int[1]);
+        UniquePtr<int[]> ptr2(new int[1]);
         ptr1[0] = 100;
         ptr2[0] = 200;
         swap(ptr1, ptr2);

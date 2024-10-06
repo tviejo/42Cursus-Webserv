@@ -3,15 +3,15 @@
 #include <iostream>
 
 template <typename T>
-class ft_unique_ptr
+class UniquePtr
 {
 	private:
 		T* ptr;
-		ft_unique_ptr(const ft_unique_ptr&);	
-		ft_unique_ptr& operator=(const ft_unique_ptr);
+		UniquePtr(const UniquePtr&);	
+		UniquePtr& operator=(const UniquePtr);
 	public:
-		explicit ft_unique_ptr(T* p = 0) : ptr(p) {}
-		~ft_unique_ptr() {
+		explicit UniquePtr(T* p = 0) : ptr(p) {}
+		~UniquePtr() {
 			delete ptr;
 		}
 		void reset(T* p = 0) {
@@ -29,26 +29,26 @@ class ft_unique_ptr
 		T& operator*() const { return *ptr; }
 		T* operator->() const { return ptr; }
 		T* get() const { return ptr; }
-		void swap(ft_unique_ptr& other) {
+		void swap(UniquePtr& other) {
 			std::swap(ptr, other.ptr);
 		}
 };
 
 template <typename T>
-void	swap(ft_unique_ptr<T>& a, ft_unique_ptr<T>& b) {
+void	swap(UniquePtr<T>& a, UniquePtr<T>& b) {
 	a.swap(b);
 }
 
 template <typename T>
-class ft_unique_ptr<T[]>
+class UniquePtr<T[]>
 {
 	private:
 		T* ptr;
-		ft_unique_ptr(const ft_unique_ptr&);	
-		ft_unique_ptr& operator=(const ft_unique_ptr);
+		UniquePtr(const UniquePtr&);	
+		UniquePtr& operator=(const UniquePtr);
 	public:
-		explicit ft_unique_ptr(T* p = 0) : ptr(p) {}
-		~ft_unique_ptr() {
+		explicit UniquePtr(T* p = 0) : ptr(p) {}
+		~UniquePtr() {
 			delete[] ptr;
 		}
 		void reset(T* p = 0) {
@@ -67,12 +67,12 @@ class ft_unique_ptr<T[]>
 		T& operator*() const { return *ptr; }
 		T* operator->() const { return ptr; }
 		T* get() const { return ptr; }
-		void swap(ft_unique_ptr& other) {
+		void swap(UniquePtr& other) {
 			std::swap(ptr, other.ptr);
 		}
 };
 
 template <typename T>
-void	swap(ft_unique_ptr<T[]>& a, ft_unique_ptr<T[]>& b) {
+void	swap(UniquePtr<T[]>& a, UniquePtr<T[]>& b) {
 	a.swap(b); 
 	}
