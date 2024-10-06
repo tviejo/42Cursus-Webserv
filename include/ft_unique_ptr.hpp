@@ -10,9 +10,7 @@ class ft_unique_ptr
 		ft_unique_ptr(const ft_unique_ptr&);	
 		ft_unique_ptr& operator=(const ft_unique_ptr);
 	public:
-		explicit ft_unique_ptr(T* p = 0) : ptr(p) {\
-			std::cout << "Raw constructor called" << std::endl;	
-		}
+		explicit ft_unique_ptr(T* p = 0) : ptr(p) {}
 		~ft_unique_ptr() {
 			delete ptr;
 		}
@@ -49,9 +47,7 @@ class ft_unique_ptr<T[]>
 		ft_unique_ptr(const ft_unique_ptr&);	
 		ft_unique_ptr& operator=(const ft_unique_ptr);
 	public:
-		explicit ft_unique_ptr(T* p = 0) : ptr(p) {
-			std::cout << "Array constructor called" << std::endl;
-		}
+		explicit ft_unique_ptr(T* p = 0) : ptr(p) {}
 		~ft_unique_ptr() {
 			delete[] ptr;
 		}
