@@ -1,19 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/07 12:39:54 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/07 12:53:36 by tviejo           ###   ########.fr       */
+/*   Created: 2024/10/07 12:52:56 by tviejo            #+#    #+#             */
+/*   Updated: 2024/10/07 12:56:06 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "webserv.hpp"
+#ifndef WEBSERV_HPP
+# define WEBSERV_HPP
 
-int main()
-{
-    std::cout << "Hello World!" << std::endl;
-    return 0;
-}
+# include <iostream>
+# include <string>
+# include <vector>
+# include <map>
+# include <list>
+# include <fstream>
+# include <sstream>
+# include <sys/types.h>
+
+#endif

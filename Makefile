@@ -1,40 +1,61 @@
-NAME = webserv
+NAME        =   webserv
 
-CPP = c++
+SRC_DIR     =   srcs/
 
-CPP_FLAGS = -Wall -Wextra -Werror -std=c++98 -g3
+OBJ_DIR     =   objs/
 
-SRC_PATH = srcs/
+SRCS        =   main.cpp
 
-SRC_FILE =	main.cpp \
+vpath %.cpp $(SRC_DIR)
 
-SRCS = $(addprefix $(SRC_PATH), $(SRC_FILE))
+OBJS        =   $(patsubst %.cpp, $(OBJ_DIR)%.o, $(SRCS))
 
-INCLUDE = -I include/
+CC          =   c++
 
-OBJ_DIR = obj/
+CFLAGS      =   -Wall -Wextra -Werror -std=c++98 -MMD -MP -g3
 
-OBJ_FILE = $(SRCS:.cpp=.o)
+INCLUDES    =   -I includes/
 
-OBJS = $(OBJ_FILE)
+LIBS		=   
 
-all: $(OBJ_DIR) $(NAME)
+D_FILES		=	$(OBJS:.o=.d)
 
-$(OBJ_DIR)/%.o : %.cpp | $(OBJ_DIR)
-	$(CPP) $(CPP_FLAGS) $(INCLUDE) -c $< -o $@
+RM          =   rm -f
 
-$(OBJ_DIR): 
-	mkdir -p $(OBJ_DIR)
+GREEN=\033[0;32m
+RED=\033[0;31m
+BLUE=\033[0;34m
+END=\033[0m
+BOLD_START=\e[1m
+BOLD_END=\e[0m
 
-$(NAME): $(OBJS)
-	$(CPP) $(CPP_FLAGS) $(INCLUDE) -o $(NAME) $(OBJS)
+ifeq ($(debug), true)
+    CFLAGS += -g3 -fsanitize=address,undefined
+endif
+
+all:            ${NAME}
+				@echo "$(GREEN)$(BOLD_START)${NAME} created$(BOLD_END)$(END)"
+
+${NAME}:        ${OBJS}
+				$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $(NAME)
+
+$(OBJ_DIR)%.o: %.cpp
+				@echo "$(BLUE)Compiling: $@ $(END)"
+				mkdir -p $(OBJ_DIR) 
+				$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -rf $(OBJ_DIR)
+				$(RM) -r $(OBJ_DIR)
+				${RM} ${OBJS}
+				@echo "$(GREEN)$(BOLD_START)Clean done$(BOLD_END)$(END)"
 
 fclean: clean
-	rm -rf $(NAME)
+				${RM} ${NAME}
+				@echo "$(GREEN)$(BOLD_START)Fclean done$(BOLD_END)$(END)"
 
 re: fclean all
 
-.PHONE: all clean fclean re
+sinclude $(D_FILES)
+
+.PHONY: all clean fclean re
+.SILENT:
