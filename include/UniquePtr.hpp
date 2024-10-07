@@ -1,6 +1,5 @@
 #pragma once
 #include <algorithm>
-#include <iostream>
 
 namespace ft {
 	template <typename T>
