@@ -1,21 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/07 12:39:54 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 13:39:03 by tviejo           ###   ########.fr       */
+/*   Created: 2024/10/08 12:49:27 by tviejo            #+#    #+#             */
+/*   Updated: 2024/10/08 12:49:41 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "webserv.hpp"
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
-int main()
-{
-        Config config("configs/default.conf");
-        config.printConfig();
-    
-    return 0;
-}
+#endif

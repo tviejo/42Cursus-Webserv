@@ -6,6 +6,20 @@ OBJ_DIR     =   objs/
 
 SRCS        =   main.cpp
 
+SRCS		+=  autoindex/autoindex.cpp
+
+SRCS		+=  cgi/cgi.cpp
+
+SRCS		+=  config/config.cpp
+
+SRCS		+=  request/request.cpp
+
+SRCS		+=  response/response.cpp
+
+SRCS		+=  server/server.cpp
+
+SRCS		+=  utils/utils.cpp
+
 vpath %.cpp $(SRC_DIR)
 
 OBJS        =   $(patsubst %.cpp, $(OBJ_DIR)%.o, $(SRCS))
@@ -41,7 +55,7 @@ ${NAME}:        ${OBJS}
 
 $(OBJ_DIR)%.o: %.cpp
 				@echo "$(BLUE)Compiling: $@ $(END)"
-				mkdir -p $(OBJ_DIR) 
+				mkdir -p $(OBJ_DIR)	$(OBJ_DIR)/autoindex $(OBJ_DIR)/cgi $(OBJ_DIR)/config $(OBJ_DIR)/request $(OBJ_DIR)/response $(OBJ_DIR)/server $(OBJ_DIR)/utils
 				$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:

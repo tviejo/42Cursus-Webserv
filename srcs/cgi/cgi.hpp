@@ -1,21 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   cgi.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/07 12:39:54 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 13:39:03 by tviejo           ###   ########.fr       */
+/*   Created: 2024/10/08 12:50:59 by tviejo            #+#    #+#             */
+/*   Updated: 2024/10/08 12:51:12 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "webserv.hpp"
+#ifndef CGI_HPP
+# define CGI_HPP
 
-int main()
-{
-        Config config("configs/default.conf");
-        config.printConfig();
-    
-    return 0;
-}
+#endif
