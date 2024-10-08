@@ -1,0 +1,25 @@
+name: Run Make
+
+on: [push]
+
+jobs:
+  build:
+    name: Run Make
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-12 lldb-12 libreadline-dev
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
+
+    - name: Verify C++ version
+      run: clang++ --version
+
+    - name: Run all
+      run: make all
