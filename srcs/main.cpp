@@ -12,15 +12,23 @@
 
 #include "webserv.hpp"
 
-int main()
+int main(int ac, char **av, char **env)
 {
-    Timer timer;
-    timer.startTimer();
-    Config config("configs/default.conf");
-    config.printConfig();
-    timer.printElapsedTime();
-    std::cout << timer.getElapsedTimeMicroseconds() << " µs"  << std::endl;
-    std::cout << "is it bigger than: 110 us? " << ((timer.isTimeElapsedUs(110) == 1) ? "true" : "false") << std::endl;
-    
-    return 0;
+	(void)env;
+	if (ac == 2)
+	{
+		try 
+		{
+			Config config(av[1]);
+//			config.printConfig();
+		}
+		catch (const std::exception &e)
+		{
+			return EXIT_FAILURE;
+		}
+	}
+	else
+		return EXIT_FAILURE;
+	
+    return EXIT_SUCCESS;
 }

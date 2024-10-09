@@ -28,7 +28,6 @@ Config::Config(std::string conffile)
     {
         std::cerr << e.what() << '\n';
     }
-    
 }
 
 Config::~Config()
@@ -159,6 +158,8 @@ void    Config::parseServer(std::ifstream &file, t_server &server)
 
 void    Config::parseConfig(std::string conffile)
 {
+	//validate file extension here?
+	std::cout << "Validate file extension in Config::parseConfig please" << std::endl;
     std::ifstream file(conffile.c_str());
     if (!file.is_open())
         throw std::runtime_error("Error: could not open file");
