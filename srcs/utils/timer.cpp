@@ -31,7 +31,7 @@ Timer::Timer(const Timer &src)
 
 Timer &Timer::operator=(const Timer &src)
 {
-    if (*this != src)
+    if (this != &src)
     {
         start = src.start;
         end = src.end;
