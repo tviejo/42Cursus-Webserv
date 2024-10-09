@@ -19,6 +19,7 @@ SRCS		+=  response/response.cpp
 SRCS		+=  server/server.cpp
 
 SRCS		+=  utils/utils.cpp
+SRCS		+=  utils/timer.cpp
 
 vpath %.cpp $(SRC_DIR)
 
