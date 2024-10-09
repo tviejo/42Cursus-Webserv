@@ -39,5 +39,3 @@ class Timer
         struct timespec start;
         struct timespec end;
 };
-
-#endif
