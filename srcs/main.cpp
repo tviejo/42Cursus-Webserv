@@ -15,20 +15,24 @@
 int main(int ac, char **av, char **env)
 {
 	(void)env;
-	if (ac == 2)
-	{
-		try 
-		{
-			Config config(av[1]);
-//			config.printConfig();
-		}
-		catch (const std::exception &e)
-		{
-			return EXIT_FAILURE;
-		}
-	}
-	else
+	if (ac != 2)
 		return EXIT_FAILURE;
-	
-    return EXIT_SUCCESS;
+	try 
+	{
+		std::string input(av[1]); // lsp warning if I pass the string constructor directly as parameter
+		Config config(input);
+		config.printConfig();
+		Server server(config);
+
+		//			create a socket and bind it to ip and port
+		//			mark the socket for listening in and accept call
+		//			close(?) the listening socket
+		//			do something upon receiving message (method)
+		//
+	}
+	catch (const std::exception &e)
+	{
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
 }

@@ -27,7 +27,9 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
-#include <sys/socket.h>
+#include "Array.hpp"
 
 #include "../srcs/config/config.hpp"
 #include "../srcs/utils/timer.hpp"
+#include "../srcs/server/Server.hpp"
+#define MAX_EVENTS 1024
