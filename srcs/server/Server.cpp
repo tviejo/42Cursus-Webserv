@@ -1,5 +1,9 @@
 
 #include "Server.hpp"
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/epoll.h>
+#include <sys/socket.h>
 
 
 Server::~Server()
@@ -46,6 +50,49 @@ void	Server::initEpoll()
 		epoll_ev.data.fd = sockfd;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, sockfd, &epoll_ev) == -1)
 			throw std::runtime_error("Failed to add server socket to epoll");
+	}
+}
+
+void	Server::handleNewConnection(int socket)
+{
+	struct sockaddr_in	clientAddr;
+	socklen_t			clientAddrlen = sizeof(clientAddr);
+	struct	epoll_event epoll_ev;
+
+	int	clientSocket = accept(socket, (struct sockaddr*)&clientAddr, &clientAddrlen);	
+	if (clientSocket == -1)
+		return; //handle error here
+	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
+	
+	epoll_ev.events = EPOLLIN | EPOLLET;
+	epoll_ev.data.fd = clientSocket;
+	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &epoll_ev) == -1)
+	{
+		close(clientSocket); // handle error here
+		return;
+	}
+}
+
+void	handleClientEvent(int socket, uint32_t event)
+{
+
+}
+
+void	Server::eventLoop()
+{
+	struct epoll_event	events[MAX_EVENTS];
+	while (true)
+	{
+		int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
+		if (nfds == -1)
+			throw std::runtime_error("epoll_wait failed");
+		for (int i = 0; i < nfds; i++)
+		{
+			if (std::find(_socket.begin(), _socket.end(), events[i].data.fd) != _socket.end()) // rethink the iteration over the sockets, find a way to search for the sockets directly?
+				handleNewConnection(events[i].data.fd);
+			else
+				handleClientEvent(events[i].data.fd, events[i].events); // filter for cgis and handle them differently
+		}
 	}
 }
 
