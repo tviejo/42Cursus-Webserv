@@ -1,4 +1,7 @@
 #pragma once
+#include <cstdint>
+#include <algorithm>
+#include <stdexcept>
 
 template <typename T, uint32_t N>
 class Array
