@@ -19,11 +19,12 @@ int main(int ac, char **av, char **env)
 		return EXIT_FAILURE;
 	try 
 	{
-		std::string input(av[1]); // lsp warning if I pass the string constructor directly as parameter
+		std::string input(av[1]);
 		Config config(input);
 		config.printConfig();
 		Server server(config);
-
+		server.init();
+		server.run();
 		//			create a socket and bind it to ip and port
 		//			mark the socket for listening in and accept call
 		//			close(?) the listening socket

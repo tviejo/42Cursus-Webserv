@@ -19,8 +19,9 @@ class Server
 		int						_epollFd;
 	public:
 		Server(Config &config) : _config(config) {};
-		~Server();
-		void	start();
+		~Server() {};
+		void	init();
+		void	run();
 		void	setupSockets();
 		void	initEpoll();
 		void	eventLoop();

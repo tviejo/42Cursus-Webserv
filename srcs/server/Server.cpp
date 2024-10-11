@@ -5,11 +5,6 @@
 #include <sys/epoll.h>
 #include <sys/socket.h>
 
-
-Server::~Server()
-{
-}
-
 void	Server::setupSockets()
 {
 	const std::vector<t_server> server = _config.getServers();
@@ -43,14 +38,20 @@ void	Server::initEpoll()
 	_epollFd = epoll_create1(0);
 	if (_epollFd == -1)
 		throw std::runtime_error("Failed to create epoll instance");
-	for (int sockfd : _socket)
+	for (const int* it = _socket.begin(); it != _socket.end(); it++)
 	{
 		struct epoll_event epoll_ev;
 		epoll_ev.events = EPOLLIN;
-		epoll_ev.data.fd = sockfd;
-		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, sockfd, &epoll_ev) == -1)
+		epoll_ev.data.fd = *it;
+		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, *it, &epoll_ev) == -1)
 			throw std::runtime_error("Failed to add server socket to epoll");
 	}
+}
+
+void	Server::init()
+{
+	setupSockets();
+	initEpoll();
 }
 
 void	Server::handleNewConnection(int socket)
@@ -93,7 +94,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	}
 }
 
-void	Server::eventLoop()
+void	Server::run()
 {
 	struct epoll_event	events[MAX_EVENTS];
 	while (true)
@@ -109,11 +110,4 @@ void	Server::eventLoop()
 				handleClientEvent(events[i].data.fd, events[i].events); // filter for cgis and handle them differently
 		}
 	}
-}
-
-void	Server::start()
-{
-	setupSockets();
-	initEpoll();
-	eventLoop();
 }

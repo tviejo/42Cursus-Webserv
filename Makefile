@@ -16,7 +16,7 @@ SRCS		+=  request/request.cpp
 
 SRCS		+=  response/response.cpp
 
-SRCS		+=  server/server.cpp
+SRCS		+=  server/Server.cpp
 
 SRCS		+=  utils/utils.cpp
 SRCS		+=  utils/timer.cpp
