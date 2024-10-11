@@ -13,7 +13,7 @@
 class Server
 {
 	private:
-		Server() = delete;
+		Server();
 		const Config			_config;
 		Array<int, MAX_SOCKETS>	_socket;
 		int						_epollFd;
@@ -25,6 +25,7 @@ class Server
 		void	initEpoll();
 		void	eventLoop();
 		void	handleNewConnection(int socket);
+		void	handleClientEvent(int socket, uint32_t event);
 };
 
 

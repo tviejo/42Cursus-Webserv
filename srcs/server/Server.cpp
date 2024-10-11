@@ -73,9 +73,24 @@ void	Server::handleNewConnection(int socket)
 	}
 }
 
-void	handleClientEvent(int socket, uint32_t event)
+void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
-
+	if (event & EPOLLIN)
+	{
+		//handle incoming HTTP request data
+		//Read from ClientSocket, parse request..
+	}
+	if (event & EPOLLOUT)
+	{
+		//handle outgoing data (HTTP request)
+		//Read from clientSocket, parse HTTP request
+	}
+	if (event & (EPOLLRDHUP | EPOLLHUP))
+	{
+		//client disconnected
+		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+		close(clientSocket);
+	}
 }
 
 void	Server::eventLoop()
