@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 void	Server::setupSockets()
 {
@@ -74,12 +75,43 @@ void	Server::handleNewConnection(int socket)
 	}
 }
 
+ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
+{
+	ssize_t	result = recv(socketfd, buffer, len, flags);
+	if (result == -1)
+		throw std::runtime_error("Receive failed");
+	return result;	
+}
+
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
 	if (event & EPOLLIN)
 	{
 		//handle incoming HTTP request data
 		//Read from ClientSocket, parse request..
+		char		buffer[MAX_BUFFER_SIZE];
+		std::string	request;
+		
+		try 
+		{
+			while (true)
+			{
+				ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
+				if (bytesRead == 0)
+				{
+					epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+					close(clientSocket);
+					break ;
+				}
+				request.append(buffer, bytesRead);
+				if (request.find("\r\n\r\n") != std::string::npos) //headers
+					break ;
+			}
+		}
+		catch (std::exception &e)
+		{
+			std::cerr << "Error receiving data from client" << e.what() << std::endl;
+		}
 	}
 	if (event & EPOLLOUT)
 	{

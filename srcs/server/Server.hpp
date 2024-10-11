@@ -9,6 +9,7 @@
 
 #define MAX_SOCKETS 1024
 #define MAX_EVENTS 10
+#define MAX_BUFFER_SIZE 4096
 
 class Server
 {
@@ -27,6 +28,7 @@ class Server
 		void	eventLoop();
 		void	handleNewConnection(int socket);
 		void	handleClientEvent(int socket, uint32_t event);
+		ssize_t	safeRecv(int socketfd, void *buffer, size_t len, int flags);
 };
 
 
