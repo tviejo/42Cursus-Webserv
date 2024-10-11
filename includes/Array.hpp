@@ -1,4 +1,7 @@
 #pragma once
+#include <stdint.h>
+#include <algorithm>
+#include <stdexcept>
 
 template <typename T, uint32_t N>
 class Array
@@ -9,7 +12,7 @@ class Array
 		T				_array[N];
 	public:
 		Array() : _size(0), _max_size(N) {};
-		~Array() = default;
+		~Array() {};
 		Array(const Array& copy) : _size(copy._size), _max_size(copy._max_size) {
 			*this = copy;
 		};

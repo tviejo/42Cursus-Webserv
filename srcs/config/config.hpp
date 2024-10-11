@@ -54,6 +54,7 @@ class Config
         Config(std::string file);
         ~Config();
         void    printConfig();
+		const std::vector<t_server>& getServers() const;
 };
 
 

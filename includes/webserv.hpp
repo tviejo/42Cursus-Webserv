@@ -10,26 +10,25 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef WEBSERV_HPP
-# define WEBSERV_HPP
+#pragma once
 
-# include <iostream>
-# include <string>
-# include <vector>
-# include <set>
-# include <map>
-# include <list>
-# include <fstream>
-# include <sstream>
-# include <sys/types.h>
-# include <fstream>
-# include <string>
-# include <sstream>
-# include <iostream>
-# include <vector>
-# include <cstdlib>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include <list>
+#include <fstream>
+#include <sstream>
+#include <sys/types.h>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <vector>
+#include <cstdlib>
+#include "Array.hpp"
 
-# include "../srcs/config/config.hpp"
-# include "../srcs/utils/timer.hpp"
-
-#endif
+#include "../srcs/config/config.hpp"
+#include "../srcs/utils/timer.hpp"
+#include "../srcs/server/Server.hpp"

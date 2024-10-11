@@ -12,15 +12,27 @@
 
 #include "webserv.hpp"
 
-int main()
+int main(int ac, char **av)
 {
-    Timer timer;
-    timer.startTimer();
-    Config config("configs/default.conf");
-    config.printConfig();
-    timer.printElapsedTime();
-    std::cout << timer.getElapsedTimeMicroseconds() << " µs"  << std::endl;
-    std::cout << "is it bigger than: 110 us? " << ((timer.isTimeElapsedUs(110) == 1) ? "true" : "false") << std::endl;
-    
-    return 0;
+	if (ac != 2)
+		return EXIT_FAILURE;
+	try 
+	{
+		std::string input(av[1]);
+		Config config(input);
+		config.printConfig();
+		Server server(config);
+		server.init();
+		server.run();
+		//			create a socket and bind it to ip and port
+		//			mark the socket for listening in and accept call
+		//			close(?) the listening socket
+		//			do something upon receiving message (method)
+		//
+	}
+	catch (const std::exception &e)
+	{
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
 }

@@ -28,7 +28,6 @@ Config::Config(std::string conffile)
     {
         std::cerr << e.what() << '\n';
     }
-    
 }
 
 Config::~Config()
@@ -190,4 +189,9 @@ bool    Config::ServerIsValid(t_server &server)
         }
     }
     return true;
+}
+
+const std::vector<t_server>& Config::getServers() const
+{
+	return servers;
 }
