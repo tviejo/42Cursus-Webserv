@@ -12,9 +12,8 @@
 
 #include "webserv.hpp"
 
-int main(int ac, char **av, char **env)
+int main(int ac, char **av)
 {
-	(void)env;
 	if (ac != 2)
 		return EXIT_FAILURE;
 	try 
