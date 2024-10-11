@@ -34,6 +34,21 @@ void	Server::setupSockets()
 	}
 }
 
+void	Server::initEpoll()
+{
+	_epollFd = epoll_create1(0);
+	if (_epollFd == -1)
+		throw std::runtime_error("Failed to create epoll instance");
+	for (int sockfd : _socket)
+	{
+		struct epoll_event epoll_ev;
+		epoll_ev.events = EPOLLIN;
+		epoll_ev.data.fd = sockfd;
+		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, sockfd, &epoll_ev) == -1)
+			throw std::runtime_error("Failed to add server socket to epoll");
+	}
+}
+
 void	Server::start()
 {
 	setupSockets();
