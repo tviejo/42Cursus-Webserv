@@ -63,15 +63,14 @@ void	Server::handleNewConnection(int socket)
 
 	int	clientSocket = accept(socket, (struct sockaddr*)&clientAddr, &clientAddrlen);	
 	if (clientSocket == -1)
-		return; //handle error here
+		throw std::runtime_error("Accept failed");
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
-	
 	epoll_ev.events = EPOLLIN | EPOLLET;
 	epoll_ev.data.fd = clientSocket;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &epoll_ev) == -1)
 	{
 		close(clientSocket); // handle error here
-		return;
+		throw std::runtime_error("Failed to add to epoll");
 	}
 }
 
@@ -81,6 +80,11 @@ ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 	if (result == -1)
 		throw std::runtime_error("Receive failed");
 	return result;	
+}
+
+void	Server::handleOutgoingData(int clientSocket)
+{
+
 }
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
@@ -115,8 +119,18 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	}
 	if (event & EPOLLOUT)
 	{
+		try 
+		{
+			handleOutgoingData(clientSocket);
+		}
+		catch (std::exception &e)
+		{
+			std::cerr << "Error sending data to client: " << e.what() << std::endl;
+		}
 		//handle outgoing data (HTTP request)
 		//Read from clientSocket, parse HTTP request
+		//Prepare response and sent it to the client
+
 	}
 	if (event & (EPOLLRDHUP | EPOLLHUP))
 	{

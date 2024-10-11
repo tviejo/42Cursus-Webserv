@@ -28,6 +28,7 @@ class Server
 		void	eventLoop();
 		void	handleNewConnection(int socket);
 		void	handleClientEvent(int socket, uint32_t event);
+		void	handleOutgoingData(int clientSocket);
 		ssize_t	safeRecv(int socketfd, void *buffer, size_t len, int flags);
 };
 
