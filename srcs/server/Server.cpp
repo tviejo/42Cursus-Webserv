@@ -65,11 +65,11 @@ void	Server::handleNewConnection(int socket)
 	if (clientSocket == -1)
 		throw std::runtime_error("Accept failed");
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
-	epoll_ev.events = EPOLLIN | EPOLLET;
+	epoll_ev.events = EPOLLIN;
 	epoll_ev.data.fd = clientSocket;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &epoll_ev) == -1)
 	{
-		close(clientSocket); // handle error here
+		close(clientSocket);
 		throw std::runtime_error("Failed to add to epoll");
 	}
 }
@@ -87,34 +87,42 @@ void	Server::handleOutgoingData(int clientSocket)
 
 }
 
+void	Server::processRequest(int clientSocket, std::string request)
+{
+
+}
+
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
 	if (event & EPOLLIN)
 	{
-		//handle incoming HTTP request data
-		//Read from ClientSocket, parse request..
 		char		buffer[MAX_BUFFER_SIZE];
-		std::string	request;
-		
+	
 		try 
 		{
-			while (true)
+			ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
+			if (bytesRead > 0)
 			{
-				ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
-				if (bytesRead == 0)
+				_partialRequest[clientSocket].append(buffer, bytesRead);
+				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
 				{
-					epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
-					close(clientSocket);
-					break ;
+					processRequest(clientSocket, _partialRequest[clientSocket]);
+					_partialRequest[clientSocket].erase(clientSocket);
 				}
-				request.append(buffer, bytesRead);
-				if (request.find("\r\n\r\n") != std::string::npos) //headers
-					break ;
+			}
+			else if (bytesRead == 0)
+			{
+				epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+				close(clientSocket);
+				_partialRequest[clientSocket].erase(clientSocket);
 			}
 		}
 		catch (std::exception &e)
 		{
 			std::cerr << "Error receiving data from client" << e.what() << std::endl;
+			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+			close(clientSocket);
+			_partialRequest[clientSocket].erase(clientSocket);
 		}
 	}
 	if (event & EPOLLOUT)

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
+#include <unordered_map>
 
 #define MAX_SOCKETS 1024
 #define MAX_EVENTS 10
@@ -15,9 +16,10 @@ class Server
 {
 	private:
 		Server();
-		const Config			_config;
-		Array<int, MAX_SOCKETS>	_socket;
-		int						_epollFd;
+		const Config							_config;
+		Array<int, MAX_SOCKETS>					_socket;
+		int										_epollFd;
+		std::unordered_map<int, std::string>	_partialRequest;
 	public:
 		Server(Config &config) : _config(config) {};
 		~Server() {};
@@ -28,6 +30,7 @@ class Server
 		void	eventLoop();
 		void	handleNewConnection(int socket);
 		void	handleClientEvent(int socket, uint32_t event);
+		void	processRequest(int clientSocket, std::string request);
 		void	handleOutgoingData(int clientSocket);
 		ssize_t	safeRecv(int socketfd, void *buffer, size_t len, int flags);
 };
