@@ -12,3 +12,28 @@
 
 # include "webserv.hpp"
 # include "request.hpp"
+
+
+HTTPRequest::HTTPRequest(const std::string& request)
+{
+	
+}
+
+HTTPRequest::HTTPRequest(const HTTPRequest& copy)
+{
+    *this = copy;
+}
+
+HTTPRequest& HTTPRequest::operator=(const HTTPRequest& copy)
+{
+    if (this != &copy)
+    {
+		this->_method = copy._method;
+		this->_uri = copy._uri;
+		this->_httpVersion = copy._httpVersion;
+		this->_headers = copy._headers;
+		this->_body = copy._body;
+    }
+    return *this;
+}
+

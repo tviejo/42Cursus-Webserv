@@ -1,5 +1,5 @@
 
-#include "Server.hpp"
+#include "webserv.hpp"
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/epoll.h>
@@ -87,9 +87,16 @@ void	Server::handleOutgoingData(int clientSocket)
 
 }
 
-void	Server::processRequest(int clientSocket, std::string request)
+void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 {
+	try
+	{
+		HTTPRequest request(clientRequest);
+	}
+	catch (std::exception &e)
+	{
 
+	}
 }
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
