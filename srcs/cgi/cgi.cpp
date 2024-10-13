@@ -6,11 +6,10 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/12 16:18:18 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/13 16:12:58 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "webserv.hpp"
 # include "cgi.hpp"
 
 Cgi::Cgi()
@@ -40,29 +39,16 @@ Cgi::Cgi(std::string path, std::string method)
     this->_type = "python3";
     this->_path = path;
     this->_method = method;
-    this->setEnv(path, method);
 }
 
-void    Cgi::setEnv(std::string path, std::string method)
-{
-    this->_env.push_back("REDIRECT_STATUS=200");
-    this->_env.push_back("REQUEST_METHOD=" + method);
-    this->_env.push_back("SCRIPT_FILENAME=" + path);
-    this->_env.push_back("SCRIPT_NAME=" + path);
-    this->_env.push_back("PATH_INFO=" + path);
-    this->_env.push_back("PATH_TRANSLATED=" + path);
-    this->_env.push_back("QUERY_STRING=");
-    this->_env.push_back("REMOTE_ADDR=");
-}
 
 char    **Cgi::getEnvp()
 {
-    char **envp = new char*[this->_env.size() + 1];
-    for (size_t i = 0; i < this->_env.size(); i++)
+    char **envp = new char*[100];
+    for (size_t i = 0; i < 1; i++)
     {
-        envp[i] = ft_strdup(this->_env[i].c_str());
+        envp[i] = strdup("name=thomas");
     }
-    envp[this->_env.size()] = NULL;
     return (envp);
 }
 
@@ -81,12 +67,21 @@ void    Cgi::execute()
     int pid = fork();
     if (pid == 0)
     {
-        if (this->_type == "python3")
-            execl("/usr/bin/python3", "/usr/bin/python3", this->_path.c_str(), NULL);
-        else
-            std::cerr << "Error: unknown type" << std::endl;
+        char *args[] = {strdup(this->_path.c_str()), NULL};
+        execve(this->_path.c_str(), args, envp);
+        exit(0);
     }
     else
     {
-        waitpid(pid, NULL, 0);
+        int status;
+        waitpid(pid, &status, 0);
     }
+    this->deleteEnvp(envp);
+}
+
+// int main()
+// {
+//     Cgi cgi("./cgi-bin/test.py", "GET");
+//     cgi.execute();
+//     return (0);
+// }
