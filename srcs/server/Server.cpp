@@ -90,20 +90,22 @@ void	Server::handleOutgoingData(int clientSocket)
 
 void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 {
-	(void)clientSocket;
-	(void)clientRequest;
-	return ;
-//	HTTPRequest	request(clientRequest);
-//	std::string	response;
-//
-//	if (request.get_method() == "GET")
-//		response = handleGetResponse(request);
-//	else if (request.get_method() == "POST")
-//		response = handlePostResponse(request);
-//	else if (request.get_method() == "DELETE")
-//		response = handleDeleteResponse(request);
-//	else
-//		response = handleResponse(request);
+	//(void)clientSocket;
+	//(void)clientRequest;
+	//return ;
+	HTTPRequest	request(clientRequest);
+	std::string	response;
+
+	if (request.get_method() == "GET")
+		response = handleGetResponse(request);
+	else if (request.get_method() == "POST")
+		response = handlePostResponse(request);
+	else if (request.get_method() == "DELETE")
+		response = handleDeleteResponse(request);
+	/*else
+		response = handleResponse(request);*/
+	sendResponse(clientSocket, response);
+	
 }
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)

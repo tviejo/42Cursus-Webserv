@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 16:16:40 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/14 17:56:51 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,5 +31,9 @@ class HTTPRequest
 		HTTPRequest(const std::string& request);
 		HTTPRequest(const HTTPRequest& copy);
 		HTTPRequest& operator=(const HTTPRequest& copy);
-		const std::string	get_method() const;
+		const std::string	&get_method() const;
+		const std::string	&getUri() const;
+		const std::string	&getHttpVersion() const;
+		const std::string	&getBody() const;
+		const std::map<std::string, std::string>	&getHeaders() const;
 };

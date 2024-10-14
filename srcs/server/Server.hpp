@@ -1,6 +1,7 @@
 
 #pragma once
 #include "webserv.hpp"
+#include "HttpRequest.hpp"
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -30,8 +31,7 @@ class Server
 		void	handleNewConnection(int socket);
 		void	handleClientEvent(int socket, uint32_t event);
 		void	processRequest(int clientSocket, const std::string& request);
+		void	sendResponse(int clientSocket, std::string &response);
 		void	handleOutgoingData(int clientSocket);
 		ssize_t	safeRecv(int socketfd, void *buffer, size_t len, int flags);
 };
-
-
