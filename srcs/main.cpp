@@ -20,7 +20,7 @@ int main(int ac, char **av)
 	{
 		std::string input(av[1]);
 		Config config(input);
-		config.printConfig();
+//		config.printConfig();
 		Server server(config);
 		server.init();
 		server.run();

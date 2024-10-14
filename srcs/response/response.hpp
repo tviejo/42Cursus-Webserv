@@ -10,7 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef RESPONSE_HPP
-# define RESPONSE_HPP
+#pragma once
+#include "webserv.hpp"
+#include <ostream>
 
-#endif
+std::string	handleGetResponse(const std::string& request);
+std::string	handlePostResponse(const std::string& request);
+std::string	handleDeleteResponse(const std::string& request);
+std::string	makeResponse(uint32_t status, const std::string& statusMessage, const std::string& path, const std::string& content);

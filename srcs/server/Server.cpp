@@ -1,9 +1,10 @@
 
-#include "Server.hpp"
+#include "webserv.hpp"
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 void	Server::setupSockets()
 {
@@ -16,7 +17,7 @@ void	Server::setupSockets()
 			throw std::runtime_error("Failed to create socket");
 		fcntl(sockfd, F_SETFL, O_NONBLOCK);	
 		struct sockaddr_in serverAddr;
-		serverAddr.sin_family = AF_INET;
+		serverAddr.sin_family = AF_INET; //This is edge trigger??
 		serverAddr.sin_addr.s_addr = inet_addr(it->host.c_str());
 		serverAddr.sin_port = htons(it->port);
 		if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
@@ -62,29 +63,96 @@ void	Server::handleNewConnection(int socket)
 
 	int	clientSocket = accept(socket, (struct sockaddr*)&clientAddr, &clientAddrlen);	
 	if (clientSocket == -1)
-		return; //handle error here
+		throw std::runtime_error("Accept failed");
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
-	
-	epoll_ev.events = EPOLLIN | EPOLLET;
+	epoll_ev.events = EPOLLIN;
 	epoll_ev.data.fd = clientSocket;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &epoll_ev) == -1)
 	{
-		close(clientSocket); // handle error here
-		return;
+		close(clientSocket);
+		throw std::runtime_error("Failed to add to epoll");
 	}
+}
+
+ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
+{
+	ssize_t	result = recv(socketfd, buffer, len, flags);
+	if (result == -1)
+		throw std::runtime_error("Receive failed");
+	return result;	
+}
+
+void	Server::handleOutgoingData(int clientSocket)
+{
+	(void)clientSocket;
+	return ;
+}
+
+void	Server::processRequest(int clientSocket, const std::string& clientRequest)
+{
+	(void)clientSocket;
+	(void)clientRequest;
+	return ;
+//	HTTPRequest	request(clientRequest);
+//	std::string	response;
+//
+//	if (request.get_method() == "GET")
+//		response = handleGetResponse(request);
+//	else if (request.get_method() == "POST")
+//		response = handlePostResponse(request);
+//	else if (request.get_method() == "DELETE")
+//		response = handleDeleteResponse(request);
+//	else
+//		response = handleResponse(request);
 }
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
 	if (event & EPOLLIN)
 	{
-		//handle incoming HTTP request data
-		//Read from ClientSocket, parse request..
+		char		buffer[MAX_BUFFER_SIZE];
+	
+		try 
+		{
+			ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
+			if (bytesRead > 0)
+			{
+				_partialRequest[clientSocket].append(buffer, bytesRead);
+				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
+				{
+					processRequest(clientSocket, _partialRequest[clientSocket]);
+					_partialRequest[clientSocket].erase(clientSocket);
+				}
+			}
+			else if (bytesRead == 0)
+			{
+				epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+				close(clientSocket);
+				_partialRequest[clientSocket].erase(clientSocket);
+			}
+		}
+		catch (std::exception &e)
+		{
+			std::cerr << "Error receiving data from client" << e.what() << std::endl;
+			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+			close(clientSocket);
+			_partialRequest[clientSocket].erase(clientSocket);
+		}
 	}
 	if (event & EPOLLOUT)
 	{
+		try 
+		{
+			handleOutgoingData(clientSocket);
+		}
+		catch (std::exception &e)
+		{
+			std::cerr << "Error sending data to client: " << e.what() << std::endl;
+		}
 		//handle outgoing data (HTTP request)
 		//Read from clientSocket, parse HTTP request
+		//Prepare response and sent it to the client
+
 	}
 	if (event & (EPOLLRDHUP | EPOLLHUP))
 	{
