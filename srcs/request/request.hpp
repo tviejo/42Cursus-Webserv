@@ -13,6 +13,7 @@
 #pragma once
 
 #include "webserv.hpp"
+#include <sstream>
 
 class HTTPRequest
 {
