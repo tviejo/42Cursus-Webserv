@@ -13,6 +13,32 @@
 # include "webserv.hpp"
 # include "request.hpp"
 
+std::string	HTTPRequest::cleanLineStream(std::istringstream& lineStream)
+{
+	std::string	line;
+	std::string	cleanBody;
+	while (std::getline(lineStream, line))
+	{
+		if (line.empty() == true && line[line.length() - 1] == '\r')
+				line.erase(line.length() - 1); //remove trailing '\r'
+	
+		std::istringstream	iss(line);
+		uint32_t			size;
+		iss >> std::hex >> size;
+		if (size == 0)
+			break;
+		
+		std::string	chunk;
+		char		c = '\0';
+		chunk.reserve(size);
+		for (uint32_t i = 0; i < size; i++)
+			chunk += c;
+		cleanBody += chunk;
+		lineStream.ignore(2); //remove clrf after chunk, probably not needed
+	}
+	return cleanBody;
+}
+
 HTTPRequest::HTTPRequest(const std::string& request)
 {
 	std::istringstream	stream(request);
@@ -34,8 +60,19 @@ HTTPRequest::HTTPRequest(const std::string& request)
 		}
 	}
 	std::ostringstream	bodyStream;
-	bodyStream << lineStream.rdbuf();
-	_body = bodyStream.str();
+	std::map<std::string, std::string>::iterator it;
+
+	for (it = _headers.begin(); it != _headers.end(); it++) //find() instead
+		if (it->first == "Transfer-Encoding:" && it->second == "chunked")
+			break;
+	
+	if (it->first == "Transfer-Encoding:" && it->second == "chunked") // redundant shit
+		_body = cleanLineStream(lineStream);
+	else
+	{
+		bodyStream << lineStream.rdbuf();
+		_body = bodyStream.str();
+	}
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest& copy)

@@ -32,4 +32,5 @@ class HTTPRequest
 		HTTPRequest(const HTTPRequest& copy);
 		HTTPRequest& operator=(const HTTPRequest& copy);
 		const std::string	get_method() const;
+		std::string			cleanLineStream(std::istringstream& lineStream);
 };
