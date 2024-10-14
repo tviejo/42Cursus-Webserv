@@ -11,8 +11,6 @@
 /* ************************************************************************** */
 
 # include "webserv.hpp"
-#include <cstddef>
-#include <sstream>
 # include "request.hpp"
 
 HTTPRequest::HTTPRequest(const std::string& request)
@@ -35,7 +33,9 @@ HTTPRequest::HTTPRequest(const std::string& request)
 			_headers[key] = value;
 		}
 	}
-
+	std::ostringstream	bodyStream;
+	bodyStream << lineStream.rdbuf();
+	_body = bodyStream.str();
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest& copy)
