@@ -89,14 +89,17 @@ void	Server::handleOutgoingData(int clientSocket)
 
 void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 {
-	try
-	{
-		HTTPRequest request(clientRequest);
-	}
-	catch (std::exception &e)
-	{
+	HTTPRequest	request(clientRequest);
+	std::string	response;
 
-	}
+	if (request.get_method() == "GET")
+		response = makeGetResponse(request);
+	else if (request.get_method() == "POST")
+		response = makePostResponse(request);
+	else if (request.get_method() == "DELETE")
+		response = makeDeleteResponse(request);
+	else
+		response = MakeInvalidResponse(request);
 }
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)

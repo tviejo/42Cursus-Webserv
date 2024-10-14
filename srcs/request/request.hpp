@@ -31,4 +31,5 @@ class HTTPRequest
 		HTTPRequest(const std::string& request);
 		HTTPRequest(const HTTPRequest& copy);
 		HTTPRequest& operator=(const HTTPRequest& copy);
+		const std::string	get_method() const;
 };

@@ -56,3 +56,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& copy)
     return *this;
 }
 
+const std::string HTTPRequest::get_method() const
+{
+	return _method;
+}
