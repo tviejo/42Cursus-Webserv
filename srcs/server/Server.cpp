@@ -17,7 +17,7 @@ void	Server::setupSockets()
 			throw std::runtime_error("Failed to create socket");
 		fcntl(sockfd, F_SETFL, O_NONBLOCK);	
 		struct sockaddr_in serverAddr;
-		serverAddr.sin_family = AF_INET;
+		serverAddr.sin_family = AF_INET; //This is edge trigger??
 		serverAddr.sin_addr.s_addr = inet_addr(it->host.c_str());
 		serverAddr.sin_port = htons(it->port);
 		if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
@@ -84,22 +84,26 @@ ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 
 void	Server::handleOutgoingData(int clientSocket)
 {
-
+	(void)clientSocket;
+	return ;
 }
 
 void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 {
-	HTTPRequest	request(clientRequest);
-	std::string	response;
-
-	if (request.get_method() == "GET")
-		response = makeGetResponse(request);
-	else if (request.get_method() == "POST")
-		response = makePostResponse(request);
-	else if (request.get_method() == "DELETE")
-		response = makeDeleteResponse(request);
-	else
-		response = MakeInvalidResponse(request);
+	(void)clientSocket;
+	(void)clientRequest;
+	return ;
+//	HTTPRequest	request(clientRequest);
+//	std::string	response;
+//
+//	if (request.get_method() == "GET")
+//		response = handleGetResponse(request);
+//	else if (request.get_method() == "POST")
+//		response = handlePostResponse(request);
+//	else if (request.get_method() == "DELETE")
+//		response = handleDeleteResponse(request);
+//	else
+//		response = handleResponse(request);
 }
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)

@@ -21,7 +21,7 @@ class HTTPRequest
 		std::string	_method;
 		std::string	_uri;
 		std::string	_httpVersion;
-		std::unordered_map<std::string, std::string> _headers;
+		std::map<std::string, std::string> _headers;
 		std::string	_body;
 	public:
 	private:

@@ -18,7 +18,7 @@ class Server
 		const Config							_config;
 		Array<int, MAX_SOCKETS>					_socket;
 		int										_epollFd;
-		std::unordered_map<int, std::string>	_partialRequest;
+		std::map<int, std::string>	_partialRequest;
 	public:
 		Server(Config &config) : _config(config) {};
 		~Server() {};
