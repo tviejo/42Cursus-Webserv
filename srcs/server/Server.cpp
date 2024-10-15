@@ -108,6 +108,13 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	
 }
 
+void	Server::sendResponse(int clientSocket, std::string &response)
+{
+	//epoll.modify(fileno, select.EPOLLOUT);
+	epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientSocket, );
+	//send(clientSocket, &response, response.size(), 0);
+}
+
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
 	if (event & EPOLLIN)
