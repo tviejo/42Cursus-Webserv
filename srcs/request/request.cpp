@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 # include "webserv.hpp"
-# include "request.hpp"
 
 std::string	HTTPRequest::cleanLineStream(std::istringstream& lineStream)
 {
@@ -60,13 +59,9 @@ HTTPRequest::HTTPRequest(const std::string& request)
 		}
 	}
 	std::ostringstream	bodyStream;
-	std::map<std::string, std::string>::iterator it;
+	std::map<std::string, std::string>::iterator it = _headers.find("Transfer-Encoding");
 
-	for (it = _headers.begin(); it != _headers.end(); it++) //find() instead
-		if (it->first == "Transfer-Encoding:" && it->second == "chunked")
-			break;
-	
-	if (it->first == "Transfer-Encoding:" && it->second == "chunked") // redundant shit
+	if (it != _headers.end() && it->second == "chunked")
 		_body = cleanLineStream(lineStream);
 	else
 	{
