@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:57:38 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 14:04:11 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/16 17:29:56 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ class Config
 {
     private:
         std::vector<t_server> servers;
+        
         void    parseConfig(std::string file);
         void    parseServer(std::ifstream &file, t_server &server);
         void    parseRoute(std::ifstream &file, t_route &route);

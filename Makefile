@@ -12,7 +12,7 @@ SRCS		+=  cgi/cgi.cpp
 
 SRCS		+=  config/config.cpp
 
-SRCS		+=  request/request.cpp
+SRCS		+=  request/HttpRequest.cpp
 
 SRCS		+=  response/response.cpp
 

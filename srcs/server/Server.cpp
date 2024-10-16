@@ -8,34 +8,39 @@
 
 void	Server::setupSockets()
 {
-	const std::vector<t_server> server = _config.getServers();
+	std::cout << "setupSockets()\n";
+	
+	const std::vector<t_server> &server = _config.getServers();
 	size_t index = 0;
 	for (std::vector<t_server>::const_iterator it = server.begin(); it != server.end(); it++)
 	{
-		int	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-		if (sockfd == -1)
+		int	sock = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock == -1)
 			throw std::runtime_error("Failed to create socket");
-		fcntl(sockfd, F_SETFL, O_NONBLOCK);	
+		fcntl(sock, F_SETFL, O_NONBLOCK);	
 		struct sockaddr_in serverAddr;
 		serverAddr.sin_family = AF_INET; //This is edge trigger??
 		serverAddr.sin_addr.s_addr = inet_addr(it->host.c_str());
 		serverAddr.sin_port = htons(it->port);
-		if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+		if (bind(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
 		{
-			close(sockfd);
+			close(sock);
 			throw std::runtime_error("Failed to bind socket");
 		}
-		if (listen(sockfd, SOMAXCONN) == -1)
+		if (listen(sock, SOMAXCONN) == -1)
 		{
-			close(sockfd);
+			close(sock);
 			throw std::runtime_error("Failed to listen on socket");
 		}
-		_socket[index++] = sockfd;
+		_socket[index++] = sock;
+		_servers[sock] = const_cast<t_server *>(&*it);
 	}
 }
 
 void	Server::initEpoll()
 {
+	std::cout << "initEpoll()\n";
+
 	_epollFd = epoll_create1(0);
 	if (_epollFd == -1)
 		throw std::runtime_error("Failed to create epoll instance");
@@ -51,12 +56,16 @@ void	Server::initEpoll()
 
 void	Server::init()
 {
+	std::cout << "init()\n";
+	
 	setupSockets();
 	initEpoll();
 }
 
 void	Server::handleNewConnection(int socket)
 {
+	std::cout << "handleNewConnection()\n";
+	
 	struct sockaddr_in	clientAddr;
 	socklen_t			clientAddrlen = sizeof(clientAddr);
 	struct	epoll_event epoll_ev;
@@ -76,6 +85,8 @@ void	Server::handleNewConnection(int socket)
 
 ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 {
+	std::cout << "safeRecv()\n";
+	
 	ssize_t	result = recv(socketfd, buffer, len, flags);
 	if (result == -1)
 		throw std::runtime_error("Receive failed");
@@ -84,15 +95,28 @@ ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 
 void	Server::handleOutgoingData(int clientSocket)
 {
-	(void)clientSocket;
-	return ;
+	std::cout << "handleOutgoingData()\n";
+	
+	std::string &toSend = _partialResponse[clientSocket];
+	ssize_t bytes_sent = send(clientSocket, toSend.c_str(), toSend.size(), 0);
+	if (bytes_sent < 0)
+		throw std::runtime_error("[handleOutgoingData/send] error while sending response to client");
+	if ((size_t)bytes_sent < toSend.size())
+		_partialResponse[clientSocket].erase(0, bytes_sent);
+	else {
+		struct epoll_event epoll_ev;
+		epoll_ev.events = 0;
+		epoll_ev.data.fd = clientSocket;
+		if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientSocket, &epoll_ev) == -1)
+			throw std::runtime_error("[handleOutgoingData/epoll_ctl] failed to modify client socket events to 0");
+		shutdown(clientSocket, SHUT_RDWR);
+	}
 }
 
 void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 {
-	//(void)clientSocket;
-	//(void)clientRequest;
-	//return ;
+	std::cout << "processRequest()\n";
+	
 	HTTPRequest	request(clientRequest);
 	std::string	response;
 
@@ -110,13 +134,20 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 
 void	Server::sendResponse(int clientSocket, std::string &response)
 {
-	//epoll.modify(fileno, select.EPOLLOUT);
-	epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientSocket, );
-	//send(clientSocket, &response, response.size(), 0);
+	std::cout << "sendResponse()\n";
+	
+	_partialResponse[clientSocket] = response;
+	struct epoll_event epoll_ev;
+	epoll_ev.events = EPOLLOUT;
+	epoll_ev.data.fd = clientSocket;
+	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientSocket, &epoll_ev) == -1)
+		throw std::runtime_error("[sendResponse/epoll_ctl] failed to modify client socket events to EPOLLOUT");
 }
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
+	std::cout << "handleClientEvent()\n";
+	
 	if (event & EPOLLIN)
 	{
 		char		buffer[MAX_BUFFER_SIZE];
@@ -130,22 +161,22 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
 				{
 					processRequest(clientSocket, _partialRequest[clientSocket]);
-					_partialRequest[clientSocket].erase(clientSocket);
+					_partialRequest.erase(clientSocket);
 				}
 			}
 			else if (bytesRead == 0)
 			{
 				epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 				close(clientSocket);
-				_partialRequest[clientSocket].erase(clientSocket);
+				_partialRequest.erase(clientSocket);
 			}
 		}
 		catch (std::exception &e)
 		{
-			std::cerr << "Error receiving data from client" << e.what() << std::endl;
+			std::cerr << "Error receiving data from client : " << e.what() << std::endl;
 			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 			close(clientSocket);
-			_partialRequest[clientSocket].erase(clientSocket);
+			_partialRequest.erase(clientSocket);
 		}
 	}
 	if (event & EPOLLOUT)
@@ -156,7 +187,9 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 		}
 		catch (std::exception &e)
 		{
-			std::cerr << "Error sending data to client: " << e.what() << std::endl;
+			std::cerr << "Error sending data to client : " << e.what() << std::endl;
+			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+			close(clientSocket);
 		}
 		//handle outgoing data (HTTP request)
 		//Read from clientSocket, parse HTTP request
@@ -168,11 +201,14 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 		//client disconnected
 		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 		close(clientSocket);
+		_partialRequest.erase(clientSocket);
 	}
 }
 
 void	Server::run()
 {
+	std::cout << "Server::run()\n";
+
 	struct epoll_event	events[MAX_EVENTS];
 	while (true)
 	{

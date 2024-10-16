@@ -1,7 +1,6 @@
 
 #pragma once
 #include "webserv.hpp"
-#include "HttpRequest.hpp"
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -15,11 +14,14 @@
 class Server
 {
 	private:
-		Server();
-		const Config							_config;
-		Array<int, MAX_SOCKETS>					_socket;
-		int										_epollFd;
+		const Config				_config;
+		Array<int, MAX_SOCKETS>		_socket;
+		int							_epollFd;
+		std::map<int, t_server *>	_servers;
 		std::map<int, std::string>	_partialRequest;
+		std::map<int, std::string>	_partialResponse;
+	
+		Server();
 	public:
 		Server(Config &config) : _config(config) {};
 		~Server() {};

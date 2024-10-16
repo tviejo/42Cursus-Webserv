@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/14 17:58:40 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/16 16:46:08 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,14 +27,14 @@ std::string	makeResponse(uint32_t status, const std::string& statusMessage,
 
 std::string	handleGetResponse(const HTTPRequest& req)
 {
-	std::string fileContent;
-	std::ostringstream ossContent;
-	ossContent << req.getUri();
+	//std::string content = getContentFromReqUri(req.getUri());
+	std::string content = "<HTML><BODY><H1>Hello Big Title !</H1><P>" + req.getUri()
+		+ "<P>Hello HTML page content !<P>Vive le père Noël.</BODY></HTML>";
 	
-	if (fileContent.empty() == true)
+	if (content.empty() == true)
 		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 	else
-		return makeResponse(200, "OK", "text/html; charset=utf-8", fileContent);
+		return makeResponse(200, "OK", "text/html; charset=utf-8", content);
 }
 
 std::string	handlePostResponse(const HTTPRequest& req)
