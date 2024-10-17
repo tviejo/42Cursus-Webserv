@@ -1,1 +1,5 @@
 .clangd
+.vscode/*
+
+webserv
+objs/*
