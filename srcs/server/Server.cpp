@@ -133,11 +133,11 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	std::string	response;
 
 	if (request.get_method() == "GET")
-		response = handleGetResponse(request);
+		response = handleGetResponse(*_sockets[clientSocket].server, request);
 	else if (request.get_method() == "POST")
-		response = handlePostResponse(request);
+		response = handlePostResponse(*_sockets[clientSocket].server, request);
 	else if (request.get_method() == "DELETE")
-		response = handleDeleteResponse(request);
+		response = handleDeleteResponse(*_sockets[clientSocket].server, request);
 	/*else
 		response = handleResponse(request);*/
 	sendResponse(clientSocket, response);
@@ -227,7 +227,7 @@ void	Server::run()
 	{
 		int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
 		if (nfds == -1)
-			throw std::runtime_error("epoll_wait failed");
+			throw std::runtime_error("[Server::run()] epoll_wait failed");
 		for (int i = 0; i < nfds; i++)
 		{
 			//if (std::find(_socket.begin(), _socket.end(), events[i].data.fd) != _socket.end()) // rethink the iteration over the sockets, find a way to search for the sockets directly?

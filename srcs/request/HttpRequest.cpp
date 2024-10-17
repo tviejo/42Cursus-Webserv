@@ -6,13 +6,15 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/14 18:04:15 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/17 11:09:31 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "webserv.hpp"
 # include "HttpRequest.hpp"
 
+/* Parse string request received from client
+*/
 HTTPRequest::HTTPRequest(const std::string& request)
 {
 	std::istringstream	stream(request);

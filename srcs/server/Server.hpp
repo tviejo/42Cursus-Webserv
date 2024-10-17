@@ -23,7 +23,6 @@ class Server
 		int							_epollFd;
 		//Array<int, MAX_SOCKETS>		_socket;
 		std::map<int, SockInfos>	_sockets;
-		//std::map<int, t_server *>	_servers;
 		std::map<int, std::string>	_partialRequest;
 		std::map<int, std::string>	_partialResponse;
 	

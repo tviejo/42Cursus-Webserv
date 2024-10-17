@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:57:38 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/16 17:29:56 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/17 14:20:12 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,11 @@
 
 typedef struct route
 {
-    std::string         path;
-    std::string         index;
-    std::set<std::string> methods;
-    std::string         upload;
-    std::string         directory;
+    std::string         path;       // route path ("/", "/top-secret")
+    std::string         index;      // index file
+    std::set<std::string> methods;  // allowed methods (GET, POST, DELETE)
+    std::string         upload;     // upload directory
+    std::string         directory;  // server directory for route (exple: "/srv/www/html" for "/")
     bool                autoindex;
     double              max_body_size;
 } t_route;
@@ -34,8 +34,8 @@ typedef struct server
     std::string         host;
     int                 port;
     bool                autoindex;
-    std::string         root;
-    std::string         error;
+    std::string         root;   // server root directory (exple: "/srv/www")
+    std::string         error;  // default error page
     int                 max_body_size;
     std::vector<t_route> routes;
 } t_server;
@@ -47,7 +47,7 @@ class Config
         
         void    parseConfig(std::string file);
         void    parseServer(std::ifstream &file, t_server &server);
-        void    parseRoute(std::ifstream &file, t_route &route);
+        void    parseRoute(std::string &routePath, std::ifstream &file, t_route &route, t_server &server);
         void    initServer(t_server &server);
         void    initRoute(t_route &route);
         bool    ServerIsValid(t_server &server);
