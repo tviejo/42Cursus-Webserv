@@ -1,4 +1,3 @@
-
 #include "webserv.hpp"
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -10,13 +9,19 @@ void	Server::setupSockets()
 {
 	std::cout << "setupSockets()\n";
 	
-	const std::vector<t_server> &server = _config.getServers();
-	size_t index = 0;
-	for (std::vector<t_server>::const_iterator it = server.begin(); it != server.end(); it++)
+	_epollFd = epoll_create1(0);
+	if (_epollFd == -1)
+		throw std::runtime_error("[setupSockets] Failed to create epoll instance");
+	struct epoll_event epoll_ev;
+	epoll_ev.events = EPOLLIN;
+
+	const std::vector<t_server> &servers = _config.getServers();
+	//size_t index = 0;
+	for (std::vector<t_server>::const_iterator it = servers.begin(); it != servers.end(); it++)
 	{
 		int	sock = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock == -1)
-			throw std::runtime_error("Failed to create socket");
+			throw std::runtime_error("[setupSockets] Failed to create socket");
 		fcntl(sock, F_SETFL, O_NONBLOCK);	
 		struct sockaddr_in serverAddr;
 		serverAddr.sin_family = AF_INET; //This is edge trigger??
@@ -25,19 +30,24 @@ void	Server::setupSockets()
 		if (bind(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
 		{
 			close(sock);
-			throw std::runtime_error("Failed to bind socket");
+			throw std::runtime_error("[setupSockets] Failed to bind socket");
 		}
 		if (listen(sock, SOMAXCONN) == -1)
 		{
 			close(sock);
-			throw std::runtime_error("Failed to listen on socket");
+			throw std::runtime_error("[setupSockets] Failed to listen on socket");
 		}
-		_socket[index++] = sock;
-		_servers[sock] = const_cast<t_server *>(&*it);
+		SockInfos sinfo = {.server = const_cast<t_server *>(&*it), .isServer = true};
+		_sockets[sock] = sinfo;
+		//_servers[sock] = const_cast<t_server *>(&*it);
+		
+		epoll_ev.data.fd = sock;
+		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, sock, &epoll_ev) == -1)
+			throw std::runtime_error("[setupSockets] Failed to add server socket to epoll");
 	}
 }
 
-void	Server::initEpoll()
+/*void	Server::initEpoll()
 {
 	std::cout << "initEpoll()\n";
 
@@ -52,17 +62,17 @@ void	Server::initEpoll()
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, *it, &epoll_ev) == -1)
 			throw std::runtime_error("Failed to add server socket to epoll");
 	}
-}
+}*/
 
 void	Server::init()
 {
 	std::cout << "init()\n";
 	
 	setupSockets();
-	initEpoll();
+	//initEpoll();
 }
 
-void	Server::handleNewConnection(int socket)
+void	Server::handleNewConnection(int servSock)
 {
 	std::cout << "handleNewConnection()\n";
 	
@@ -70,7 +80,7 @@ void	Server::handleNewConnection(int socket)
 	socklen_t			clientAddrlen = sizeof(clientAddr);
 	struct	epoll_event epoll_ev;
 
-	int	clientSocket = accept(socket, (struct sockaddr*)&clientAddr, &clientAddrlen);	
+	int	clientSocket = accept(servSock, (struct sockaddr*)&clientAddr, &clientAddrlen);	
 	if (clientSocket == -1)
 		throw std::runtime_error("Accept failed");
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
@@ -81,6 +91,8 @@ void	Server::handleNewConnection(int socket)
 		close(clientSocket);
 		throw std::runtime_error("Failed to add to epoll");
 	}
+	SockInfos sinfos = {.server = _sockets[servSock].server, .isServer = false};
+	_sockets[clientSocket] = sinfos;
 }
 
 ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
@@ -202,6 +214,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 		close(clientSocket);
 		_partialRequest.erase(clientSocket);
+		_sockets.erase(clientSocket);
 	}
 }
 
@@ -217,10 +230,12 @@ void	Server::run()
 			throw std::runtime_error("epoll_wait failed");
 		for (int i = 0; i < nfds; i++)
 		{
-			if (std::find(_socket.begin(), _socket.end(), events[i].data.fd) != _socket.end()) // rethink the iteration over the sockets, find a way to search for the sockets directly?
+			//if (std::find(_socket.begin(), _socket.end(), events[i].data.fd) != _socket.end()) // rethink the iteration over the sockets, find a way to search for the sockets directly?
+			//if (_servers.find(events[i].data.fd) == _servers.end())
+			if (_sockets[events[i].data.fd].isServer)
 				handleNewConnection(events[i].data.fd);
 			else
-				handleClientEvent(events[i].data.fd, events[i].events); // filter for cgis and handle them differently
+				handleClientEvent(events[i].data.fd, events[i].events);
 		}
 	}
 }

@@ -11,13 +11,19 @@
 #define MAX_EVENTS 10
 #define MAX_BUFFER_SIZE 4096
 
+typedef struct {
+	t_server	*server;
+	bool		isServer;
+} SockInfos;
+
 class Server
 {
 	private:
 		const Config				_config;
-		Array<int, MAX_SOCKETS>		_socket;
 		int							_epollFd;
-		std::map<int, t_server *>	_servers;
+		//Array<int, MAX_SOCKETS>		_socket;
+		std::map<int, SockInfos>	_sockets;
+		//std::map<int, t_server *>	_servers;
 		std::map<int, std::string>	_partialRequest;
 		std::map<int, std::string>	_partialResponse;
 	
@@ -28,7 +34,7 @@ class Server
 		void	init();
 		void	run();
 		void	setupSockets();
-		void	initEpoll();
+		//void	initEpoll();
 		void	eventLoop();
 		void	handleNewConnection(int socket);
 		void	handleClientEvent(int socket, uint32_t event);

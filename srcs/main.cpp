@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:39:54 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 16:40:09 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/17 01:49:47 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ int main(int ac, char **av)
 	{
 		std::string input(av[1]);
 		Config config(input);
-//		config.printConfig();
+		config.printConfig();
 		Server server(config);
 		server.init();
 		server.run();
@@ -32,6 +32,7 @@ int main(int ac, char **av)
 	}
 	catch (const std::exception &e)
 	{
+		std::cout << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
