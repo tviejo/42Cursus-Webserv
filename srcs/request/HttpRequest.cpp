@@ -1,18 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   request.cpp                                        :+:      :+:    :+:   */
+/*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 12:47:54 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/17 11:09:31 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "webserv.hpp"
-# include "request.hpp"
+# include "HttpRequest.hpp"
 
+/* Parse string request received from client
+*/
 HTTPRequest::HTTPRequest(const std::string& request)
 {
 	std::istringstream	stream(request);
@@ -56,7 +58,27 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& copy)
     return *this;
 }
 
-const std::string HTTPRequest::get_method() const
+const std::string &HTTPRequest::get_method() const
 {
 	return _method;
+}
+
+const std::string	&HTTPRequest::getUri() const
+{
+	return _uri;
+}
+
+const std::string	&HTTPRequest::getHttpVersion() const
+{
+	return _httpVersion;
+}
+
+const std::string	&HTTPRequest::getBody() const
+{
+	return _body;
+}
+
+const std::map<std::string, std::string>	&HTTPRequest::getHeaders() const
+{
+	return _headers;
 }
