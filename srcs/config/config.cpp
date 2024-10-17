@@ -3,15 +3,29 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:56:20 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 14:09:36 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/17 14:57:02 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 #include "config.hpp"
+
+inline std::string &trimRef(std::string &str, const std::string &charToTrim = " \t\n\r\f\v")
+{
+    str.erase(str.find_last_not_of(charToTrim) + 1);
+    str.erase(0, str.find_first_not_of(charToTrim));
+    return str;
+}
+
+inline std::string trim(std::string str, const std::string &charToTrim = " \t\n\r\f\v")
+{
+    str.erase(str.find_last_not_of(charToTrim) + 1);
+    str.erase(0, str.find_first_not_of(charToTrim));
+    return str;
+}
 
 Config::Config(std::string conffile)
 {
@@ -86,16 +100,20 @@ void    Config::printConfig()
     }
 }
 
-void    Config::parseRoute(std::ifstream &file, t_route &route)
+void    Config::parseRoute(std::string &routePath, std::ifstream &file, t_route &route, t_server &server)
 {
-    Config::initRoute(route);
     std::string line;
+    
+    Config::initRoute(route);
+    
+    route.path = routePath;
+
     while (std::getline(file, line))
     {
         if (line.find("}") != std::string::npos)
             break;
-        if (line.find("path = ") != std::string::npos)
-            route.path = line.substr(line.find("path = ") + 7);
+        /*if (line.find("path = ") != std::string::npos)
+            route.path = line.substr(line.find("path = ") + 7);*/
         if (line.find("index = ") != std::string::npos)
             route.index = line.substr(line.find("index =") + 8);
         if (line.find("methods = ") != std::string::npos)
@@ -115,9 +133,11 @@ void    Config::parseRoute(std::ifstream &file, t_route &route)
             route.methods.insert(method);
         }
         if (line.find("upload = ") != std::string::npos)
-            route.upload = line.substr(line.find("upload = ") + 9);
-        if (line.find("directory = ") != std::string::npos)
-            route.directory = line.substr(line.find("directory = ") + 12);
+            route.upload = server.root + trim(line.substr(line.find("=") + 1));
+        /*if (line.find("directory = ") != std::string::npos)
+            route.directory = line.substr(line.find("directory = ") + 12);*/
+        if (line.find("root = ") != std::string::npos)
+            route.directory = server.root + trim(line.substr(line.find("=") + 1));
         if (line.find("autoindex = ") != std::string::npos)
             route.autoindex = line.substr(line.find("autoindex = ") + 12) == "on" ? true : false;
         if (line.find("max_body_size = ") != std::string::npos)
@@ -150,7 +170,8 @@ void    Config::parseServer(std::ifstream &file, t_server &server)
         if (line.find("route = ") != std::string::npos)
         {
             t_route route;
-            parseRoute(file, route);
+            std::string path = line.substr(line.find("=") + 1);
+            parseRoute(trimRef(path, "\" \t\n\r\f\v"), file, route, server);
             server.routes.push_back(route);
         }
     }

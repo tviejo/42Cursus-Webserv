@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   request.hpp                                        :+:      :+:    :+:   */
+/*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/08 16:16:40 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/17 17:54:05 by jteissie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,9 @@ class HTTPRequest
 		HTTPRequest(const std::string& request);
 		HTTPRequest(const HTTPRequest& copy);
 		HTTPRequest& operator=(const HTTPRequest& copy);
-		const std::string	get_method() const;
-		std::string			cleanLineStream(std::istringstream& lineStream);
+		const std::string	&get_method() const;
+		const std::string	&getUri() const;
+		const std::string	&getHttpVersion() const;
+		const std::string	&getBody() const;
+		const std::map<std::string, std::string>	&getHeaders() const;
 };
