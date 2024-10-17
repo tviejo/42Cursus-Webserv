@@ -169,6 +169,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
 			if (bytesRead > 0)
 			{
+				std::cerr << bytesRead << " bytes received : " << std::string(buffer, bytesRead) << "\n";
 				_partialRequest[clientSocket].append(buffer, bytesRead);
 				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
 				{
@@ -178,6 +179,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			}
 			else if (bytesRead == 0)
 			{
+				std::cerr << "Error ? bytesRead == 0\n";
 				epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 				close(clientSocket);
 				_partialRequest.erase(clientSocket);
@@ -210,6 +212,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	}
 	if (event & (EPOLLRDHUP | EPOLLHUP))
 	{
+		std::cout << "event: EPOLLRDHUP | EPOLLHUP\n";
 		//client disconnected
 		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 		close(clientSocket);
@@ -225,7 +228,7 @@ void	Server::run()
 	struct epoll_event	events[MAX_EVENTS];
 	while (true)
 	{
-		int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, -1);
+		int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, 100);
 		if (nfds == -1)
 			throw std::runtime_error("[Server::run()] epoll_wait failed");
 		for (int i = 0; i < nfds; i++)
@@ -237,5 +240,22 @@ void	Server::run()
 			else
 				handleClientEvent(events[i].data.fd, events[i].events);
 		}
+		std::cout << "epoll_wait returns; nfds: " << nfds << std::endl;
+		if (NonBlockingGetch::getche() == 27)  // Echap to shutdown webserver
+		{
+			shutDown();
+			return;
+		}
+	}
+}
+
+void	Server::shutDown()
+{
+	std::map<int,SockInfos>::iterator it = _sockets.begin();
+	std::map<int,SockInfos>::iterator end = _sockets.end();
+	for (; it != end; it++)
+	{
+		shutdown(it->first, SHUT_RDWR);
+		close(it->first);
 	}
 }

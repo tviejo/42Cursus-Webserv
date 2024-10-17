@@ -41,4 +41,5 @@ class Server
 		void	sendResponse(int clientSocket, std::string &response);
 		void	handleOutgoingData(int clientSocket);
 		ssize_t	safeRecv(int socketfd, void *buffer, size_t len, int flags);
+		void	shutDown();
 };

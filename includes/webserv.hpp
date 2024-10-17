@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:52:56 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/14 18:05:58 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/17 19:46:16 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,3 +35,4 @@
 #include "../srcs/server/Server.hpp"
 #include "../srcs/request/HttpRequest.hpp"
 #include "../srcs/response/response.hpp"
+#include "../srcs/utils/NonBlockingGetch.hpp"
