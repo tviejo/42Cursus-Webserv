@@ -72,7 +72,7 @@ void	Server::init()
 
 void	Server::handleNewConnection(int servSock)
 {
-	std::cout << "[handleNewConnection()] incoming connection on server port: "
+	std::cout << "handleNewConnection(): incoming connection on server port: "
 		<< _sockets[servSock].server->port << "  (servSock: " << servSock << ")\n";
 	
 	struct sockaddr_in	clientAddr;
@@ -81,34 +81,34 @@ void	Server::handleNewConnection(int servSock)
 
 	int	clientSocket = accept(servSock, (struct sockaddr*)&clientAddr, &clientAddrlen);	
 	if (clientSocket == -1)
-		throw std::runtime_error("Accept failed");
+		throw std::runtime_error("[handleNewConnection/accept] Accept failed");
 	fcntl(clientSocket, F_SETFL, O_NONBLOCK);
 	epoll_ev.events = EPOLLIN;
 	epoll_ev.data.fd = clientSocket;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &epoll_ev) == -1)
 	{
 		close(clientSocket);
-		throw std::runtime_error("Failed to add to epoll");
+		throw std::runtime_error("[handleNewConnection/epoll_ctl] Failed to add to epoll");
 	}
 	SockInfos sinfos = {.server = _sockets[servSock].server, .isServer = false};
 	_sockets[clientSocket] = sinfos;
-	std::cout << "    -> new client socket: " << clientSocket << std::endl;
+	
+	char cliIP[16];
+	inet_ntop(AF_INET, &clientAddr.sin_addr, cliIP, sizeof(cliIP));
+	std::cout << "   -> new client @IP: " << cliIP << ":" << ntohs(clientAddr.sin_port)
+		<< " on socket: " << clientSocket << std::endl;
 }
 
 ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 {
-	//std::cout << "safeRecv()\n";
-	
 	ssize_t	result = recv(socketfd, buffer, len, flags);
 	if (result == -1)
-		throw std::runtime_error("Receive failed");
+		throw std::runtime_error("[safeRecv/recv] Receive failed");
 	return result;	
 }
 
 void	Server::handleOutgoingData(int clientSocket)
 {
-	//std::cout << "handleOutgoingData()\n";
-	
 	std::string &toSend = _partialResponse[clientSocket];
 	ssize_t bytes_sent = send(clientSocket, toSend.c_str(), toSend.size(), 0);
 	if (bytes_sent < 0)
@@ -133,11 +133,11 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	std::string	response;
 
 	if (request.get_method() == "GET")
-		response = handleGetResponse(*_sockets[clientSocket].server, request);
+		response = Response::handleGet(*_sockets[clientSocket].server, request);
 	else if (request.get_method() == "POST")
-		response = handlePostResponse(*_sockets[clientSocket].server, request);
+		response = Response::handlePost(*_sockets[clientSocket].server, request);
 	else if (request.get_method() == "DELETE")
-		response = handleDeleteResponse(*_sockets[clientSocket].server, request);
+		response = Response::handleDelete(*_sockets[clientSocket].server, request);
 	/*else
 		response = handleResponse(request);*/
 	sendResponse(clientSocket, response);
@@ -157,7 +157,17 @@ void	Server::sendResponse(int clientSocket, std::string &response)
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
-	std::cout << "handleClientEvent()   socket: " << clientSocket << "\n";
+	// getsockname() & inet_ntop() only for debug/info:
+	sockaddr_in	cliAddr, srvAddr;
+	socklen_t	cliAddrLen = sizeof(cliAddr), srvAddrLen = sizeof(srvAddr);
+	char cliIP[16], srvIP[16];
+	getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen);
+	getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen);
+	inet_ntop(AF_INET, &cliAddr.sin_addr, cliIP, sizeof(cliIP));
+	inet_ntop(AF_INET, &srvAddr.sin_addr, srvIP, sizeof(srvIP));
+	std::cout << "handleClientEvent()  socket: " << clientSocket
+		<< "  (" << cliIP << ":" << ntohs(cliAddr.sin_port)
+		<< " <=> " << srvIP << ":" << ntohs(srvAddr.sin_port) << ")\n";
 	
 	if (event & EPOLLIN)
 	{
@@ -168,7 +178,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
 			if (bytesRead > 0)
 			{
-				std::cerr << bytesRead << " bytes received : \n" << std::string(buffer, bytesRead) << "\n";
+				std::cout << "   [EPOLLIN] " << bytesRead << " bytes received : \n" << std::string(buffer, bytesRead) << "\n";
 				_partialRequest[clientSocket].append(buffer, bytesRead);
 				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
 				{
@@ -178,7 +188,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			}
 			else if (bytesRead == 0)
 			{
-				std::cerr << "Error ? bytesRead == 0\n";
+				std::cerr << "   [EPOLLIN] Error ? bytesRead == 0\n";
 				epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 				close(clientSocket);
 				_partialRequest.erase(clientSocket);
@@ -186,7 +196,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 		}
 		catch (std::exception &e)
 		{
-			std::cerr << "Error receiving data from client : " << e.what() << std::endl;
+			std::cerr << "   [EPOLLIN] Error receiving data from client : " << e.what() << std::endl;
 			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 			close(clientSocket);
 			_partialRequest.erase(clientSocket);
@@ -196,6 +206,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	{
 		try 
 		{
+			std::cout << "   [EPOLLOUT] -> handleOutgoingData()\n";
 			handleOutgoingData(clientSocket);
 		}
 		catch (std::exception &e)
@@ -211,8 +222,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	}
 	if (event & (EPOLLRDHUP | EPOLLHUP))
 	{
-		std::cout << "event: EPOLLRDHUP | EPOLLHUP\n";
-		//client disconnected
+		std::cout << "   [EPOLLRDHUP | EPOLLHUP] client disconnected\n";
 		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 		close(clientSocket);
 		_partialRequest.erase(clientSocket);
@@ -222,7 +232,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 
 void	Server::run()
 {
-	std::cout << "Server::run()   --- Press <Esc> to properly shutdown webserv ---\n";
+	std::cout << "Server::run()   --- Press <Esc> to properly shutdown webserv ---\n\n";
 	Terminal::disableEcho();
 	Terminal::disableSignals();
 	struct epoll_event	events[MAX_EVENTS];

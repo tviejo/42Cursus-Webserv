@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:39:54 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/18 13:35:58 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/18 21:33:47 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ int main(int ac, char **av)
 			return EXIT_FAILURE;
 	}
 	try	{
+		Response::setupContentTypeMap();
 		std::string confFileName((ac >= 2) ? av[1] : "configs/default.conf");
 		Config config(confFileName);
 		config.printConfig();
