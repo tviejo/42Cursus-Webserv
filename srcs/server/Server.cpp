@@ -16,7 +16,6 @@ void	Server::setupSockets()
 	epoll_ev.events = EPOLLIN;
 
 	const std::vector<t_server> &servers = _config.getServers();
-	//size_t index = 0;
 	for (std::vector<t_server>::const_iterator it = servers.begin(); it != servers.end(); it++)
 	{
 		int	sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,8 +38,7 @@ void	Server::setupSockets()
 		}
 		SockInfos sinfo = {.server = const_cast<t_server *>(&*it), .isServer = true};
 		_sockets[sock] = sinfo;
-		//_servers[sock] = const_cast<t_server *>(&*it);
-		
+				
 		epoll_ev.data.fd = sock;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, sock, &epoll_ev) == -1)
 			throw std::runtime_error("[setupSockets] Failed to add server socket to epoll");
@@ -74,7 +72,8 @@ void	Server::init()
 
 void	Server::handleNewConnection(int servSock)
 {
-	std::cout << "handleNewConnection()\n";
+	std::cout << "[handleNewConnection()] incoming connection on server port: "
+		<< _sockets[servSock].server->port << "  (servSock: " << servSock << ")\n";
 	
 	struct sockaddr_in	clientAddr;
 	socklen_t			clientAddrlen = sizeof(clientAddr);
@@ -93,11 +92,12 @@ void	Server::handleNewConnection(int servSock)
 	}
 	SockInfos sinfos = {.server = _sockets[servSock].server, .isServer = false};
 	_sockets[clientSocket] = sinfos;
+	std::cout << "    -> new client socket: " << clientSocket << std::endl;
 }
 
 ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 {
-	std::cout << "safeRecv()\n";
+	//std::cout << "safeRecv()\n";
 	
 	ssize_t	result = recv(socketfd, buffer, len, flags);
 	if (result == -1)
@@ -107,7 +107,7 @@ ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 
 void	Server::handleOutgoingData(int clientSocket)
 {
-	std::cout << "handleOutgoingData()\n";
+	//std::cout << "handleOutgoingData()\n";
 	
 	std::string &toSend = _partialResponse[clientSocket];
 	ssize_t bytes_sent = send(clientSocket, toSend.c_str(), toSend.size(), 0);
@@ -127,7 +127,7 @@ void	Server::handleOutgoingData(int clientSocket)
 
 void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 {
-	std::cout << "processRequest()\n";
+	std::cout << "processRequest()   socket: " << clientSocket << "\n";
 	
 	HTTPRequest	request(clientRequest);
 	std::string	response;
@@ -141,12 +141,11 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	/*else
 		response = handleResponse(request);*/
 	sendResponse(clientSocket, response);
-	
 }
 
 void	Server::sendResponse(int clientSocket, std::string &response)
 {
-	std::cout << "sendResponse()\n";
+	std::cout << "sendResponse()   socket: " << clientSocket << "\n";
 	
 	_partialResponse[clientSocket] = response;
 	struct epoll_event epoll_ev;
@@ -158,7 +157,7 @@ void	Server::sendResponse(int clientSocket, std::string &response)
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
-	std::cout << "handleClientEvent()\n";
+	std::cout << "handleClientEvent()   socket: " << clientSocket << "\n";
 	
 	if (event & EPOLLIN)
 	{
@@ -169,7 +168,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
 			if (bytesRead > 0)
 			{
-				std::cerr << bytesRead << " bytes received : " << std::string(buffer, bytesRead) << "\n";
+				std::cerr << bytesRead << " bytes received : \n" << std::string(buffer, bytesRead) << "\n";
 				_partialRequest[clientSocket].append(buffer, bytesRead);
 				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
 				{
@@ -223,30 +222,46 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 
 void	Server::run()
 {
-	std::cout << "Server::run()\n";
-
+	std::cout << "Server::run()   --- Press <Esc> to properly shutdown webserv ---\n";
 	struct epoll_event	events[MAX_EVENTS];
-	while (true)
+
+	while (isAlive())
 	{
-		int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, 100);
+		int nfds = epoll_wait(_epollFd, events, MAX_EVENTS, 100);  // timeout 100ms
 		if (nfds == -1)
 			throw std::runtime_error("[Server::run()] epoll_wait failed");
 		for (int i = 0; i < nfds; i++)
 		{
-			//if (std::find(_socket.begin(), _socket.end(), events[i].data.fd) != _socket.end()) // rethink the iteration over the sockets, find a way to search for the sockets directly?
-			//if (_servers.find(events[i].data.fd) == _servers.end())
 			if (_sockets[events[i].data.fd].isServer)
 				handleNewConnection(events[i].data.fd);
 			else
 				handleClientEvent(events[i].data.fd, events[i].events);
 		}
-		std::cout << "epoll_wait returns; nfds: " << nfds << std::endl;
-		if (NonBlockingGetch::getche() == 27)  // Echap to shutdown webserver
-		{
-			shutDown();
-			return;
-		}
 	}
+}
+
+bool	Server::isAlive()
+{
+	static bool isShutdownConfirmed = false;
+	char c;
+	
+	if ((c = NonBlockingGetch::getch()) == 27)  // <Esc> to shutdown webserver
+	{
+		if (isShutdownConfirmed) {
+			shutDown();
+			return false;
+		}
+		isShutdownConfirmed = true;
+		std::cout << "\n  CAUTION : You are \"sur le point\" to SHUTDOWN this magnificient WebServer.\n";
+		std::cout << "  Are you ABSOLUTLY sure that is you REALLY want to do ?\n";
+		std::cout << "  Press <Esc> to IRREVOCABLY confirm or any other key to abort.\n";
+	}
+	else if (c != -1 && isShutdownConfirmed)
+	{
+		std::cout << "\nShutdown aborted ; webserv is still alive :-)\n";
+		isShutdownConfirmed = false;
+	}
+	return true;
 }
 
 void	Server::shutDown()

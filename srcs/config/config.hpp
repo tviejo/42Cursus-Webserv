@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:57:38 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/17 18:44:42 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/18 03:38:15 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,8 @@ typedef struct server
     std::string         root;   // server root directory (exple: "/srv/www")
     std::string         error;  // default error page
     int                 max_body_size;
-    std::vector<t_route> routes;
-    //std::map<std::string, t_route> routes;  // map<path, t_route>
+    //std::vector<t_route> routes;
+    std::map<std::string, t_route> routes;  // map<path, t_route>
 } t_server;
 
 class Config

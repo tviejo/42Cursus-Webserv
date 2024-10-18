@@ -42,4 +42,5 @@ class Server
 		void	handleOutgoingData(int clientSocket);
 		ssize_t	safeRecv(int socketfd, void *buffer, size_t len, int flags);
 		void	shutDown();
+		bool	isAlive();
 };

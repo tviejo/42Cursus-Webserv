@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/17 14:45:59 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/18 04:04:32 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ const t_route & getRouteFromUri(const t_server & server, std::string uri)
 {
 	(void)server;
 	(void)uri;
-	return server.routes[0];
+	return server.routes.begin()->second;
 }
 
 std::string	handleGetResponse(const t_server & server, const HTTPRequest & req)

@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:39:54 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/17 01:49:47 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/18 01:28:21 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,6 @@ int main(int ac, char **av)
 		Server server(config);
 		server.init();
 		server.run();
-		//			create a socket and bind it to ip and port
-		//			mark the socket for listening in and accept call
-		//			close(?) the listening socket
-		//			do something upon receiving message (method)
-		//
 	}
 	catch (const std::exception &e)
 	{
