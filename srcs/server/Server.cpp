@@ -223,6 +223,8 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 void	Server::run()
 {
 	std::cout << "Server::run()   --- Press <Esc> to properly shutdown webserv ---\n";
+	Terminal::disableEcho();
+	Terminal::disableSignals();
 	struct epoll_event	events[MAX_EVENTS];
 
 	while (isAlive())
@@ -238,14 +240,16 @@ void	Server::run()
 				handleClientEvent(events[i].data.fd, events[i].events);
 		}
 	}
+	Terminal::enableEcho();
+	Terminal::enableSignals();
 }
 
 bool	Server::isAlive()
 {
 	static bool isShutdownConfirmed = false;
-	char c;
+	int c;
 	
-	if ((c = NonBlockingGetch::getch()) == 27)  // <Esc> to shutdown webserver
+	if ((c = Terminal::getch()) == 27)  // <Esc> to shutdown webserver
 	{
 		if (isShutdownConfirmed) {
 			shutDown();

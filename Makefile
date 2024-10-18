@@ -20,7 +20,7 @@ SRCS		+=  server/Server.cpp
 
 SRCS		+=  utils/utils.cpp
 SRCS		+=  utils/timer.cpp
-SRCS		+=  utils/NonBlockingGetch.cpp
+SRCS		+=  utils/Terminal.cpp
 
 vpath %.cpp $(SRC_DIR)
 
