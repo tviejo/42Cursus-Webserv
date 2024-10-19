@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/19 13:57:16 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/19 20:32:11 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,10 +75,11 @@ std::string Response::getContentType(const std::string & uri)
 	return _contentTypeMap[ext];
 }
 
-std::ifstream::pos_type Response::getFileSize(const std::string & filename)
+std::streampos Response::getFileSize(const std::string & filename)
 {
-    std::ifstream ifs(filename.c_str(), std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
-    return ifs.tellg();
+	std::ifstream ifs(filename.c_str(), std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
+	std::streampos tellg = ifs.tellg();
+	return (tellg == 9223372036854775807) ? std::streampos(-1) : tellg;
 }
 
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req)
@@ -97,20 +98,17 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	else {
 		std::string filename = route.directory + req.getUri();
 		ssize_t filesize = getFileSize(filename);
-		if (filesize == -1)
-			return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
-		
+		std::cout << "         filename: '" << filename << "'  filesize: " << filesize << "\n";
+		if (filesize == -1) {
+			filename = server.root + server.error;
+			filesize = getFileSize(filename);
+			if (filesize == -1)  // 404 error page is missing
+				return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+			std::string header = makeResponseHeader(404, "Not Found", getContentType("html"), filesize);
+			return new OutgoingData(header, filename, true);
+		}
 		std::string header = makeResponseHeader(200, "OK", getContentType(req.getUri()), filesize);
 		return new OutgoingData(header, filename, true);
-		
-		/*std::ifstream ifs((route.directory + req.getUri()).c_str(), std::ios_base::in);
-		std::ostringstream oss;
-		while (ifs) {
-			std::getline(ifs, content);
-			oss << content;
-		}
-		content = oss.str();
-		return makeResponse(200, "OK", "text/html; charset=utf-8", content);*/
 	}
 }
 

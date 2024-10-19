@@ -114,6 +114,7 @@ void	Server::handleOutgoingData(int clientSocket)
 	if (bytes_sent < 0)
 		throw std::runtime_error("[handleOutgoingData/send] error while sending response to client");
 	
+	//std::cout << std::string(toSend->getbufptr(), toSend->getbuflen()) << "\n";
 	if (bytes_sent < toSend->getbuflen())
 	{
 		toSend->bufferForward(bytes_sent);
