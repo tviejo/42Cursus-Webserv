@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/19 20:32:11 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/20 00:23:33 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	if (route.path == "/cgi")
 	{
 		// return new OutgoingData(cgiRespHeader, cgiRespBody);
-		return NULL;
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 	}
 	else {
 		std::string filename = route.directory + req.getUri();
