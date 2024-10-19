@@ -230,9 +230,9 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 			close(clientSocket);
 			if (_responses.find(clientSocket) != _responses.end()) {
-			delete _responses[clientSocket];
-			_responses.erase(clientSocket);
-		}
+				delete _responses[clientSocket];
+				_responses.erase(clientSocket);
+			}
 		}
 		//handle outgoing data (HTTP request)
 		//Read from clientSocket, parse HTTP request
