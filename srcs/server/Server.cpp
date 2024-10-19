@@ -109,13 +109,22 @@ ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 
 void	Server::handleOutgoingData(int clientSocket)
 {
-	std::string &toSend = _partialResponse[clientSocket];
-	ssize_t bytes_sent = send(clientSocket, toSend.c_str(), toSend.size(), 0);
+	OutgoingData *toSend = _responses[clientSocket];
+	ssize_t bytes_sent = send(clientSocket, toSend->getbufptr(), toSend->getbuflen(), 0);
 	if (bytes_sent < 0)
 		throw std::runtime_error("[handleOutgoingData/send] error while sending response to client");
-	if ((size_t)bytes_sent < toSend.size())
-		_partialResponse[clientSocket].erase(0, bytes_sent);
+	
+	if (bytes_sent < toSend->getbuflen())
+	{
+		toSend->bufferForward(bytes_sent);
+	}
+	else if (toSend->hasRemainingData())
+	{
+		toSend->loadBuffer();
+	}
 	else {
+		delete toSend;
+		_responses.erase(clientSocket);
 		struct epoll_event epoll_ev;
 		epoll_ev.events = 0;
 		epoll_ev.data.fd = clientSocket;
@@ -130,7 +139,8 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	std::cout << "processRequest()   socket: " << clientSocket << "\n";
 	
 	HTTPRequest	request(clientRequest);
-	std::string	response;
+	std::cout << "  -> " << request << std::endl;
+	OutgoingData *response;
 
 	if (request.get_method() == "GET")
 		response = Response::handleGet(*_sockets[clientSocket].server, request);
@@ -143,11 +153,11 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	sendResponse(clientSocket, response);
 }
 
-void	Server::sendResponse(int clientSocket, std::string &response)
+void	Server::sendResponse(int clientSocket, OutgoingData *response)
 {
 	std::cout << "sendResponse()   socket: " << clientSocket << "\n";
 	
-	_partialResponse[clientSocket] = response;
+	_responses[clientSocket] = response;
 	struct epoll_event epoll_ev;
 	epoll_ev.events = EPOLLOUT;
 	epoll_ev.data.fd = clientSocket;
@@ -157,7 +167,7 @@ void	Server::sendResponse(int clientSocket, std::string &response)
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
-	// getsockname() & inet_ntop() only for debug/info:
+	// getpeername() and getsockname() for debug/info:
 	sockaddr_in	cliAddr, srvAddr;
 	socklen_t	cliAddrLen = sizeof(cliAddr), srvAddrLen = sizeof(srvAddr);
 	char cliIP[16], srvIP[16];
@@ -171,15 +181,19 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	
 	if (event & EPOLLIN)
 	{
-		char		buffer[MAX_BUFFER_SIZE];
+		char		buffer[IO_BUFFER_SIZE];
 	
 		try 
 		{
 			ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
 			if (bytesRead > 0)
 			{
-				std::cout << "   [EPOLLIN] " << bytesRead << " bytes received : \n" << std::string(buffer, bytesRead) << "\n";
+				std::cout << "   [EPOLLIN] " << bytesRead << " bytes received\n";
 				_partialRequest[clientSocket].append(buffer, bytesRead);
+				// Attention ici on s'arrete dès la fin des headers HTTP, on ne lit pas le body.
+				// Si il y a un body il faudra le lire par la suite avant l'appel à processRequest() ou apres un
+				// premier appel a processRequest qui permettra deja de refuser ou d'accepter
+				// la requete en attendant de lire le body (requete POST).
 				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
 				{
 					processRequest(clientSocket, _partialRequest[clientSocket]);

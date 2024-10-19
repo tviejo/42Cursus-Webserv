@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/18 21:30:32 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/19 13:57:16 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,22 @@ void Response::setupContentTypeMap()
 	_contentTypeMap["gif"] = "image/gif";
 }
 
-std::string	Response::makeResponse(uint32_t status,
+std::string	Response::makeResponseHeader(uint32_t status,
+						 const std::string & statusMessage, 
+						 const std::string & contentType,
+						 size_t contentLength)
+{
+	std::ostringstream	response;
+
+	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
+	response << "Content-Type: " << contentType << "\r\n"; 
+	response << "Content-Length: " << contentLength << "\r\n"; 
+	response << "Connection: Closed\r\n";
+	response << "\r\n";
+	return response.str();
+}
+
+OutgoingData *	Response::makeResponse(uint32_t status,
 						 const std::string & statusMessage, 
 						 const std::string & contentType,
 						 const std::string & content)
@@ -39,12 +54,16 @@ std::string	Response::makeResponse(uint32_t status,
 	response << "Content-Length: " << content.length() << "\r\n"; 
 	response << "Connection: Closed\r\n";
 	response << "\r\n";
-	response << content;
-	return response.str();
+	//response << content;
+	//return response.str();
+	return new OutgoingData(response.str(), content);
 }
 
 const t_route & Response::getRouteFromUri(const t_server & server, std::string uri)
 {
+	// TODO : return first route that match uri 
+	// if not found retry in a loop with uri without the last (1,2,3,...) folder(s)
+	// it will ultimately match with "/"
 	(void)server;
 	(void)uri;
 	return server.routes.begin()->second;
@@ -56,43 +75,55 @@ std::string Response::getContentType(const std::string & uri)
 	return _contentTypeMap[ext];
 }
 
-std::string	Response::handleGet(const t_server & server, const HTTPRequest & req)
+std::ifstream::pos_type Response::getFileSize(const std::string & filename)
 {
-	//std::string content = getContentFromReqUri(req.getUri());
-	/*std::string content = "<HTML><HEAD></HEAD><BODY><H1>Hello Big Title !</H1><P><CODE>URI: " + req.getUri()
-		+ "</CODE><P>Hello HTML page content !<P>Vive le père Noël.</BODY></HTML>";*/
-	
+    std::ifstream ifs(filename.c_str(), std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
+    return ifs.tellg();
+}
+
+OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req)
+{
 	const t_route &route = getRouteFromUri(server, req.getUri());
 	if (route.methods.find(req.get_method()) == route.methods.end())
 	{
 		std::cout << "Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
 	}
-	std::string content;
-	std::ifstream ifs((route.directory + req.getUri()).c_str(), std::ios_base::in);
-	std::ostringstream oss;
-	while (ifs) {
-		std::getline(ifs, content);
-		oss << content;
+	if (route.path == "/cgi")
+	{
+		// return new OutgoingData(cgiRespHeader, cgiRespBody);
+		return NULL;
 	}
-	content = oss.str();
-	if (content.empty() == true)
-		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
-	else
-		return makeResponse(200, "OK", getContentType(req.getUri()), content);
-		//return makeResponse(200, "OK", "text/html; charset=utf-8", content);
+	else {
+		std::string filename = route.directory + req.getUri();
+		ssize_t filesize = getFileSize(filename);
+		if (filesize == -1)
+			return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		
+		std::string header = makeResponseHeader(200, "OK", getContentType(req.getUri()), filesize);
+		return new OutgoingData(header, filename, true);
+		
+		/*std::ifstream ifs((route.directory + req.getUri()).c_str(), std::ios_base::in);
+		std::ostringstream oss;
+		while (ifs) {
+			std::getline(ifs, content);
+			oss << content;
+		}
+		content = oss.str();
+		return makeResponse(200, "OK", "text/html; charset=utf-8", content);*/
+	}
 }
 
-std::string	Response::handlePost(const t_server & server, const HTTPRequest & req)
+OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req)
 {
 	(void)server;
 	(void)req;
-	return ("dummy");
+	return NULL;
 }
 
-std::string	Response::handleDelete(const t_server & server, const HTTPRequest & req)
+OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req)
 {
 	(void)server;
 	(void)req;
-	return ("dummy");
+	return NULL;
 }

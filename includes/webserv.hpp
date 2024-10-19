@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:52:56 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/18 20:41:29 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/19 07:09:48 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,4 +35,5 @@
 #include "../srcs/server/Server.hpp"
 #include "../srcs/request/HttpRequest.hpp"
 #include "../srcs/response/Response.hpp"
+#include "../srcs/response/OutgoingData.hpp"
 #include "../srcs/utils/Terminal.hpp"

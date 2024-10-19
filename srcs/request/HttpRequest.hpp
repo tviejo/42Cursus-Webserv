@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   request.hpp                                        :+:      :+:    :+:   */
+/*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/14 17:56:51 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/19 14:52:40 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,3 +37,5 @@ class HTTPRequest
 		const std::string	&getBody() const;
 		const std::map<std::string, std::string>	&getHeaders() const;
 };
+
+std::ostream & operator << (std::ostream &, const HTTPRequest &);

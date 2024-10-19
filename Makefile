@@ -15,6 +15,7 @@ SRCS		+=  config/config.cpp
 SRCS		+=  request/HttpRequest.cpp
 
 SRCS		+=  response/Response.cpp
+SRCS		+=  response/OutgoingData.cpp
 
 SRCS		+=  server/Server.cpp
 
