@@ -127,11 +127,11 @@ void	Server::handleOutgoingData(int clientSocket)
 		delete toSend;
 		_responses.erase(clientSocket);
 		struct epoll_event epoll_ev;
-		epoll_ev.events = 0;
+		epoll_ev.events = EPOLLIN;
 		epoll_ev.data.fd = clientSocket;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientSocket, &epoll_ev) == -1)
 			throw std::runtime_error("[handleOutgoingData/epoll_ctl] failed to modify client socket events to 0");
-		shutdown(clientSocket, SHUT_RDWR);
+		//shutdown(clientSocket, SHUT_RDWR);
 	}
 }
 
@@ -229,6 +229,10 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			std::cerr << "Error sending data to client : " << e.what() << std::endl;
 			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 			close(clientSocket);
+			if (_responses.find(clientSocket) != _responses.end()) {
+			delete _responses[clientSocket];
+			_responses.erase(clientSocket);
+		}
 		}
 		//handle outgoing data (HTTP request)
 		//Read from clientSocket, parse HTTP request
@@ -241,6 +245,10 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 		close(clientSocket);
 		_partialRequest.erase(clientSocket);
+		if (_responses.find(clientSocket) != _responses.end()) {
+			delete _responses[clientSocket];
+			_responses.erase(clientSocket);
+		}
 		_sockets.erase(clientSocket);
 	}
 }
