@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/20 00:23:33 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/20 04:01:10 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,13 +75,6 @@ std::string Response::getContentType(const std::string & uri)
 	return _contentTypeMap[ext];
 }
 
-std::streampos Response::getFileSize(const std::string & filename)
-{
-	std::ifstream ifs(filename.c_str(), std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
-	std::streampos tellg = ifs.tellg();
-	return (tellg == 9223372036854775807) ? std::streampos(-1) : tellg;
-}
-
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req)
 {
 	const t_route &route = getRouteFromUri(server, req.getUri());
@@ -96,7 +89,16 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 	}
 	else {
-		std::string filename = route.directory + req.getUri();
+		std::string filename;
+		if (req.getUri() == route.path && route.autoindex)
+			filename = route.directory + "/" + route.index;
+		else
+			filename = route.directory + req.getUri();
+		if (isDirectory(filename)) {
+			std::ostringstream entries;
+			readDirectory(filename, entries);
+			return makeResponse(200, "OK", "text/plain", entries.str());
+		}
 		ssize_t filesize = getFileSize(filename);
 		std::cout << "         filename: '" << filename << "'  filesize: " << filesize << "\n";
 		if (filesize == -1) {

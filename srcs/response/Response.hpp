@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:33 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/19 13:01:10 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/20 03:29:46 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,5 +34,4 @@ public:
 									 	 const std::string & content);
 	static void				setupContentTypeMap();
 	static std::string		getContentType(const std::string & uri);
-	static std::ifstream::pos_type	getFileSize(const std::string & filename);
 };

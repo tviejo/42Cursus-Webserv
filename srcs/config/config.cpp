@@ -6,26 +6,12 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:56:20 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/18 04:02:04 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/20 03:52:32 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "webserv.hpp"
 #include "config.hpp"
-
-inline std::string &trimRef(std::string &str, const std::string &charToTrim = " \t\n\r\f\v")
-{
-	str.erase(str.find_last_not_of(charToTrim) + 1);
-	str.erase(0, str.find_first_not_of(charToTrim));
-	return str;
-}
-
-inline std::string trim(std::string str, const std::string &charToTrim = " \t\n\r\f\v")
-{
-	str.erase(str.find_last_not_of(charToTrim) + 1);
-	str.erase(0, str.find_first_not_of(charToTrim));
-	return str;
-}
 
 Config::Config(std::string conffile)
 {
@@ -140,8 +126,12 @@ void    Config::parseRoute(std::string &routePath, std::ifstream &file, t_route 
 			route.directory = server.root + trim(line.substr(line.find("=") + 1));
 		if (line.find("autoindex = ") != std::string::npos)
 			route.autoindex = line.substr(line.find("autoindex = ") + 12) == "on" ? true : false;
+		else
+			route.autoindex = server.autoindex; // if autoindex is not defined for route get the global server value
 		if (line.find("max_body_size = ") != std::string::npos)
 			route.max_body_size = std::atol(line.substr(line.find("max_body_size = ") + 16).c_str());
+		else
+			route.max_body_size = server.max_body_size; // if max_body_size is not defined for route get the global server value
 	}
 }
 

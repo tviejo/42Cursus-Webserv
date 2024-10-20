@@ -27,7 +27,6 @@ class Server
 														 // for efficiency and mandatory to handle binary stuff (POST bin file)
 		//std::map<int, std::ofstream>	_requestStreams;
 		
-		//std::map<int, std::string>	_partialResponse;
 		std::map<int, class OutgoingData *>	_responses;
 	
 		Server();
@@ -36,8 +35,7 @@ class Server
 		~Server() {};
 		void	init();
 		void	run();
-		void	setupSockets();
-		//void	initEpoll();
+		void	setupListeningSockets();
 		void	eventLoop();
 		void	handleNewConnection(int socket);
 		void	handleClientEvent(int socket, uint32_t event);

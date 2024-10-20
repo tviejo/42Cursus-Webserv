@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-void	Server::setupSockets()
+void	Server::setupListeningSockets()
 {
 	std::cout << "setupSockets()\n";
 	
@@ -45,29 +45,10 @@ void	Server::setupSockets()
 	}
 }
 
-/*void	Server::initEpoll()
-{
-	std::cout << "initEpoll()\n";
-
-	_epollFd = epoll_create1(0);
-	if (_epollFd == -1)
-		throw std::runtime_error("Failed to create epoll instance");
-	for (const int* it = _socket.begin(); it != _socket.end(); it++)
-	{
-		struct epoll_event epoll_ev;
-		epoll_ev.events = EPOLLIN;
-		epoll_ev.data.fd = *it;
-		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, *it, &epoll_ev) == -1)
-			throw std::runtime_error("Failed to add server socket to epoll");
-	}
-}*/
-
 void	Server::init()
 {
 	std::cout << "init()\n";
-	
-	setupSockets();
-	//initEpoll();
+	setupListeningSockets();
 }
 
 void	Server::handleNewConnection(int servSock)
@@ -234,10 +215,6 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 				_responses.erase(clientSocket);
 			}
 		}
-		//handle outgoing data (HTTP request)
-		//Read from clientSocket, parse HTTP request
-		//Prepare response and sent it to the client
-
 	}
 	if (event & (EPOLLRDHUP | EPOLLHUP))
 	{
@@ -253,11 +230,8 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	}
 }
 
-void	Server::run()
+void	Server::eventLoop()
 {
-	std::cout << "Server::run()   --- Press <Esc> to properly shutdown webserv ---\n\n";
-	Terminal::disableEcho();
-	Terminal::disableSignals();
 	struct epoll_event	events[MAX_EVENTS];
 
 	while (isAlive())
@@ -273,6 +247,14 @@ void	Server::run()
 				handleClientEvent(events[i].data.fd, events[i].events);
 		}
 	}
+}
+
+void	Server::run()
+{
+	std::cout << "Server::run()   --- Press <Esc> to properly shutdown webserv ---\n\n";
+	Terminal::disableEcho();
+	Terminal::disableSignals();
+	eventLoop();
 	Terminal::enableEcho();
 	Terminal::enableSignals();
 }
