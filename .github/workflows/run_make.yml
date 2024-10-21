@@ -8,8 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout code with submodules
       uses: actions/checkout@v3
+      with:
+        submodules: true  # Initialize and update submodules
+        fetch-depth: 0
 
     - name: Install dependencies
       run: |
@@ -20,6 +23,12 @@ jobs:
 
     - name: Verify C++ version
       run: clang++ --version
+
+    - name: Update submodules
+      run: git submodule update --init --recursive
+
+    - name: Verify submodule status
+      run: git submodule status
 
     - name: Run all
       run: make all
