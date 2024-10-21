@@ -37,3 +37,5 @@ class HTTPRequest
 		const std::string	&getBody() const;
 		const std::map<std::string, std::string>	&getHeaders() const;
 };
+
+std::ostream & operator << (std::ostream &, const HTTPRequest &);

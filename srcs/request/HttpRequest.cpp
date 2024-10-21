@@ -6,7 +6,7 @@
 /*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/17 17:54:17 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/19 14:58:57 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,4 +81,9 @@ const std::string	&HTTPRequest::getBody() const
 const std::map<std::string, std::string>	&HTTPRequest::getHeaders() const
 {
 	return _headers;
+}
+
+std::ostream & operator << (std::ostream &os, const HTTPRequest &req)
+{
+	return os << req.get_method() << " " << req.getUri() << " (" << req.getHttpVersion() << ")";
 }

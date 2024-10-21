@@ -14,12 +14,14 @@ SRCS		+=  config/config.cpp
 
 SRCS		+=  request/HttpRequest.cpp
 
-SRCS		+=  response/response.cpp
+SRCS		+=  response/Response.cpp
+SRCS		+=  response/OutgoingData.cpp
 
 SRCS		+=  server/Server.cpp
 
 SRCS		+=  utils/utils.cpp
 SRCS		+=  utils/timer.cpp
+SRCS		+=  utils/Terminal.cpp
 
 vpath %.cpp $(SRC_DIR)
 
