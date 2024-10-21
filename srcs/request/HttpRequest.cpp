@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
 /*   Updated: 2024/10/19 14:58:57 by ade-sarr         ###   ########.fr       */
@@ -21,7 +21,7 @@ HTTPRequest::HTTPRequest(const std::string& request)
 	std::string			request_line;
 	std::getline(stream, request_line);
 	std::istringstream	lineStream(request_line);
-	
+
 	lineStream >> _method >> _uri >> _httpVersion;
 	while (std::getline(stream, request_line) && request_line != "\r")
 	{
