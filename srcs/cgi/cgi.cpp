@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/21 11:35:00 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/21 13:32:55 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,9 @@ Cgi &Cgi::operator=(const Cgi &copy)
 
 Cgi::Cgi(std::string path, std::string method, std::string info)
 {
+    this->_header = "";
+    this->_contentLength = 0;
+    this->_isDone = false;
     this->_type = "python3";
     this->_path = path;
     this->_method = method;
@@ -64,6 +67,8 @@ void    Cgi::execute()
     int pid = fork();
     if (pid == 0)
     {
+        close(fd[0]);
+        dup2(fd[1], 1);
         char **envp = this->getEnvp();
         char *args[] = {strdup(this->_path.c_str()), NULL};
         execve(this->_path.c_str(), args, envp);
@@ -71,8 +76,23 @@ void    Cgi::execute()
     }
     else
     {
+        close(fd[1]);
+        char buffer[4096];
+        size_t size = 0;
+        while ((size = read(fd[0], buffer, 4096)) > 0)
+        {
+            this->_response += std::string(buffer, size);
+            this->_contentLength += size;
+        }
         int status;
         waitpid(pid, &status, 0);
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+            throw std::runtime_error("Cgi script failed");
+        else
+        {
+            this->_header = this->createHeader(200, "OK", "/cgi-bin/cgi.html", this->_contentLength);
+            this->_isDone = true;
+        }
     }
 }
 
@@ -100,17 +120,29 @@ void    Cgi::CgiHandler()
     }
 }
 
-int main()
+std::string Cgi::createHeader(size_t status, std::string message, std::string contentType, size_t contentLength)
 {
-    Cgi cgi("./cgi-bin/test.py", "GET", "NAME=thomas");
-    try
-    {
-        cgi.CgiHandler();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    
-    return (0);
+    std::string header;
+    header += "HTTP/1.1 " + std::to_string(status) + " " + message + "\r\n";
+    header += "Content-Type: " + contentType + "\r\n";
+    header += "Content-Length: " + std::to_string(contentLength) + "\r\n";
+    header += "Connection: Closed\r\n";
+    header += "\r\n";
+    return (header);
 }
+
+// int main()
+// {
+//     Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
+//     try
+//     {
+//         cgi.CgiHandler();
+//     }
+//     catch(const std::exception& e)
+//     {
+//         std::cerr << e.what() << '\n';
+//     }
+//     std::cout << cgi.GetHeader() << std::endl;
+//     std::cout << cgi.GetResponse() << std::endl;
+//     return (0);
+// }
