@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:59 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/13 16:07:38 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/21 11:34:42 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,14 +30,15 @@ class Cgi
         Cgi &operator=(const Cgi &copy);
         char **getEnvp();
         void    deleteEnvp(char **envp);
-        std::vector<std::string> _env;
+        std::string _env;
         std::string _path;
         std::string _method;
         std::string _type;
     public:
-        Cgi(std::string path, std::string method);
+        Cgi(std::string path, std::string method, std::string info);
         ~Cgi();
         void execute();
+        void CgiHandler();
         
 };
 

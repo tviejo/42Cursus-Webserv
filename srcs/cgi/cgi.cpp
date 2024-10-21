@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/13 16:12:58 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/21 11:35:00 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ Cgi::Cgi()
 
 Cgi::~Cgi()
 {
+
 }
 
 Cgi::Cgi(const Cgi &copy)
@@ -34,39 +35,36 @@ Cgi &Cgi::operator=(const Cgi &copy)
     return (*this);
 }
 
-Cgi::Cgi(std::string path, std::string method)
+Cgi::Cgi(std::string path, std::string method, std::string info)
 {
     this->_type = "python3";
     this->_path = path;
     this->_method = method;
+    this->_env = info;
 }
+
 
 
 char    **Cgi::getEnvp()
 {
-    char **envp = new char*[100];
-    for (size_t i = 0; i < 1; i++)
-    {
-        envp[i] = strdup("name=thomas");
-    }
+    char **envp = new char*[1];
+    envp[0] = strdup(this->_env.c_str());
     return (envp);
 }
 
 void    Cgi::deleteEnvp(char **envp)
 {
-    for (size_t i = 0; i < this->_env.size(); i++)
-    {
-        delete [] envp[i];
-    }
-    delete [] envp;
+    delete[] envp;
 }
 
 void    Cgi::execute()
 {
-    char **envp = this->getEnvp();
+    int fd[2];
+    pipe(fd);
     int pid = fork();
     if (pid == 0)
     {
+        char **envp = this->getEnvp();
         char *args[] = {strdup(this->_path.c_str()), NULL};
         execve(this->_path.c_str(), args, envp);
         exit(0);
@@ -76,12 +74,43 @@ void    Cgi::execute()
         int status;
         waitpid(pid, &status, 0);
     }
-    this->deleteEnvp(envp);
 }
 
-// int main()
-// {
-//     Cgi cgi("./cgi-bin/test.py", "GET");
-//     cgi.execute();
-//     return (0);
-// }
+void    Cgi::CgiHandler()
+{
+    if (this->_path.empty())
+    {
+        throw std::runtime_error("Empty cgi path");
+    }
+    if (this->_path.find("/cgi-bin/") == std::string::npos)
+    {
+        throw std::runtime_error("Invalid cgi script");
+    }
+    if (std::strncmp(this->_path.c_str() + this->_path.size() - 3, ".py", 3) != 0)
+    {
+        throw std::runtime_error("Invalid cgi type");
+    }
+    if (access(this->_path.c_str(), F_OK) == -1)
+    {
+        throw std::runtime_error("Invalid cgi path");
+    }
+    if (this->_method == "GET")
+    {
+        this->execute();
+    }
+}
+
+int main()
+{
+    Cgi cgi("./cgi-bin/test.py", "GET", "NAME=thomas");
+    try
+    {
+        cgi.CgiHandler();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+    return (0);
+}
