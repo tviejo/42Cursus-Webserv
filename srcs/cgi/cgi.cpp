@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/21 13:38:46 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/21 13:47:08 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,18 +134,18 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     return (header);
 }
 
-int main()
-{
-    Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
-    try
-    {
-        cgi.CgiHandler();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    std::cout << cgi.GetHeader() << std::endl;
-    std::cout << cgi.GetResponse() << std::endl;
-    return (0);
-}
+// int main()
+// {
+//     Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
+//     try
+//     {
+//         cgi.CgiHandler();
+//     }
+//     catch(const std::exception& e)
+//     {
+//         std::cerr << e.what() << '\n';
+//     }
+//     std::cout << cgi.GetHeader() << std::endl;
+//     std::cout << cgi.GetResponse() << std::endl;
+//     return (0);
+// }
