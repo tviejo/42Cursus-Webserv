@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:57:38 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/17 14:20:12 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/20 03:54:56 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ typedef struct route
     std::string         upload;     // upload directory
     std::string         directory;  // server directory for route (exple: "/srv/www/html" for "/")
     bool                autoindex;
-    double              max_body_size;
+    size_t              max_body_size;
 } t_route;
 
 typedef struct server
@@ -36,8 +36,9 @@ typedef struct server
     bool                autoindex;
     std::string         root;   // server root directory (exple: "/srv/www")
     std::string         error;  // default error page
-    int                 max_body_size;
-    std::vector<t_route> routes;
+    size_t              max_body_size;
+    //std::vector<t_route> routes;
+    std::map<std::string, t_route> routes;  // map<path, t_route>
 } t_server;
 
 class Config
