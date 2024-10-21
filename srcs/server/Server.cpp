@@ -271,8 +271,8 @@ bool	Server::isAlive()
 			return false;
 		}
 		isShutdownConfirmed = true;
-		std::cout << "\n  CAUTION : You are \"sur le point\" to SHUTDOWN this magnificient WebServer.\n";
-		std::cout << "  Are you ABSOLUTLY sure that is you REALLY want to do ?\n";
+		std::cout << "\n  CAUTION : You are about to SHUTDOWN this magnificient WebServer.\n";
+		std::cout << "  Are you ABSOLUTLY sure that that is what you REALLY want to do ?\n";
 		std::cout << "  Press <Esc> to IRREVOCABLY confirm or any other key to abort.\n";
 	}
 	else if (c != -1 && isShutdownConfirmed)
