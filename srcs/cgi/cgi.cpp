@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/21 13:32:55 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/21 13:38:46 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,9 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
 
 char    **Cgi::getEnvp()
 {
-    char **envp = new char*[1];
+    char **envp = new char*[2];
     envp[0] = strdup(this->_env.c_str());
+    envp[1] = NULL;
     return (envp);
 }
 
@@ -69,6 +70,7 @@ void    Cgi::execute()
     {
         close(fd[0]);
         dup2(fd[1], 1);
+        close(fd[1]);
         char **envp = this->getEnvp();
         char *args[] = {strdup(this->_path.c_str()), NULL};
         execve(this->_path.c_str(), args, envp);
@@ -84,6 +86,7 @@ void    Cgi::execute()
             this->_response += std::string(buffer, size);
             this->_contentLength += size;
         }
+        close(fd[0]);
         int status;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
@@ -131,18 +134,18 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     return (header);
 }
 
-// int main()
-// {
-//     Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
-//     try
-//     {
-//         cgi.CgiHandler();
-//     }
-//     catch(const std::exception& e)
-//     {
-//         std::cerr << e.what() << '\n';
-//     }
-//     std::cout << cgi.GetHeader() << std::endl;
-//     std::cout << cgi.GetResponse() << std::endl;
-//     return (0);
-// }
+int main()
+{
+    Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
+    try
+    {
+        cgi.CgiHandler();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    std::cout << cgi.GetHeader() << std::endl;
+    std::cout << cgi.GetResponse() << std::endl;
+    return (0);
+}
