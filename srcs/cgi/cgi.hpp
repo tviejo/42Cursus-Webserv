@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:59 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/21 13:24:13 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/21 14:34:37 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,14 @@
 # define CGI_HPP
 
 # include <iostream>
+# include <sstream>
+# include <string>
 # include <string>
 # include <cstring>
 # include <cstdlib>
 # include <vector>
 # include <unistd.h>
+# include <stdlib.h>
 # include <sys/types.h>
 # include <sys/wait.h>
 
