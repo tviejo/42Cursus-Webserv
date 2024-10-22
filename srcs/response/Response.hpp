@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:33 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/20 03:29:46 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/22 20:09:57 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ private:
 	static std::map<std::string,std::string> _contentTypeMap;
 
 public:	
-	static const t_route &	getRouteFromUri(const t_server &, std::string uri);
+	static const t_route *	getRouteFromUri(const t_server &, std::string uri);
 	static OutgoingData *	handleGet(const t_server &, const HTTPRequest &);
 	static OutgoingData *	handlePost(const t_server &, const HTTPRequest &);
 	static OutgoingData *	handleDelete(const t_server &, const HTTPRequest &);
