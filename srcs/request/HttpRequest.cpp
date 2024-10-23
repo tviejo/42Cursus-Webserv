@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/23 10:29:38 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/23 14:17:39 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,13 +37,13 @@ HTTPRequest::HTTPRequest(const std::string& request)
 	}
 	extractQueryString();
 
-	// A modifier/supprimer : le body devrait etre considéré comme un flux binaire (ou bien
-	// tenir compte du content-type) et surtout faire l'objet d'un traitement
+	// A modifier/supprimer : le body devrait etre considéré comme un flux binaire
+	// (ou bien tenir compte du content-type) et surtout faire l'objet d'un traitement
 	// postérieur notemment dans le cas d'un POST avec un fichier quelconque.
-	// le constructeur HTTPRequest devrait etre appelé dès que l'on a recu la fin des entetes;
-	// ce qui permet déjà de décider si serveur refuse ou accepte la requete et
-	// ensuite seuleument on recupère le body (avec par exemple un objet de classe
-	// IngoingData qui reste à créer !)
+	// Le constructeur HTTPRequest devrait etre appelé dès que l'on a recu la fin des entetes;
+	// ce qui permettra déjà de décider si serveur refuse ou accepte la requete et
+	// ensuite seuleument de recupérer le body avec par exemple un objet IngoingData
+	// (classe qui reste à faire !)
 	std::ostringstream	bodyStream;
 	bodyStream << lineStream.rdbuf();
 	_body = bodyStream.str();
@@ -51,9 +51,24 @@ HTTPRequest::HTTPRequest(const std::string& request)
 
 void HTTPRequest::extractQueryString()
 {
-	// TODO : 
-	// renseigner _uriWithoutQString;
-	// renseigner _queryStrings;
+	_uriWithoutQString = _uri.substr(0, _uri.find_first_of('?'));
+
+	std::string queryStrs = _uri.substr(_uri.find_first_of('?'));
+	if (queryStrs.length() > 0)
+		queryStrs.erase(0, 1);
+	while (queryStrs.length() > 0)
+	{
+		size_t sepPos = queryStrs.find_first_of('=');
+		size_t endPos =  queryStrs.find_first_of('&');
+		std::string key = queryStrs.substr(0, sepPos);
+		std::string val = (sepPos == std::string::npos) ? ""
+						: queryStrs.substr(sepPos + 1, endPos - sepPos - 1);
+		_queryStrings[key] = val;
+		std::cout << "        " << key << "='" << _queryStrings[key] << "'\n";
+		if (endPos == std::string::npos)
+			return;
+		queryStrs.erase(0, endPos + 1);
+	}
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest& copy)

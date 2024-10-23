@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/22 22:19:26 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/23 14:07:39 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ std::string Response::getContentType(const std::string & uri)
 
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req)
 {
-	std::string uri = req.getUri();
+	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
