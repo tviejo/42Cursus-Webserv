@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/21 14:52:08 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/23 10:29:38 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,25 @@ HTTPRequest::HTTPRequest(const std::string& request)
 			_headers[key] = value;
 		}
 	}
+	extractQueryString();
+
+	// A modifier/supprimer : le body devrait etre considéré comme un flux binaire (ou bien
+	// tenir compte du content-type) et surtout faire l'objet d'un traitement
+	// postérieur notemment dans le cas d'un POST avec un fichier quelconque.
+	// le constructeur HTTPRequest devrait etre appelé dès que l'on a recu la fin des entetes;
+	// ce qui permet déjà de décider si serveur refuse ou accepte la requete et
+	// ensuite seuleument on recupère le body (avec par exemple un objet de classe
+	// IngoingData qui reste à créer !)
 	std::ostringstream	bodyStream;
 	bodyStream << lineStream.rdbuf();
 	_body = bodyStream.str();
+}
+
+void HTTPRequest::extractQueryString()
+{
+	// TODO : 
+	// renseigner _uriWithoutQString;
+	// renseigner _queryStrings;
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest& copy)
@@ -51,8 +67,10 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& copy)
     {
 		this->_method = copy._method;
 		this->_uri = copy._uri;
+		this->_uriWithoutQString = copy._uriWithoutQString;
 		this->_httpVersion = copy._httpVersion;
 		this->_headers = copy._headers;
+		this->_queryStrings = copy._queryStrings;
 		this->_body = copy._body;
     }
     return *this;
@@ -68,6 +86,11 @@ const std::string	&HTTPRequest::getUri() const
 	return _uri;
 }
 
+const std::string	&HTTPRequest::getUriWithoutQString() const
+{
+	return _uriWithoutQString;
+}
+
 const std::string	&HTTPRequest::getHttpVersion() const
 {
 	return _httpVersion;
@@ -81,6 +104,11 @@ const std::string	&HTTPRequest::getBody() const
 const std::map<std::string, std::string>	&HTTPRequest::getHeaders() const
 {
 	return _headers;
+}
+
+const std::map<std::string, std::string>	&HTTPRequest::getQueryStrings() const
+{
+	return _queryStrings;
 }
 
 std::ostream & operator << (std::ostream &os, const HTTPRequest &req)
