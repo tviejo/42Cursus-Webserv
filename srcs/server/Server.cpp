@@ -5,9 +5,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include <errno.h>
-#include <string.h>
-
 void	Server::setupListeningSockets()
 {
 	std::cout << "setupSockets()\n";
@@ -29,13 +26,6 @@ void	Server::setupListeningSockets()
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		{
 			close(sock);
-			perror(strerror(errno));
-			throw std::runtime_error("[setupSockets] Failed to set socket options");
-		}
-		if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1)
-		{
-			close(sock);
-			perror(strerror(errno));
 			throw std::runtime_error("[setupSockets] Failed to set socket options");
 		}
 		fcntl(sock, F_SETFL, O_NONBLOCK);	
