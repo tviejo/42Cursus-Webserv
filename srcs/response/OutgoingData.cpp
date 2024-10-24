@@ -9,7 +9,7 @@ OutgoingData::OutgoingData(const std::string &header, const std::string &body)
 	loadBuffer();
 }
 
-/* fromFileYes value has no importance (it semantically should be true)
+/* fromFileYes value doesn't matter (it semantically should be true)
 */
 OutgoingData::OutgoingData(const std::string &header, const std::string &filename, bool fromFileYes)
 {
