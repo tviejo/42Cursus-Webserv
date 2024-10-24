@@ -5,6 +5,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <errno.h>
+#include <string.h>
+
 void	Server::setupListeningSockets()
 {
 	std::cout << "setupSockets()\n";
@@ -18,18 +21,26 @@ void	Server::setupListeningSockets()
 	const std::vector<t_server> &servers = _config.getServers();
 	for (std::vector<t_server>::const_iterator it = servers.begin(); it != servers.end(); it++)
 	{
-		int	sock = socket(AF_INET, SOCK_STREAM, 0);
+		int	sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 		if (sock == -1)
 			throw std::runtime_error("[setupSockets] Failed to create socket");
 		int	opt = 1;
-		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt) == 1))
+
+		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		{
 			close(sock);
+			perror(strerror(errno));
+			throw std::runtime_error("[setupSockets] Failed to set socket options");
+		}
+		if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1)
+		{
+			close(sock);
+			perror(strerror(errno));
 			throw std::runtime_error("[setupSockets] Failed to set socket options");
 		}
 		fcntl(sock, F_SETFL, O_NONBLOCK);	
 		struct sockaddr_in serverAddr;
-		serverAddr.sin_family = AF_INET; //This is edge trigger??
+		serverAddr.sin_family = AF_INET;
 		serverAddr.sin_addr.s_addr = inet_addr(it->host.c_str());
 		serverAddr.sin_port = htons(it->port);
 		if (bind(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
