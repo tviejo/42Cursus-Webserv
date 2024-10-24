@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/20 04:01:10 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/23 14:07:39 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ std::string	Response::makeResponseHeader(uint32_t status,
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
 	response << "Content-Type: " << contentType << "\r\n"; 
 	response << "Content-Length: " << contentLength << "\r\n"; 
-	response << "Connection: Closed\r\n";
+	//response << "Connection: Closed\r\n";
 	response << "\r\n";
 	return response.str();
 }
@@ -52,21 +52,29 @@ OutgoingData *	Response::makeResponse(uint32_t status,
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
 	response << "Content-Type: " << contentType << "\r\n"; 
 	response << "Content-Length: " << content.length() << "\r\n"; 
-	response << "Connection: Closed\r\n";
+	//response << "Connection: Closed\r\n";
 	response << "\r\n";
-	//response << content;
-	//return response.str();
 	return new OutgoingData(response.str(), content);
 }
 
-const t_route & Response::getRouteFromUri(const t_server & server, std::string uri)
+/* Return first route that match 'uri'
+ * if not found with full uri retry in a loop with uri without the last (1,2,3,...) folder(s)
+ * it will ultimately match with "/" if this route exits or return NULL
+*/
+const t_route * Response::getRouteFromUri(const t_server & server, std::string uri)
 {
-	// TODO : return first route that match uri 
-	// if not found retry in a loop with uri without the last (1,2,3,...) folder(s)
-	// it will ultimately match with "/"
-	(void)server;
-	(void)uri;
-	return server.routes.begin()->second;
+	while (true) {
+		//std::cout << "[getRouteFromUri():find loop] uri: " << uri << "\n";
+		std::map<std::string, t_route>::const_iterator it;
+		it = server.routes.find(uri.size() == 0 ? "/" : uri);
+		if (it != server.routes.end())
+			return &it->second;
+		size_t lastSlashPos = uri.find_last_of("/");
+		if (lastSlashPos != std::string::npos)
+			uri.erase(lastSlashPos);
+		else
+			return NULL;
+	}
 }
 
 std::string Response::getContentType(const std::string & uri)
@@ -77,10 +85,17 @@ std::string Response::getContentType(const std::string & uri)
 
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req)
 {
-	const t_route &route = getRouteFromUri(server, req.getUri());
+	std::string uri = req.getUriWithoutQString();
+	const t_route *routeptr = getRouteFromUri(server, uri);
+	if (routeptr == NULL) {
+		std::cout << "     no route found from uri: " << uri << std::endl;
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	}
+	const t_route &route = *routeptr;
+	std::cout << "     route found: " << route.path << std::endl;
 	if (route.methods.find(req.get_method()) == route.methods.end())
 	{
-		std::cout << "Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
+		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
 	}
 	if (route.path == "/cgi")
@@ -90,17 +105,17 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	}
 	else {
 		std::string filename;
-		if (req.getUri() == route.path && route.autoindex)
+		if (uri == route.path && route.autoindex)
 			filename = route.directory + "/" + route.index;
 		else
-			filename = route.directory + req.getUri();
+			filename = route.directory + "/" + uri.erase(0, route.path.length());
 		if (isDirectory(filename)) {
 			std::ostringstream entries;
 			readDirectory(filename, entries);
 			return makeResponse(200, "OK", "text/plain", entries.str());
 		}
 		ssize_t filesize = getFileSize(filename);
-		std::cout << "         filename: '" << filename << "'  filesize: " << filesize << "\n";
+		std::cout << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
 		if (filesize == -1) {
 			filename = server.root + server.error;
 			filesize = getFileSize(filename);
@@ -109,7 +124,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			std::string header = makeResponseHeader(404, "Not Found", getContentType("html"), filesize);
 			return new OutgoingData(header, filename, true);
 		}
-		std::string header = makeResponseHeader(200, "OK", getContentType(req.getUri()), filesize);
+		std::string header = makeResponseHeader(200, "OK", getContentType(uri), filesize);
 		return new OutgoingData(header, filename, true);
 	}
 }

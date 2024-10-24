@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/21 14:52:08 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/23 14:17:39 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,9 +35,40 @@ HTTPRequest::HTTPRequest(const std::string& request)
 			_headers[key] = value;
 		}
 	}
+	extractQueryString();
+
+	// A modifier/supprimer : le body devrait etre considéré comme un flux binaire
+	// (ou bien tenir compte du content-type) et surtout faire l'objet d'un traitement
+	// postérieur notemment dans le cas d'un POST avec un fichier quelconque.
+	// Le constructeur HTTPRequest devrait etre appelé dès que l'on a recu la fin des entetes;
+	// ce qui permettra déjà de décider si serveur refuse ou accepte la requete et
+	// ensuite seuleument de recupérer le body avec par exemple un objet IngoingData
+	// (classe qui reste à faire !)
 	std::ostringstream	bodyStream;
 	bodyStream << lineStream.rdbuf();
 	_body = bodyStream.str();
+}
+
+void HTTPRequest::extractQueryString()
+{
+	_uriWithoutQString = _uri.substr(0, _uri.find_first_of('?'));
+
+	std::string queryStrs = _uri.substr(_uri.find_first_of('?'));
+	if (queryStrs.length() > 0)
+		queryStrs.erase(0, 1);
+	while (queryStrs.length() > 0)
+	{
+		size_t sepPos = queryStrs.find_first_of('=');
+		size_t endPos =  queryStrs.find_first_of('&');
+		std::string key = queryStrs.substr(0, sepPos);
+		std::string val = (sepPos == std::string::npos) ? ""
+						: queryStrs.substr(sepPos + 1, endPos - sepPos - 1);
+		_queryStrings[key] = val;
+		std::cout << "        " << key << "='" << _queryStrings[key] << "'\n";
+		if (endPos == std::string::npos)
+			return;
+		queryStrs.erase(0, endPos + 1);
+	}
 }
 
 HTTPRequest::HTTPRequest(const HTTPRequest& copy)
@@ -51,8 +82,10 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& copy)
     {
 		this->_method = copy._method;
 		this->_uri = copy._uri;
+		this->_uriWithoutQString = copy._uriWithoutQString;
 		this->_httpVersion = copy._httpVersion;
 		this->_headers = copy._headers;
+		this->_queryStrings = copy._queryStrings;
 		this->_body = copy._body;
     }
     return *this;
@@ -68,6 +101,11 @@ const std::string	&HTTPRequest::getUri() const
 	return _uri;
 }
 
+const std::string	&HTTPRequest::getUriWithoutQString() const
+{
+	return _uriWithoutQString;
+}
+
 const std::string	&HTTPRequest::getHttpVersion() const
 {
 	return _httpVersion;
@@ -81,6 +119,11 @@ const std::string	&HTTPRequest::getBody() const
 const std::map<std::string, std::string>	&HTTPRequest::getHeaders() const
 {
 	return _headers;
+}
+
+const std::map<std::string, std::string>	&HTTPRequest::getQueryStrings() const
+{
+	return _queryStrings;
 }
 
 std::ostream & operator << (std::ostream &os, const HTTPRequest &req)
