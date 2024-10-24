@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:52:13 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/24 20:30:11 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,35 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	if (route.path == "/cgi")
 	{
 		Cgi cgi("./cgi-bin/name.py", "GET", req.getQueryStrings("name"));
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
+	else if (route.path == "/time")
+	{
+		std::cerr << "\nTIME CGI\n\n";
+		Cgi cgi("./cgi-bin/a.out", "GET", "");
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
+	else if (route.path == "/gallery")
+	{
+		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
  		try
  		{
   	    	cgi.CgiHandler();

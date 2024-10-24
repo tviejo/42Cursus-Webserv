@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:55:02 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/24 19:46:37 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
     this->_header = "";
     this->_contentLength = 0;
     this->_isDone = false;
-    this->_type = "python3";
     this->_path = path;
     this->_method = method;
     this->_env = "name="+ info;
@@ -108,10 +107,6 @@ void    Cgi::CgiHandler()
     if (this->_path.find("/cgi-bin/") == std::string::npos)
     {
         throw std::runtime_error("Invalid cgi script");
-    }
-    if (std::strncmp(this->_path.c_str() + this->_path.size() - 3, ".py", 3) != 0)
-    {
-        throw std::runtime_error("Invalid cgi type");
     }
     if (access(this->_path.c_str(), F_OK) == -1)
     {
