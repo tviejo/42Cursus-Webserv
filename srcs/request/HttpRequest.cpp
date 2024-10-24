@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:22:20 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/24 17:48:54 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,11 @@ const std::map<std::string, std::string>	&HTTPRequest::getHeaders() const
 const std::map<std::string, std::string>	&HTTPRequest::getQueryStrings() const
 {
 	return _queryStrings;
+}
+
+const std::string	&HTTPRequest::getQueryStrings(const std::string &key) const
+{
+	return _queryStrings.at(key);
 }
 
 std::ostream & operator << (std::ostream &os, const HTTPRequest &req)

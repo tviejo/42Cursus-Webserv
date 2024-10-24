@@ -126,7 +126,8 @@
             generate web pages dynamically. Here you can test CGI functionality easily.
         </p>
         
-        <form action="/cgi/name.cgi" method="POST">
+        <!-- Changed form method to GET -->
+        <form action="/cgi/name.cgi" method="GET">
             <label for="name">Enter your name:</label>
             <input type="text" id="name" name="name" required placeholder="Your Name">
             <input type="submit" value="Submit">

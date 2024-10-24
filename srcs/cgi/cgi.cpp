@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 15:28:14 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/24 17:55:02 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
     this->_type = "python3";
     this->_path = path;
     this->_method = method;
-    this->_env = info;
+    this->_env = "name="+ info;
 }
 
 
