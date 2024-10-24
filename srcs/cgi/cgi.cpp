@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/21 14:41:01 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/24 15:28:14 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ void    Cgi::execute()
             throw std::runtime_error("Cgi script failed");
         else
         {
-            this->_header = this->createHeader(200, "OK", "/cgi-bin/cgi.html", this->_contentLength);
+            this->_header = this->createHeader(200, "OK", "text/html", this->_contentLength);
             this->_isDone = true;
         }
     }
@@ -137,7 +137,6 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     header += "HTTP/1.1 " + status_string + " " + message + "\r\n";
     header += "Content-Type: " + contentType + "\r\n";
     header += "Content-Length: " + contentLength_string + "\r\n";
-    header += "Connection: Closed\r\n";
     header += "\r\n";
     return (header);
 }
