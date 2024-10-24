@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:55:02 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/24 18:33:50 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ Cgi &Cgi::operator=(const Cgi &copy)
 
 Cgi::Cgi(std::string path, std::string method, std::string info)
 {
+    this->_info = info;
     this->_header = "";
     this->_contentLength = 0;
     this->_isDone = false;
@@ -135,6 +136,7 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     ssStatus << status;
     status_string = ssStatus.str();
     header += "HTTP/1.1 " + status_string + " " + message + "\r\n";
+    header += "Set-Cookie: username=" + this->_info + "; Path=/ \r\n";
     header += "Content-Type: " + contentType + "\r\n";
     header += "Content-Length: " + contentLength_string + "\r\n";
     header += "\r\n";
