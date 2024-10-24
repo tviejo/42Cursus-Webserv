@@ -51,9 +51,15 @@ HTTPRequest::HTTPRequest(const std::string& request)
 
 void HTTPRequest::extractQueryString()
 {
-	_uriWithoutQString = _uri.substr(0, _uri.find_first_of('?'));
+	size_t	sepPos = _uri.find_first_of('?');
 
-	std::string queryStrs = _uri.substr(_uri.find_first_of('?'));
+	if (sepPos == std::string::npos)
+	{
+		_uriWithoutQString = _uri;
+		return ;
+	}
+	_uriWithoutQString = _uri.substr(0, sepPos);
+	std::string queryStrs = _uri.substr(sepPos, _uri.size());
 	if (queryStrs.length() > 0)
 		queryStrs.erase(0, 1);
 	while (queryStrs.length() > 0)
