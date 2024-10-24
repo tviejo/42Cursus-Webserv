@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/23 14:17:39 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/24 17:22:20 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,4 +135,26 @@ const std::map<std::string, std::string>	&HTTPRequest::getQueryStrings() const
 std::ostream & operator << (std::ostream &os, const HTTPRequest &req)
 {
 	return os << req.get_method() << " " << req.getUri() << " (" << req.getHttpVersion() << ")";
+}
+
+void	HTTPRequest::printRequest() const
+{
+	std::cerr << "Request: " << std::endl;
+	std::cerr << "  method: " << _method << std::endl;
+	std::cerr << "  uri: " << _uri << std::endl;
+	std::cerr << "  uri without query string: " << _uriWithoutQString << std::endl;
+	std::cerr << "  http version: " << _httpVersion << std::endl;
+	std::cerr << "  Headers:\n";
+	for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
+			it != _headers.end(); ++it)
+	{
+		std::cerr << "    " << it->first << ": " << it->second << std::endl;
+	}
+	std::cerr << "  Query strings:\n";
+	for (std::map<std::string, std::string>::const_iterator it = _queryStrings.begin();
+			it != _queryStrings.end(); ++it)
+	{
+		std::cerr << "    " << it->first << ": " << it->second << std::endl;
+	}
+	std::cerr << "  Body:\n" << _body << std::endl;
 }

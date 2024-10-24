@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/23 14:07:39 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/24 17:22:10 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,7 @@ std::string Response::getContentType(const std::string & uri)
 
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req)
 {
+	req.printRequest();
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
@@ -101,7 +102,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	if (route.path == "/cgi")
 	{
 		// return new OutgoingData(cgiRespHeader, cgiRespBody);
-		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		return makeResponse(404, "Get CGI Not Found", "text/plain", "404 Not Found");
 	}
 	else {
 		std::string filename;
@@ -132,13 +133,38 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req)
 {
 	(void)server;
-	(void)req;
-	return NULL;
+	std::string uri = req.getUriWithoutQString();
+	const t_route *routeptr = getRouteFromUri(server, uri);
+	if (routeptr == NULL) {
+		std::cout << "     no route found from uri: " << uri << std::endl;
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	}
+	const t_route &route = *routeptr;
+	std::cout << "     route found: " << route.path << std::endl;
+	if (route.path == "/cgi")
+	{
+		req.printRequest();
+		Cgi cgi("./cgi-bin/name.py", "GET", "name=thomas");
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
+	else
+	{
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	}
 }
 
 OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req)
 {
 	(void)server;
 	(void)req;
-	return NULL;
+	return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 }

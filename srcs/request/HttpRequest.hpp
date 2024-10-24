@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/23 10:22:12 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/24 17:20:03 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class HTTPRequest
 		const std::string	&getHttpVersion() const;
 		const std::string	&getBody() const;
 		const std::map<std::string, std::string>	&getHeaders() const;
+		void printRequest() const;
 };
 
 std::ostream & operator << (std::ostream &, const HTTPRequest &);
