@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:55:02 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 10:19:33 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
     this->_header = "";
     this->_contentLength = 0;
     this->_isDone = false;
-    this->_type = "python3";
     this->_path = path;
     this->_method = method;
     this->_env = "name="+ info;
@@ -93,7 +92,7 @@ void    Cgi::execute()
             throw std::runtime_error("Cgi script failed");
         else
         {
-            this->_header = this->createHeader(200, "OK", "text/html", this->_contentLength);
+            this->_header = Response::makeResponseHeader(200, "OK", "text/html", this->_contentLength);
             this->_isDone = true;
         }
     }
@@ -109,10 +108,6 @@ void    Cgi::CgiHandler()
     {
         throw std::runtime_error("Invalid cgi script");
     }
-    if (std::strncmp(this->_path.c_str() + this->_path.size() - 3, ".py", 3) != 0)
-    {
-        throw std::runtime_error("Invalid cgi type");
-    }
     if (access(this->_path.c_str(), F_OK) == -1)
     {
         throw std::runtime_error("Invalid cgi path");
@@ -121,24 +116,6 @@ void    Cgi::CgiHandler()
     {
         this->execute();
     }
-}
-
-std::string Cgi::createHeader(size_t status, std::string message, std::string contentType, size_t contentLength)
-{
-    std::string header;
-    std::string status_string;
-    std::string contentLength_string;
-    std::stringstream ssContentLength;
-    std::stringstream ssStatus;
-    ssContentLength << contentLength;
-    contentLength_string = ssContentLength.str();
-    ssStatus << status;
-    status_string = ssStatus.str();
-    header += "HTTP/1.1 " + status_string + " " + message + "\r\n";
-    header += "Content-Type: " + contentType + "\r\n";
-    header += "Content-Length: " + contentLength_string + "\r\n";
-    header += "\r\n";
-    return (header);
 }
 
 // int main()
