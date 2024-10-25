@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:59 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:49:00 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 13:30:07 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Cgi
         void CgiHandler();
         std::string GetHeader() { return _header; }
         std::string GetResponse() { return _response; }
-        std::string createHeader(size_t status, std::string message, std::string contentType, size_t contentLength);
+        std::string createHeader(size_t status, std::string message, std::string contentType, size_t contentLength, std::string cookie);
         
 };
 

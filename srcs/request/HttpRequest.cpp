@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:48:54 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 10:23:42 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,7 @@ HTTPRequest::HTTPRequest(const std::string& request)
 		{
 			std::string key = request_line.substr(0, sepPos);
 			std::string value = request_line.substr(sepPos + 1);
-			value.erase(0, value.find_last_not_of(" \t"));
-			value.erase(value.find_last_not_of((" \t") + 1));
+			trimRef(value);
 			_headers[key] = value;
 		}
 	}

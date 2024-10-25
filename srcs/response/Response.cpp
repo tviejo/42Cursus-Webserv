@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:52:13 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 12:08:28 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,13 @@ void Response::setupContentTypeMap()
 std::string	Response::makeResponseHeader(uint32_t status,
 						 const std::string & statusMessage, 
 						 const std::string & contentType,
-						 size_t contentLength)
+						 size_t contentLength, int clientSocket)
 {
 	std::ostringstream	response;
 
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
+	if (clientSocket != -1)
+		response << "Set-Cookie: ID=" << clientSocket << "; Path=/ \r\n";
 	response << "Content-Type: " << contentType << "\r\n"; 
 	response << "Content-Length: " << contentLength << "\r\n"; 
 	//response << "Connection: Closed\r\n";
@@ -83,7 +85,7 @@ std::string Response::getContentType(const std::string & uri)
 	return _contentTypeMap[ext];
 }
 
-OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req)
+OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
 	req.printRequest();
 	std::string uri = req.getUriWithoutQString();
@@ -113,6 +115,37 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		}
 		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
+	else if (route.path == "/time")
+	{
+		std::cerr << "\nTIME CGI\n\n";
+		Cgi cgi("./cgi-bin/a.out", "GET", "");
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
+	else if (route.path == "/gallery")
+	{
+		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		std::cerr << cgi.GetHeader() << std::endl;
+		std::cerr << cgi.GetResponse() << std::endl;
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
 	else {
 		std::string filename;
 		if (uri == route.path && route.autoindex)
@@ -131,17 +164,18 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			filesize = getFileSize(filename);
 			if (filesize == -1)  // 404 error page is missing
 				return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
-			std::string header = makeResponseHeader(404, "Not Found", getContentType("html"), filesize);
+			std::string header = makeResponseHeader(404, "Not Found", getContentType("html"), filesize, clientSocket);
 			return new OutgoingData(header, filename, true);
 		}
-		std::string header = makeResponseHeader(200, "OK", getContentType(uri), filesize);
+		std::string header = makeResponseHeader(200, "OK", getContentType(uri), filesize, clientSocket);
 		return new OutgoingData(header, filename, true);
 	}
 }
 
-OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req)
+OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
 	(void)server;
+	(void)clientSocket;
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
@@ -171,9 +205,10 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	}
 }
 
-OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req)
+OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
 	(void)server;
 	(void)req;
+	(void)clientSocket;
 	return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 }
