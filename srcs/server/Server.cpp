@@ -104,7 +104,7 @@ ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 void	Server::handleOutgoingData(int clientSocket)
 {
 	OutgoingData *toSend = _responses[clientSocket];
-	ssize_t bytes_sent = send(clientSocket, toSend->getbufptr(), toSend->getbuflen(), 0);
+	ssize_t bytes_sent = send(clientSocket, toSend->getbufptr(), toSend->getbuflen(), MSG_NOSIGNAL);
 	if (bytes_sent < 0)
 		throw std::runtime_error("[handleOutgoingData/send] error while sending response to client");
 	
@@ -170,24 +170,14 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 
 	infoStatus += getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen);
 	infoStatus += getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen);
-	if (infoStatus != 0)
+	if (infoStatus == 0)
 	{
-		std::cerr << "Socket: " << clientSocket << " is in bad state, cleaning up." << std::endl;
-		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
-		close(clientSocket);
-		_partialRequest.erase(clientSocket);
-		if (_responses.find(clientSocket) != _responses.end()) {
-			delete _responses[clientSocket];
-			_responses.erase(clientSocket);
-		}
-		_sockets.erase(clientSocket);	
-		return ;
+		inet_ntop(AF_INET, &cliAddr.sin_addr, cliIP, sizeof(cliIP));
+		inet_ntop(AF_INET, &srvAddr.sin_addr, srvIP, sizeof(srvIP));
+		std::cout << "handleClientEvent()  socket: " << clientSocket
+			<< "  (" << cliIP << ":" << ntohs(cliAddr.sin_port)
+			<< " <=> " << srvIP << ":" << ntohs(srvAddr.sin_port) << ")\n";
 	}
-	inet_ntop(AF_INET, &cliAddr.sin_addr, cliIP, sizeof(cliIP));
-	inet_ntop(AF_INET, &srvAddr.sin_addr, srvIP, sizeof(srvIP));
-	std::cout << "handleClientEvent()  socket: " << clientSocket
-		<< "  (" << cliIP << ":" << ntohs(cliAddr.sin_port)
-		<< " <=> " << srvIP << ":" << ntohs(srvAddr.sin_port) << ")\n";
 	if (event & EPOLLIN)
 	{
 		char		buffer[IO_BUFFER_SIZE];
