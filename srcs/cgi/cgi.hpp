@@ -24,6 +24,7 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <sys/wait.h>
+# include "webserv.hpp"
 
 class Cgi
 {
@@ -49,7 +50,6 @@ class Cgi
         void CgiHandler();
         std::string GetHeader() { return _header; }
         std::string GetResponse() { return _response; }
-        std::string createHeader(size_t status, std::string message, std::string contentType, size_t contentLength);
         
 };
 

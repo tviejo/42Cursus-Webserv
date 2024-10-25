@@ -114,6 +114,37 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		}
 		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
+	else if (route.path == "/time")
+	{
+		std::cerr << "\nTIME CGI\n\n";
+		Cgi cgi("./cgi-bin/a.out", "GET", "");
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
+	else if (route.path == "/gallery")
+	{
+		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		std::cerr << cgi.GetHeader() << std::endl;
+		std::cerr << cgi.GetResponse() << std::endl;
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
 	else {
 		std::string filename;
 		if (uri == route.path && route.autoindex)
