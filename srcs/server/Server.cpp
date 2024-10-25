@@ -22,11 +22,17 @@ void	Server::setupListeningSockets()
 		if (sock == -1)
 			throw std::runtime_error("[setupSockets] Failed to create socket");
 		int	opt = 1;
+		int keepalive = 1;
 
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		{
 			close(sock);
-			throw std::runtime_error("[setupSockets] Failed to set socket options");
+			throw std::runtime_error("[setupSockets] Failed to set socket options: reuseaddr");
+		}
+		if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) == -1)
+		{
+			close(sock);
+			throw std::runtime_error("[setupSockets] Failed to set socket options: keepalive");
 		}
 		fcntl(sock, F_SETFL, O_NONBLOCK);	
 		struct sockaddr_in serverAddr;
@@ -160,16 +166,28 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	sockaddr_in	cliAddr, srvAddr;
 	socklen_t	cliAddrLen = sizeof(cliAddr), srvAddrLen = sizeof(srvAddr);
 	char cliIP[16], srvIP[16];
-	if (getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen) == -1)
+	int infoStatus = 0;
+
+	infoStatus += getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen);
+	infoStatus += getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen);
+	if (infoStatus != 0)
+	{
+		std::cerr << "Socket: " << clientSocket << " is in bad state, cleaning up." << std::endl;
+		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+		close(clientSocket);
+		_partialRequest.erase(clientSocket);
+		if (_responses.find(clientSocket) != _responses.end()) {
+			delete _responses[clientSocket];
+			_responses.erase(clientSocket);
+		}
+		_sockets.erase(clientSocket);	
 		return ;
-	if (getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen) == -1)
-		return ;
+	}
 	inet_ntop(AF_INET, &cliAddr.sin_addr, cliIP, sizeof(cliIP));
 	inet_ntop(AF_INET, &srvAddr.sin_addr, srvIP, sizeof(srvIP));
 	std::cout << "handleClientEvent()  socket: " << clientSocket
 		<< "  (" << cliIP << ":" << ntohs(cliAddr.sin_port)
 		<< " <=> " << srvIP << ":" << ntohs(srvAddr.sin_port) << ")\n";
-	
 	if (event & EPOLLIN)
 	{
 		char		buffer[IO_BUFFER_SIZE];
