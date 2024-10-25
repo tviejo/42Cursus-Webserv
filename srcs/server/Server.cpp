@@ -131,6 +131,7 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	std::cout << "  -> " << request << std::endl;
 	OutgoingData *response;
 
+	std::cerr << " METHOD: " << request.get_method() << std::endl;
 	if (request.get_method() == "GET")
 		response = Response::handleGet(*_sockets[clientSocket].server, request, clientSocket);
 	else if (request.get_method() == "POST")
@@ -139,6 +140,7 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 		response = Response::handleDelete(*_sockets[clientSocket].server, request, clientSocket);
 	else
 		response = Response::makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+	std::cerr << "reponse value: " << response->getbufptr() << std::endl;
 	sendResponse(clientSocket, response);
 }
 
@@ -199,7 +201,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 		}
 		catch (std::exception &e)
 		{
-			std::cerr << "   [EPOLLIN] Error receiving data from client : " << e.what() << std::endl;
+			std::cerr << "   [EPOLLIN]  from client : " << e.what() << std::endl;
 			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 			close(clientSocket);
 			_partialRequest.erase(clientSocket);

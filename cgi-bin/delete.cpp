@@ -15,9 +15,13 @@ int main()
 {
     bool isRemoved = true;
 
-    std::string file = getEnvVar("QUERY_STRING");
+    std::string file = getEnvVar("QueryString");
     std::cout << file << std::endl;
-    if (std::remove((FOLDER + file).c_str()) != 0)
+    if (file != "")
+    {
+        isRemoved = false;
+    }
+    else if (std::remove((FOLDER + file).c_str()) != 0)
         isRemoved = false;
 
     std::cout << "<!DOCTYPE html>\n";

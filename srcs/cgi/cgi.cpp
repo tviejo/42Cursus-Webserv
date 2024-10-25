@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 13:38:34 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 15:35:44 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ Cgi &Cgi::operator=(const Cgi &copy)
 
 Cgi::Cgi(std::string path, std::string method, std::string info)
 {
+    std::cerr << "Cgi constructor\n";
     this->_header = "";
     this->_contentLength = 0;
     this->_isDone = false;
@@ -45,7 +46,9 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
     if (info.empty())
         this->_env = "";
     else
-        this->_env = "username="+ info;
+        this->_env = "QueryString="+ info;
+    std::cerr << "Cgi constructor end\n";
+    
 }
 
 
@@ -70,12 +73,14 @@ void    Cgi::execute()
     int pid = fork();
     if (pid == 0)
     {
+        std::cerr << "Cgi execute\n";
         close(fd[0]);
         dup2(fd[1], 1);
         close(fd[1]);
         char **envp = this->getEnvp();
         char *args[] = {strdup(this->_path.c_str()), NULL};
         execve(this->_path.c_str(), args, envp);
+        throw std::runtime_error("execve failed");
         exit(0);
     }
     else
@@ -115,7 +120,7 @@ void    Cgi::CgiHandler()
     {
         throw std::runtime_error("Invalid cgi path");
     }
-    if (this->_method == "GET")
+    if (this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE")
     {
         this->execute();
     }

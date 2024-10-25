@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 12:08:28 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 16:53:17 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,7 +158,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			return makeResponse(200, "OK", "text/plain", entries.str());
 		}
 		ssize_t filesize = getFileSize(filename);
-		std::cout << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
+		std::cerr << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
 		if (filesize == -1) {
 			filename = server.root + server.error;
 			filesize = getFileSize(filename);
@@ -208,7 +208,34 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
 	(void)server;
-	(void)req;
 	(void)clientSocket;
-	return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	std::cerr << "\nDELETE REQUEST\n\n";
+	std::string uri = req.getUriWithoutQString();
+	const t_route *routeptr = getRouteFromUri(server, uri);
+	if (routeptr == NULL) {
+		std::cerr << "     no route found from uri: " << uri << std::endl;
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	}
+	std::cerr << uri << std::endl;
+	const t_route &route = *routeptr;
+	std::cerr << "     route found: " << route.path << std::endl;
+	if (uri.find("delete.out"))
+	{
+		req.printRequest();
+		Cgi cgi("./cgi-bin/delete.out", "DELETE", req.getQueryStrings("file"));
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		std::cerr << cgi.GetHeader() << std::endl;
+		std::cerr << cgi.GetResponse() << std::endl;
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+	}
+	else
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 }
