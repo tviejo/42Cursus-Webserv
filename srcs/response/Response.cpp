@@ -199,6 +199,10 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		}
 		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
+	else if (req.contentType == "text/plain")
+	{
+		return handleTextPost(req, route);
+	}
 	else
 	{
 		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
