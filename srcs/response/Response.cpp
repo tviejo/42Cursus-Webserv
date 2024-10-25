@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 19:04:51 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 12:08:28 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,8 @@ std::string	Response::makeResponseHeader(uint32_t status,
 	std::ostringstream	response;
 
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
-	response << "Set-Cookie: ID=" << clientSocket << "; Path=/ \r\n";
+	if (clientSocket != -1)
+		response << "Set-Cookie: ID=" << clientSocket << "; Path=/ \r\n";
 	response << "Content-Type: " << contentType << "\r\n"; 
 	response << "Content-Length: " << contentLength << "\r\n"; 
 	//response << "Connection: Closed\r\n";
