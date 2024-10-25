@@ -38,7 +38,10 @@ OutgoingData*	Response::handleTextPost(const HTTPRequest& req, const t_route& ro
 		std::string			fileName = getDate(req.getBody()) + ".txt";
 		const std::string	path = "www/upload/" + fileName;
 		std::string			line;
-
+		//set max length to protect against ddos
+		//check if directory exist and handle it if it does not
+		//check if file already exists and handle that case
+		//sanitize filename
 		std::ofstream		outFile(path.c_str(), std::ios::out | std::ios::binary);
 		if (!outFile)
 			throw std::runtime_error("Could not open file: " + path);
