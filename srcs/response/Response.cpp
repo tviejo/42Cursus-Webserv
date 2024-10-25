@@ -140,8 +140,8 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			std::cerr << e.what() << '\n';
 			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
 		}
-		std::cout << cgi.GetHeader() << std::endl;
-		std::cout << cgi.GetResponse() << std::endl;
+		std::cerr << cgi.GetHeader() << std::endl;
+		std::cerr << cgi.GetResponse() << std::endl;
 		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
 	else {
