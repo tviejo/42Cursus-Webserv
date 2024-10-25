@@ -16,7 +16,7 @@ int main()
     bool isRemoved = true;
 
     std::string file = getEnvVar("QueryString");
-    std::cout << file << std::endl;
+    std::cerr << "File to delete: " << FOLDER + file << std::endl;
     if (file != "")
     {
         isRemoved = false;

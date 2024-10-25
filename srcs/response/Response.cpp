@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 16:53:17 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 17:57:31 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,6 @@ std::string Response::getContentType(const std::string & uri)
 
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
-	req.printRequest();
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
@@ -186,7 +185,6 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	std::cout << "     route found: " << route.path << std::endl;
 	if (route.path == "/cgi")
 	{
-		req.printRequest();
 		Cgi cgi("./cgi-bin/name.py", "GET", "name=thomas");
  		try
  		{
@@ -221,7 +219,6 @@ OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest
 	std::cerr << "     route found: " << route.path << std::endl;
 	if (uri.find("delete.out"))
 	{
-		req.printRequest();
 		Cgi cgi("./cgi-bin/delete.out", "DELETE", req.getQueryStrings("file"));
  		try
  		{

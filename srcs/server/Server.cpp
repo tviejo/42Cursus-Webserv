@@ -140,7 +140,6 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 		response = Response::handleDelete(*_sockets[clientSocket].server, request, clientSocket);
 	else
 		response = Response::makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
-	std::cerr << "reponse value: " << response->getbufptr() << std::endl;
 	sendResponse(clientSocket, response);
 }
 

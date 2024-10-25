@@ -139,12 +139,21 @@
             document.getElementById('delete-form').addEventListener('submit', function(event) {
                 event.preventDefault();
                 const fileName = document.getElementById('file').value;
-                fetch('/delete/delete.out', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `file=${encodeURIComponent(fileName)}`
+
+                // Construct the URL with the query string for the DELETE request
+                const deleteUrl = `/delete/delete.out?file=${encodeURIComponent(fileName)}`;
+                
+                // Send DELETE request
+                fetch(deleteUrl, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Redirect or display a success message if needed
+                        window.location.href = deleteUrl;
+                    } else {
+                        console.error('Failed to delete file');
+                    }
                 })
                 .catch(error => console.error('Error:', error));
             });
