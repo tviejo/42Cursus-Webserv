@@ -160,8 +160,10 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	sockaddr_in	cliAddr, srvAddr;
 	socklen_t	cliAddrLen = sizeof(cliAddr), srvAddrLen = sizeof(srvAddr);
 	char cliIP[16], srvIP[16];
-	getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen);
-	getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen);
+	if (getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen) == -1)
+		return ;
+	if (getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen) == -1)
+		return ;
 	inet_ntop(AF_INET, &cliAddr.sin_addr, cliIP, sizeof(cliIP));
 	inet_ntop(AF_INET, &srvAddr.sin_addr, srvIP, sizeof(srvIP));
 	std::cout << "handleClientEvent()  socket: " << clientSocket
