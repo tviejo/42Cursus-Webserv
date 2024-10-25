@@ -76,8 +76,32 @@
             color: #888;
         }
     </style>
+    <script>
+        function getCookie(name) {
+            let nameEQ = name + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(nameEQ) == 0) {
+                    return c.substring(nameEQ.length, c.length);
+                }
+            }
+            return null;
+        }
+
+        function checkName() {
+            let userName = getCookie("username");
+            if (userName) {
+                document.getElementById("greeting").innerHTML = "Welcome back, " + userName + "!";
+            }
+        }
+    </script>
 </head>
-<body>
+<body onload="checkName()">
 
     <header>
         <nav>
@@ -93,8 +117,8 @@
     </header>
 
     <main>
-        <h1>Welcome to Webserv</h1>
-        <p>This is a simple yet cool webpage for your project.</p>
+        <h1 id="greeting">Welcome to Webserv</h1>
+        <p>Are you Ready?</p>
     </main>
 
     <footer>
