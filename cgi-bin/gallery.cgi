@@ -1,6 +1,6 @@
 #!/bin/bash
 
-UPLOAD_DIR="./www/html/upload-folder/"
+UPLOAD_DIR="./www/html/uploadedFiles/"
 
 cat <<EOF
 <!DOCTYPE html>
@@ -92,7 +92,7 @@ for file in "$UPLOAD_DIR"/*; do
         ext="${file##*.}"
         if [[ "$ext" == "jpg" || "$ext" == "jpeg" || "$ext" == "png" || "$ext" == "gif" ]]; then
             filename=$(basename "$file")
-            echo "      <img src=\"/upload-folder/$filename\" alt=\"$filename\">"
+            echo "      <img src=\"/uploadedFiles/$filename\" alt=\"$filename\">"
         fi
     fi
 done
@@ -108,7 +108,7 @@ for file in "$UPLOAD_DIR"/*; do
         ext="${file##*.}"
         if [[ "$ext" == "txt" || "$ext" == "pdf" || "$ext" == "doc" || "$ext" == "docx" ]]; then
             filename=$(basename "$file")
-            echo "      <a href=\"/upload-folder/$filename\">$filename</a>"
+            echo "      <a href=\"/uploadedFiles/$filename\">$filename</a>"
         fi
     fi
 done
