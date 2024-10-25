@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "Response.hpp"
-#include <string>
 
 std::map<std::string,std::string> Response::_contentTypeMap;
 
@@ -176,8 +175,10 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 {
 	(void)server;
 	(void)clientSocket;
-	std::string uri = req.getUriWithoutQString();
-	const t_route *routeptr = getRouteFromUri(server, uri);
+	std::string			uri = req.getUriWithoutQString();
+	const t_route		*routeptr = getRouteFromUri(server, uri);
+	std::map<std::string, std::string>::const_iterator contentType = req.getHeaders().find("content-type");
+
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
 		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
@@ -199,14 +200,18 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		}
 		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
-	else if (req.contentType == "text/plain")
-	{
-		return handleTextPost(req, route);
-	}
-	else
-	{
+	else if (contentType == req.getHeaders().end())
 		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
-	}
+	else if (contentType->second.find("text/plain") != std::string::npos)
+		return handleTextPost(req, route);
+	else if (contentType->second.find("multipart/form-data") != std::string::npos)
+		return handleFileUpload(req, route);
+	else if (contentType->second.find("application/x-www-form-urlencoded") != std::string::npos)
+		return handleFormSubmission(req, route);
+	else if (contentType->second.find("application/json") != std::string::npos)
+		return handleJsonPost(req, route);
+	else
+		return makeResponse(415, "Unsupported Media Type", "text/plain", "415 Unsupported Media Type: " + contentType->second);
 }
 
 OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
