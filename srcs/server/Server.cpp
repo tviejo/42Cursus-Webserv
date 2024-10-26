@@ -210,7 +210,7 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 		}
 		catch (std::exception &e)
 		{
-			std::cerr << "   [EPOLLIN]  from client : " << e.what() << std::endl;
+			std::cerr << "   [EPOLLIN] Error receiving data from client : " << e.what() << std::endl;
 			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
 			close(clientSocket);
 			_partialRequest.erase(clientSocket);
