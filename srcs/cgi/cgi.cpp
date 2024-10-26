@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 15:35:44 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/26 14:12:56 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,9 @@ void    Cgi::execute()
         close(fd[1]);
         char **envp = this->getEnvp();
         char *args[] = {strdup(this->_path.c_str()), NULL};
+        std::cerr << "execve\n";
         execve(this->_path.c_str(), args, envp);
+        std::cerr << "execve failed\n";
         throw std::runtime_error("execve failed");
         exit(0);
     }
@@ -103,6 +105,8 @@ void    Cgi::execute()
             this->_header = this->createHeader(200, "OK", "text/html", this->_contentLength, _env);
             this->_isDone = true;
         }
+        std::cerr << _header << std::endl;
+        std::cerr << _response << std::endl;
     }
 }
 
@@ -139,25 +143,9 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     status_string = ssStatus.str();
     header += "HTTP/1.1 " + status_string + " " + message + "\r\n";
     if (!cookie.empty())
-        header += "Set-Cookie: " + cookie + ";path=/ \r\n";
+        header += "Set-Cookie: " + cookie + ";path=/; Max-Age=3600;\r\n";
     header += "Content-Type: " + contentType + "\r\n";
     header += "Content-Length: " + contentLength_string + "\r\n";
     header += "\r\n";
     return (header);
 }
-
-// int main()
-// {
-//     Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
-//     try
-//     {
-//         cgi.CgiHandler();
-//     }
-//     catch(const std::exception& e)
-//     {
-//         std::cerr << e.what() << '\n';
-//     }
-//     std::cout << cgi.GetHeader() << std::endl;
-//     std::cout << cgi.GetResponse() << std::endl;
-//     return (0);
-// }

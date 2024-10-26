@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 17:57:31 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/26 14:07:25 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,6 +183,11 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	}
 	const t_route &route = *routeptr;
 	std::cout << "     route found: " << route.path << std::endl;
+	if (route.methods.find(req.get_method()) == route.methods.end())
+	{
+		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
+		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+	}
 	if (route.path == "/cgi")
 	{
 		Cgi cgi("./cgi-bin/name.py", "GET", "name=thomas");
@@ -216,22 +221,20 @@ OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest
 	}
 	std::cerr << uri << std::endl;
 	const t_route &route = *routeptr;
-	std::cerr << "     route found: " << route.path << std::endl;
-	if (uri.find("delete.out"))
+	if (route.methods.find(req.get_method()) == route.methods.end())
 	{
-		Cgi cgi("./cgi-bin/delete.out", "DELETE", req.getQueryStrings("file"));
- 		try
- 		{
-  	    	cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		std::cerr << cgi.GetHeader() << std::endl;
-		std::cerr << cgi.GetResponse() << std::endl;
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
+		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+	}
+	std::cerr << "     route found: " << route.path << std::endl;
+	if (route.path == "/delete")
+	{
+		std::string file = "./www/html/uploadedFiles/" + req.getQueryStrings("file");
+		std::cerr << "     file: " << file << std::endl;
+ 		if (std::remove(( "./www/html/uploadedFiles/" + req.getQueryStrings("file")).c_str()) != 0)
+			return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		else
+			return makeResponse(200, "OK", "text/plain", "200 OK");
 	}
 	else
 		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
