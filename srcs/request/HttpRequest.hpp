@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/24 17:48:22 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 15:17:18 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ class HTTPRequest
 		std::string	_httpVersion;
 		std::map<std::string, std::string> _headers;
 		std::string	_body;
+		std::string	_empty_string;
 	public:
 	private:
 		HTTPRequest();

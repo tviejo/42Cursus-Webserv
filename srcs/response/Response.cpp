@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 12:08:28 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/26 14:59:12 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,6 @@ std::string Response::getContentType(const std::string & uri)
 
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
-	req.printRequest();
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
@@ -118,7 +117,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	else if (route.path == "/time")
 	{
 		std::cerr << "\nTIME CGI\n\n";
-		Cgi cgi("./cgi-bin/a.out", "GET", "");
+		Cgi cgi("./cgi-bin/time.out", "GET", "");
  		try
  		{
   	    	cgi.CgiHandler();
@@ -158,7 +157,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			return makeResponse(200, "OK", "text/plain", entries.str());
 		}
 		ssize_t filesize = getFileSize(filename);
-		std::cout << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
+		std::cerr << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
 		if (filesize == -1) {
 			filename = server.root + server.error;
 			filesize = getFileSize(filename);
@@ -184,9 +183,13 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	}
 	const t_route &route = *routeptr;
 	std::cout << "     route found: " << route.path << std::endl;
+	if (route.methods.find(req.get_method()) == route.methods.end())
+	{
+		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
+		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+	}
 	if (route.path == "/cgi")
 	{
-		req.printRequest();
 		Cgi cgi("./cgi-bin/name.py", "GET", "name=thomas");
  		try
  		{
@@ -208,7 +211,31 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
 	(void)server;
-	(void)req;
 	(void)clientSocket;
-	return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	std::cerr << "\nDELETE REQUEST\n\n";
+	std::string uri = req.getUriWithoutQString();
+	const t_route *routeptr = getRouteFromUri(server, uri);
+	if (routeptr == NULL) {
+		std::cerr << "     no route found from uri: " << uri << std::endl;
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	}
+	std::cerr << uri << std::endl;
+	const t_route &route = *routeptr;
+	if (route.methods.find(req.get_method()) == route.methods.end())
+	{
+		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
+		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+	}
+	std::cerr << "     route found: " << route.path << std::endl;
+	if (route.path == "/delete")
+	{
+		std::string file = "./www/html/uploadedFiles/" + req.getQueryStrings("file");
+		std::cerr << "     file: " << file << std::endl;
+ 		if (std::remove(( "./www/html/uploadedFiles/" + req.getQueryStrings("file")).c_str()) != 0)
+			return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		else
+			return makeResponse(200, "OK", "text/plain", "200 OK");
+	}
+	else
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 }
