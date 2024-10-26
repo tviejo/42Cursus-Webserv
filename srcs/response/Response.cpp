@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 09:51:20 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/26 14:17:47 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,7 +120,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	else if (route.path == "/time")
 	{
 		std::cerr << "\nTIME CGI\n\n";
-		Cgi cgi("./cgi-bin/a.out", "GET", "");  // TODO: rename 'a.out' to better name ('time.cgi')
+		Cgi cgi("./cgi-bin/time.bin", "GET", "");
  		return cgi.makeResponse();
 		/*try
  		{
