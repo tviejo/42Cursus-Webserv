@@ -185,7 +185,7 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 			std::cerr << e.what() << '\n';
 			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
 		}
-		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
 	else
 	{
