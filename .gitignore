@@ -2,4 +2,6 @@
 .vscode/*
 
 webserv
+cgi-bin/*.bin
+cgi-bin/*.out
 objs/*

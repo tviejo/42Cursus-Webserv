@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 14:17:47 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/26 15:08:53 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,49 +106,17 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	{
 		Cgi cgi("./cgi-bin/name.py", "GET", req.getQueryStrings("name"));
  		return cgi.makeResponse();
-		/*try
- 		{
-  	    	cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());*/
 	}
 	else if (route.path == "/time")
 	{
 		std::cerr << "\nTIME CGI\n\n";
 		Cgi cgi("./cgi-bin/time.bin", "GET", "");
  		return cgi.makeResponse();
-		/*try
- 		{
-  	    	cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());*/
 	}
 	else if (route.path == "/gallery")
 	{
 		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
  		return cgi.makeResponse();
-		/*try
- 		{
-  	    	cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		std::cerr << cgi.GetRespHeader() << std::endl;
-		std::cerr << cgi.GetRespBody() << std::endl;
-		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());*/
 	}
 	else {
 		std::string filename;
