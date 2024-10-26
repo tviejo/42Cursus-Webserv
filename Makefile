@@ -1,5 +1,8 @@
 NAME        =   webserv
 
+TIME_CGI    =   cgi-bin/time.bin
+TIME_SRCS   =   cgi-bin/time.cpp
+
 SRC_DIR     =   srcs/
 
 OBJ_DIR     =   objs/
@@ -61,7 +64,7 @@ define PRINT_LOADING
 	@printf "] 100%%$(RESET)\n$(END)"
 endef
 
-all:            $(LIBFT) ${NAME}
+all:            $(TIME_CGI) $(LIBFT) ${NAME}
 				@echo "$(GREEN)$(BOLD_START)${NAME} created$(BOLD_END)$(END)"
 
 ${NAME}:        ${OBJS}
@@ -76,6 +79,8 @@ $(LIBFT):
 				@$(PRINT_LOADING)
 				$(MAKE) -s all -C libft/
 
+$(TIME_CGI):
+				$(CC) $(TIME_SRCS) $(FLAGS) -o $(TIME_CGI)
 
 clean:
 				$(RM) -r $(OBJ_DIR)
@@ -86,6 +91,7 @@ clean:
 
 fclean: clean
 				${RM} ${NAME}
+				$(RM) $(TIME_CGI)
 				$(MAKE) fclean -s -C ./libft/
 				@echo "$(RED)Fclean libft$(END)"
 				@echo "$(GREEN)$(BOLD_START)Fclean done$(BOLD_END)$(END)"

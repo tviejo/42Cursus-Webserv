@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>42 Project</title>
+    <title>CGI File Upload - 42 Project</title>
     <style>
         * {
             margin: 0;
@@ -55,7 +55,7 @@
         }
 
         main {
-            margin-top: 200px;
+            margin-top: 0px;
             text-align: center;
             max-width: 800px;
             width: 100%;
@@ -71,60 +71,72 @@
             color: #666;
         }
 
-        footer {
-            text-align: center;
-            width: 100%;
-            padding: 10px 0;
-            font-size: 0.9rem;
-            color: #888;
-            background-color: #333;
-            margin-top: auto;
-        }
-    </style>
-    <script>
-        function getCookie(name) {
-            let nameEQ = name + "=";
-            let decodedCookie = decodeURIComponent(document.cookie);
-            let ca = decodedCookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) == ' ') {
-                    c = c.substring(1);
-                }
-                if (c.indexOf(nameEQ) == 0) {
-                    return c.substring(nameEQ.length, c.length);
-                }
-            }
-            return null;
+        form {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        function checkName() {
-            let userName = getCookie("QueryString");
-            if (userName) {
-                document.getElementById("greeting").innerHTML = "Welcome back, " + userName + "!";
-            }
+        input[type="file"], input[type="submit"] {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
-    </script>
+
+        input[type="submit"] {
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #42b883;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 10px;
+            text-align: center;
+            width: 100%;
+            font-size: 0.9rem;
+            color: #888;
+        }
+    </style>
 </head>
-<body onload="checkName()">
+<body>
 
     <header>
         <nav>
-            <a href="/index.html">Home</a>
-            <a href="cgi.html">CGI</a>
-            <a href="time.html">Time</a>
-            <a href="gallery.html">Gallery</a>
-            <a href="delete.html">Delete</a>
-            <a href="upload/upload.html">Upload</a>
-            <a href="graphfx/index.html">Graph fx</a>
-            <a href="mandel/index.html">WebGL fractal</a>
-            <a href="raytracing/index.html">Ray tracing gallery</a>
+            <a href="../index.html">Home</a>
+            <a href="../cgi.html">CGI</a>
+            <a href="../time.html">Time</a>
+            <a href="../gallery.html">Gallery</a>
+            <a href="../delete.html">Delete</a>
+            <a href="../upload/upload.html">Upload</a>
+            <a href="../graphfx/index.html">Graph fx</a>
+            <a href="../mandel/index.html">WebGL fractal</a>
+            <a href="../raytracing/index.html">Ray tracing gallery</a>
         </nav>
     </header>
 
     <main>
-        <h1 id="greeting">Welcome to Webserv</h1>
-        <p>Are you Ready?</p>
+        <h1>File Upload</h1>
+        <p>
+            Upload your text file using the form below. The server will process the upload.
+        </p>
+        
+        <form action="action" method="POST" enctype="multipart/form-data">
+            <label for="file">Choose a text file:</label>
+            <input type="file" id="file" name="file" accept=".txt" required>
+            <input type="submit" value="Upload">
+        </form>
+
+        <p>After submitting, you will receive a confirmation of your upload.</p>
     </main>
 
     <footer>

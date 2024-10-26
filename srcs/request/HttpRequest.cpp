@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 10:23:42 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/25 15:17:50 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ HTTPRequest::HTTPRequest(const std::string& request)
 	std::ostringstream	bodyStream;
 	bodyStream << lineStream.rdbuf();
 	_body = bodyStream.str();
+	_empty_string = "";
 }
 
 void HTTPRequest::extractQueryString()
@@ -133,7 +134,10 @@ const std::map<std::string, std::string>	&HTTPRequest::getQueryStrings() const
 
 const std::string	&HTTPRequest::getQueryStrings(const std::string &key) const
 {
-	return _queryStrings.at(key);
+	if (_queryStrings.find(key) == _queryStrings.end())
+		return _empty_string;
+	else
+		return _queryStrings.at(key);
 }
 
 std::ostream & operator << (std::ostream &os, const HTTPRequest &req)
