@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 14:07:25 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/26 14:59:12 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	else if (route.path == "/time")
 	{
 		std::cerr << "\nTIME CGI\n\n";
-		Cgi cgi("./cgi-bin/a.out", "GET", "");
+		Cgi cgi("./cgi-bin/time.out", "GET", "");
  		try
  		{
   	    	cgi.CgiHandler();
