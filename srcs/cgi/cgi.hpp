@@ -14,7 +14,7 @@
 # define CGI_HPP
 
 # include "webserv.hpp"
-/*# include <iostream>
+# include <iostream>
 # include <sstream>
 # include <string>
 # include <string>
@@ -22,7 +22,7 @@
 # include <cstdlib>
 # include <vector>
 # include <unistd.h>
-# include <stdlib.h>*/
+# include <stdlib.h>
 # include <sys/types.h>
 # include <sys/wait.h>
 
