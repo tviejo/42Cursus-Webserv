@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 15:08:53 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/26 16:15:19 by jteissie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ void Response::setupContentTypeMap()
 }
 
 std::string	Response::makeResponseHeader(uint32_t status,
-						 const std::string & statusMessage, 
+						 const std::string & statusMessage,
 						 const std::string & contentType,
 						 size_t contentLength, int clientSocket)
 {
@@ -37,15 +37,15 @@ std::string	Response::makeResponseHeader(uint32_t status,
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
 	if (clientSocket != -1)
 		response << "Set-Cookie: ID=" << clientSocket << "; Path=/ \r\n";
-	response << "Content-Type: " << contentType << "\r\n"; 
-	response << "Content-Length: " << contentLength << "\r\n"; 
+	response << "Content-Type: " << contentType << "\r\n";
+	response << "Content-Length: " << contentLength << "\r\n";
 	//response << "Connection: Closed\r\n";
 	response << "\r\n";
 	return response.str();
 }
 
 OutgoingData *	Response::makeResponse(uint32_t status,
-						 const std::string & statusMessage, 
+						 const std::string & statusMessage,
 						 const std::string & contentType,
 						 const std::string & content,
 						 const std::string & addHeader)
@@ -53,8 +53,8 @@ OutgoingData *	Response::makeResponse(uint32_t status,
 	std::ostringstream	response;
 
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
-	response << "Content-Type: " << contentType << "\r\n"; 
-	response << "Content-Length: " << content.length() << "\r\n"; 
+	response << "Content-Type: " << contentType << "\r\n";
+	response << "Content-Length: " << content.length() << "\r\n";
 	response << addHeader << "\r\n";
 	response << "\r\n";
 	return new OutgoingData(response.str(), content);
@@ -88,7 +88,6 @@ std::string Response::getContentType(const std::string & uri)
 
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket, Server &serverObj)
 {
-	req.printRequest();
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
@@ -110,8 +109,17 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	else if (route.path == "/time")
 	{
 		std::cerr << "\nTIME CGI\n\n";
-		Cgi cgi("./cgi-bin/time.bin", "GET", "");
- 		return cgi.makeResponse();
+		Cgi cgi("./cgi-bin/time.out", "GET", "");
+ 		try
+ 		{
+  	    	cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
 	else if (route.path == "/gallery")
 	{
@@ -134,7 +142,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			return makeResponse(200, "OK", "text/html", htmlContent.str());
 		}
 		ssize_t filesize = getFileSize(filename);
-		std::cout << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
+		std::cerr << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
 		if (filesize == -1) {
 			filename = server.root + server.error;
 			filesize = getFileSize(filename);
@@ -160,9 +168,13 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	}
 	const t_route &route = *routeptr;
 	std::cout << "     route found: " << route.path << std::endl;
+	if (route.methods.find(req.get_method()) == route.methods.end())
+	{
+		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
+		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+	}
 	if (route.path == "/cgi")
 	{
-		req.printRequest();
 		Cgi cgi("./cgi-bin/name.py", "GET", "name=thomas");
  		try
  		{
@@ -184,7 +196,31 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
 	(void)server;
-	(void)req;
 	(void)clientSocket;
-	return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	std::cerr << "\nDELETE REQUEST\n\n";
+	std::string uri = req.getUriWithoutQString();
+	const t_route *routeptr = getRouteFromUri(server, uri);
+	if (routeptr == NULL) {
+		std::cerr << "     no route found from uri: " << uri << std::endl;
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+	}
+	std::cerr << uri << std::endl;
+	const t_route &route = *routeptr;
+	if (route.methods.find(req.get_method()) == route.methods.end())
+	{
+		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
+		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+	}
+	std::cerr << "     route found: " << route.path << std::endl;
+	if (route.path == "/delete")
+	{
+		std::string file = "./www/html/uploadedFiles/" + req.getQueryStrings("file");
+		std::cerr << "     file: " << file << std::endl;
+ 		if (std::remove(( "./www/html/uploadedFiles/" + req.getQueryStrings("file")).c_str()) != 0)
+			return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		else
+			return makeResponse(200, "OK", "text/plain", "200 OK");
+	}
+	else
+		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 }

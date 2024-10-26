@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 10:55:52 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/26 16:19:21 by jteissie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ Cgi &Cgi::operator=(const Cgi &copy)
 
 Cgi::Cgi(std::string path, std::string method, std::string info)
 {
+    std::cerr << "Cgi constructor\n";
     this->_header = "";
     this->_contentLength = 0;
     this->_isDone = false;
@@ -45,7 +46,9 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
     if (info.empty())
         this->_env = "";
     else
-        this->_env = "username="+ info;
+        this->_env = "QueryString="+ info;
+    std::cerr << "Cgi constructor end\n";
+
 }
 
 
@@ -70,12 +73,16 @@ void    Cgi::execute()
     int pid = fork();
     if (pid == 0)
     {
+        std::cerr << "Cgi execute\n";
         close(fd[0]);
         dup2(fd[1], 1);
         close(fd[1]);
         char **envp = this->getEnvp();
-        char *args[] = {ft_strdup(this->_path.c_str()), NULL};
+        char *args[] = {strdup(this->_path.c_str()), NULL};
+        std::cerr << "execve\n";
         execve(this->_path.c_str(), args, envp);
+        std::cerr << "execve failed\n";
+        throw std::runtime_error("execve failed");
         exit(0);
     }
     else
@@ -98,6 +105,8 @@ void    Cgi::execute()
             this->_header = this->createHeader(200, "OK", "text/html", this->_contentLength, _env);
             this->_isDone = true;
         }
+        std::cerr << _header << std::endl;
+        std::cerr << _response << std::endl;
     }
 }
 
@@ -115,7 +124,7 @@ void    Cgi::CgiHandler()
     {
         throw std::runtime_error("Invalid cgi path");
     }
-    if (this->_method == "GET")
+    if (this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE")
     {
         this->execute();
     }
@@ -134,40 +143,9 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     status_string = ssStatus.str();
     header += "HTTP/1.1 " + status_string + " " + message + "\r\n";
     if (!cookie.empty())
-        header += "Set-Cookie: " + cookie + ";path=/ \r\n";
+        header += "Set-Cookie: " + cookie + ";path=/; Max-Age=3600;\r\n";
     header += "Content-Type: " + contentType + "\r\n";
     header += "Content-Length: " + contentLength_string + "\r\n";
     header += "\r\n";
     return (header);
 }
-
-OutgoingData * Cgi::makeResponse()
-{
-    try {
-        CgiHandler();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        return Response::makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-    }
-    std::cerr << GetRespHeader() << std::endl;
-    std::cerr << GetRespBody() << std::endl;
-    return new OutgoingData(GetRespHeader(), GetRespBody());
-}
-
-// int main()
-// {
-//     Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
-//     try
-//     {
-//         cgi.CgiHandler();
-//     }
-//     catch(const std::exception& e)
-//     {
-//         std::cerr << e.what() << '\n';
-//     }
-//     std::cout << cgi.GetRespHeader() << std::endl;
-//     std::cout << cgi.GetRespBody() << std::endl;
-//     return (0);
-// }

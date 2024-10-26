@@ -155,6 +155,7 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	std::cout << "  -> " << request << std::endl;
 	OutgoingData *response;
 
+	std::cerr << " METHOD: " << request.get_method() << std::endl;
 	if (request.get_method() == "GET")
 		response = Response::handleGet(*_sockets[clientSocket].server, request, clientSocket, *this);
 	else if (request.get_method() == "POST")
