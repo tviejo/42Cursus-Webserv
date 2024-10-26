@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 12:08:28 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/26 09:51:20 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,14 +47,15 @@ std::string	Response::makeResponseHeader(uint32_t status,
 OutgoingData *	Response::makeResponse(uint32_t status,
 						 const std::string & statusMessage, 
 						 const std::string & contentType,
-						 const std::string & content)
+						 const std::string & content,
+						 const std::string & addHeader)
 {
 	std::ostringstream	response;
 
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
 	response << "Content-Type: " << contentType << "\r\n"; 
 	response << "Content-Length: " << content.length() << "\r\n"; 
-	//response << "Connection: Closed\r\n";
+	response << addHeader << "\r\n";
 	response << "\r\n";
 	return new OutgoingData(response.str(), content);
 }
@@ -85,7 +86,7 @@ std::string Response::getContentType(const std::string & uri)
 	return _contentTypeMap[ext];
 }
 
-OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket)
+OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket, Server &serverObj)
 {
 	req.printRequest();
 	std::string uri = req.getUriWithoutQString();
@@ -104,7 +105,8 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	if (route.path == "/cgi")
 	{
 		Cgi cgi("./cgi-bin/name.py", "GET", req.getQueryStrings("name"));
- 		try
+ 		return cgi.makeResponse();
+		/*try
  		{
   	    	cgi.CgiHandler();
 		}
@@ -113,13 +115,14 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			std::cerr << e.what() << '\n';
 			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
 		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());*/
 	}
 	else if (route.path == "/time")
 	{
 		std::cerr << "\nTIME CGI\n\n";
-		Cgi cgi("./cgi-bin/a.out", "GET", "");
- 		try
+		Cgi cgi("./cgi-bin/a.out", "GET", "");  // TODO: rename 'a.out' to better name ('time.cgi')
+ 		return cgi.makeResponse();
+		/*try
  		{
   	    	cgi.CgiHandler();
 		}
@@ -128,12 +131,13 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			std::cerr << e.what() << '\n';
 			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
 		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());*/
 	}
 	else if (route.path == "/gallery")
 	{
 		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
- 		try
+ 		return cgi.makeResponse();
+		/*try
  		{
   	    	cgi.CgiHandler();
 		}
@@ -142,9 +146,9 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			std::cerr << e.what() << '\n';
 			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
 		}
-		std::cerr << cgi.GetHeader() << std::endl;
-		std::cerr << cgi.GetResponse() << std::endl;
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		std::cerr << cgi.GetRespHeader() << std::endl;
+		std::cerr << cgi.GetRespBody() << std::endl;
+		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());*/
 	}
 	else {
 		std::string filename;
@@ -153,9 +157,13 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		else
 			filename = route.directory + "/" + uri.erase(0, route.path.length());
 		if (isDirectory(filename)) {
-			std::ostringstream entries;
-			readDirectory(filename, entries);
-			return makeResponse(200, "OK", "text/plain", entries.str());
+			if (filename[filename.length() - 1] != '/')  //if no final slash on directory: redirection 301 with uri + '/'
+				return makeResponse(301, "Moved Permanently", "text/plain", "301 Moved Permanently", "location: /" + uri + '/');
+			std::ostringstream htmlContent;
+			htmlContent << serverObj.getDisplayDirHtmlP1();
+			readDirectory(filename, htmlContent, ",", "''");
+			htmlContent << serverObj.getDisplayDirHtmlP2();
+			return makeResponse(200, "OK", "text/html", htmlContent.str());
 		}
 		ssize_t filesize = getFileSize(filename);
 		std::cout << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
@@ -197,7 +205,7 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 			std::cerr << e.what() << '\n';
 			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
 		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		return new OutgoingData(cgi.GetRespHeader(), cgi.GetRespBody());
 	}
 	else
 	{

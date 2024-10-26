@@ -58,9 +58,28 @@ void	Server::setupListeningSockets()
 	}
 }
 
+bool Server::loadDisplayDirectoryHtmlFiles()
+{
+	std::ifstream ifs("www/directory/directory-part1.html");
+	if (!ifs)
+		return false;
+	std::stringstream ss;
+	ss << ifs.rdbuf();
+	_displayDirHtmlPart1 = ss.str();
+	
+	std::ifstream ifs2("www/directory/directory-part2.html");
+	if (!ifs2)
+		return false;
+	std::stringstream ss2;
+	ss2 << ifs2.rdbuf();
+	_displayDirHtmlPart2 = ss2.str();
+	return true;
+}
+
 void	Server::init()
 {
 	std::cout << "init()\n";
+	loadDisplayDirectoryHtmlFiles();
 	setupListeningSockets();
 }
 
@@ -125,7 +144,6 @@ void	Server::handleOutgoingData(int clientSocket)
 		epoll_ev.data.fd = clientSocket;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientSocket, &epoll_ev) == -1)
 			throw std::runtime_error("[handleOutgoingData/epoll_ctl] failed to modify client socket events to 0");
-		//shutdown(clientSocket, SHUT_RDWR);
 	}
 }
 
@@ -138,7 +156,7 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	OutgoingData *response;
 
 	if (request.get_method() == "GET")
-		response = Response::handleGet(*_sockets[clientSocket].server, request, clientSocket);
+		response = Response::handleGet(*_sockets[clientSocket].server, request, clientSocket, *this);
 	else if (request.get_method() == "POST")
 		response = Response::handlePost(*_sockets[clientSocket].server, request, clientSocket);
 	else if (request.get_method() == "DELETE")
@@ -181,9 +199,8 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	if (event & EPOLLIN)
 	{
 		char		buffer[IO_BUFFER_SIZE];
-	
-		try 
-		{
+		
+		try {
 			ssize_t	bytesRead = safeRecv(clientSocket, buffer, sizeof(buffer), 0);
 			if (bytesRead > 0)
 			{
@@ -202,49 +219,64 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			else if (bytesRead == 0)
 			{
 				std::cerr << "   [EPOLLIN] Error ? bytesRead == 0\n";
-				epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
-				close(clientSocket);
-				_partialRequest.erase(clientSocket);
+				closeConnection(clientSocket, event);
 			}
 		}
 		catch (std::exception &e)
 		{
 			std::cerr << "   [EPOLLIN] Error receiving data from client : " << e.what() << std::endl;
-			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
-			close(clientSocket);
-			_partialRequest.erase(clientSocket);
+			closeConnection(clientSocket, event);
 		}
 	}
 	if (event & EPOLLOUT)
 	{
-		try 
-		{
+		try {
 			std::cout << "   [EPOLLOUT] -> handleOutgoingData()\n";
 			handleOutgoingData(clientSocket);
 		}
 		catch (std::exception &e)
 		{
 			std::cerr << "Error sending data to client : " << e.what() << std::endl;
-			epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
-			close(clientSocket);
-			if (_responses.find(clientSocket) != _responses.end()) {
-				delete _responses[clientSocket];
-				_responses.erase(clientSocket);
-			}
+			closeConnection(clientSocket, event);	
 		}
 	}
-	if (event & (EPOLLRDHUP | EPOLLHUP))
+	if (event & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 	{
-		std::cout << "   [EPOLLRDHUP | EPOLLHUP] client disconnected\n";
-		epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
-		close(clientSocket);
+		std::cout << "   [EPOLLRDHUP | EPOLLHUP | EPOLLERR] client disconnected\n";
+		closeConnection(clientSocket, event);
+	}
+}
+
+void Server::closeConnection(int clientSocket, uint32_t event)
+{
+	// Delete clientSocket from epoll instance _epollFd and close it
+	epoll_ctl(_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+	close(clientSocket);
+	
+	switch (event)  // specific cleanup that depends on the epoll event (receiving, sending or error/hang up)
+	{
+	case EPOLLIN:
 		_partialRequest.erase(clientSocket);
-		if (_responses.find(clientSocket) != _responses.end()) {
+		break;
+	case EPOLLOUT:
+		if (_responses.find(clientSocket) != _responses.end())
+		{
 			delete _responses[clientSocket];
 			_responses.erase(clientSocket);
 		}
-		_sockets.erase(clientSocket);
+		break;
+	case EPOLLRDHUP:
+	case EPOLLHUP:
+	case EPOLLERR:
+		_partialRequest.erase(clientSocket);
+		if (_responses.find(clientSocket) != _responses.end())
+		{
+			delete _responses[clientSocket];
+			_responses.erase(clientSocket);
+		}
 	}
+	// Finally erase client socket from _sockets map
+	_sockets.erase(clientSocket);
 }
 
 void	Server::eventLoop()

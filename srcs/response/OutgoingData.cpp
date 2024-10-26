@@ -4,8 +4,15 @@ OutgoingData::OutgoingData(const std::string &header, const std::string &body)
 {
 	_bufptr = _buffer;
 	_buflen = 0;
-	_header = new std::istringstream(header); 
-	_body = new std::istringstream(body);
+	if (body.length() < 512)
+	{
+		_header = new std::istringstream(header + body);
+		_body = NULL;
+	}
+	else {
+		_header = new std::istringstream(header);
+		_body = new std::istringstream(body);
+	}
 	loadBuffer();
 }
 
@@ -24,12 +31,13 @@ OutgoingData::OutgoingData(const std::string &header, const std::string &filenam
 OutgoingData::~OutgoingData()
 {
 	delete _header;
-	delete _body;
+	if (_body)
+		delete _body;
 }
 
 bool	OutgoingData::hasRemainingData()
 {
-	return (*_header || *_body);
+	return (*_header || (_body && *_body));
 }
 
 void	OutgoingData::loadBuffer()
@@ -38,7 +46,7 @@ void	OutgoingData::loadBuffer()
 		_header->read(_buffer, sizeof(_buffer));
 		_buflen = _header->gcount();
 		_bufptr = _buffer;
-	} else if (*_body) {
+	} else if (_body && *_body) {
 		_body->read(_buffer, sizeof(_buffer));
 		_buflen = _body->gcount();
 		_bufptr = _buffer;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 13:38:34 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/26 10:55:52 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
 char    **Cgi::getEnvp()
 {
     char **envp = new char*[2];
-    envp[0] = strdup(this->_env.c_str());
+    envp[0] = ft_strdup(this->_env.c_str());
     envp[1] = NULL;
     return (envp);
 }
@@ -74,7 +74,7 @@ void    Cgi::execute()
         dup2(fd[1], 1);
         close(fd[1]);
         char **envp = this->getEnvp();
-        char *args[] = {strdup(this->_path.c_str()), NULL};
+        char *args[] = {ft_strdup(this->_path.c_str()), NULL};
         execve(this->_path.c_str(), args, envp);
         exit(0);
     }
@@ -141,6 +141,21 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     return (header);
 }
 
+OutgoingData * Cgi::makeResponse()
+{
+    try {
+        CgiHandler();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return Response::makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+    }
+    std::cerr << GetRespHeader() << std::endl;
+    std::cerr << GetRespBody() << std::endl;
+    return new OutgoingData(GetRespHeader(), GetRespBody());
+}
+
 // int main()
 // {
 //     Cgi cgi("./cgi-bin/test.py", "GET", "name=thomas");
@@ -152,7 +167,7 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
 //     {
 //         std::cerr << e.what() << '\n';
 //     }
-//     std::cout << cgi.GetHeader() << std::endl;
-//     std::cout << cgi.GetResponse() << std::endl;
+//     std::cout << cgi.GetRespHeader() << std::endl;
+//     std::cout << cgi.GetRespBody() << std::endl;
 //     return (0);
 // }
