@@ -130,8 +130,6 @@ std::vector<formPart>	parseMultipartForm(const std::string& body, const std::str
 	return partsVec;
 }
 
-
-
 OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& route)
 {
 	try 
@@ -183,7 +181,7 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& 
 			response += "- " + *it + "\n";
 		return makeResponse(201, "Created", "text/plain", response);
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
 		return makeResponse(500, "Internal Server Error", "text/plain",
 					  std::string("Failed to process upload: ") + e.what());
@@ -194,6 +192,38 @@ OutgoingData*	Response::handleFormSubmission(const HTTPRequest& req, const t_rou
 {
 }
 
+bool isValidJson(const std::string& content)
+{
+	//horror going to happen here
+	return true;
+}
+
 OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const t_route& route)
 {
+	try
+	{
+		const std::string&	content = req.getBody();
+		if (content.empty())
+			return makeResponse(400, "Bad Request", "application/json", "{\"error\": \"Empty request body\"}");
+		if (content.length() > 10 * 1024 * 1024) // 10 MB
+			return makeResponse(413, "Payload Too Large", "application/json", "{\"error\": \"Request body too large\"}");
+		if (!isValidJson(content))
+			return makeResponse(400, "Bad Request", "application/json", "{\"error\": \"Invalid JSON format\"}");
+		std::string	uploadDir = "www/upload";
+		//check for existing uploadDir here and also maybe make another one for json
+		std::string		fileName = getDate(req.getBody()) + ".json";
+		std::string		fullPath = uploadDir + "/" + sanitizeFileName(fileName);
+		std::ofstream	outFile(fullPath.c_str(), std::ios::out | std::ios::binary);
+		if (!outFile)
+			throw std::runtime_error("Could not create output file");
+		outFile.write(content.c_str(), content.length());
+		outFile.close();
+
+		return makeResponse(201, "Created", "application/json",
+					 "{\"status\": \"success\", \"file\": \"" + fileName + "\"}");
+	}
+	catch (const std::exception& e)
+	{
+		return makeResponse(500, "Inernal Server Error", "application/json", "{\"error\"}: \"" + std::string(e.what()) + "\"}");
+	}
 }
