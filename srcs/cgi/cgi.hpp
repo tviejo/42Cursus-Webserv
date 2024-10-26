@@ -48,8 +48,8 @@ class Cgi
 		~Cgi();
 		void execute();
 		void CgiHandler();
-		std::string GetRespHeader() { return _header; }
-		std::string GetRespBody() { return _response; }
+		std::string GetHeader() { return _header; }
+        	std::string GetResponse() { return _response; }
 		std::string createHeader(size_t status, std::string message, std::string contentType, size_t contentLength, std::string cookie);
 		class OutgoingData * makeResponse();
 };
