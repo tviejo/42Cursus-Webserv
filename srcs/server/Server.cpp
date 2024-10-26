@@ -22,11 +22,17 @@ void	Server::setupListeningSockets()
 		if (sock == -1)
 			throw std::runtime_error("[setupSockets] Failed to create socket");
 		int	opt = 1;
+		int keepalive = 1;
 
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		{
 			close(sock);
-			throw std::runtime_error("[setupSockets] Failed to set socket options");
+			throw std::runtime_error("[setupSockets] Failed to set socket options: reuseaddr");
+		}
+		if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) == -1)
+		{
+			close(sock);
+			throw std::runtime_error("[setupSockets] Failed to set socket options: keepalive");
 		}
 		fcntl(sock, F_SETFL, O_NONBLOCK);	
 		struct sockaddr_in serverAddr;
@@ -98,7 +104,7 @@ ssize_t	Server::safeRecv(int socketfd, void *buffer, size_t len, int flags)
 void	Server::handleOutgoingData(int clientSocket)
 {
 	OutgoingData *toSend = _responses[clientSocket];
-	ssize_t bytes_sent = send(clientSocket, toSend->getbufptr(), toSend->getbuflen(), 0);
+	ssize_t bytes_sent = send(clientSocket, toSend->getbufptr(), toSend->getbuflen(), MSG_NOSIGNAL);
 	if (bytes_sent < 0)
 		throw std::runtime_error("[handleOutgoingData/send] error while sending response to client");
 	
@@ -161,14 +167,18 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 	sockaddr_in	cliAddr, srvAddr;
 	socklen_t	cliAddrLen = sizeof(cliAddr), srvAddrLen = sizeof(srvAddr);
 	char cliIP[16], srvIP[16];
-	getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen);
-	getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen);
-	inet_ntop(AF_INET, &cliAddr.sin_addr, cliIP, sizeof(cliIP));
-	inet_ntop(AF_INET, &srvAddr.sin_addr, srvIP, sizeof(srvIP));
-	std::cout << "handleClientEvent()  socket: " << clientSocket
-		<< "  (" << cliIP << ":" << ntohs(cliAddr.sin_port)
-		<< " <=> " << srvIP << ":" << ntohs(srvAddr.sin_port) << ")\n";
-	
+	int infoStatus = 0;
+
+	infoStatus += getpeername(clientSocket, (sockaddr *)&cliAddr, &cliAddrLen);
+	infoStatus += getsockname(clientSocket, (sockaddr *)&srvAddr, &srvAddrLen);
+	if (infoStatus == 0)
+	{
+		inet_ntop(AF_INET, &cliAddr.sin_addr, cliIP, sizeof(cliIP));
+		inet_ntop(AF_INET, &srvAddr.sin_addr, srvIP, sizeof(srvIP));
+		std::cout << "handleClientEvent()  socket: " << clientSocket
+			<< "  (" << cliIP << ":" << ntohs(cliAddr.sin_port)
+			<< " <=> " << srvIP << ":" << ntohs(srvAddr.sin_port) << ")\n";
+	}
 	if (event & EPOLLIN)
 	{
 		char		buffer[IO_BUFFER_SIZE];
