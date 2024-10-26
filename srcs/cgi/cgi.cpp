@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 14:12:56 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/26 16:19:21 by jteissie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
     else
         this->_env = "QueryString="+ info;
     std::cerr << "Cgi constructor end\n";
-    
+
 }
 
 
@@ -56,7 +56,7 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
 char    **Cgi::getEnvp()
 {
     char **envp = new char*[2];
-    envp[0] = strdup(this->_env.c_str());
+    envp[0] = ft_strdup(this->_env.c_str());
     envp[1] = NULL;
     return (envp);
 }

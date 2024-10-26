@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:17 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/20 03:32:38 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/25 17:41:40 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,22 @@ void readDirectory(const std::string& name, std::ostringstream& oss)
     struct dirent * dp;
     while ((dp = readdir(dirp)) != NULL) {
         oss << dp->d_name << "\n";
+    }
+    closedir(dirp);
+}
+
+/* Read a directory and write all entries into an ostringstream
+*/
+void readDirectory(const std::string& name, std::ostringstream& oss, const std::string& separator, const std::string& quotes)
+{
+    DIR* dirp = opendir(name.c_str());
+    struct dirent * dp;
+    bool firstEntry = true;
+    while ((dp = readdir(dirp)) != NULL) {
+        if (!firstEntry)
+            oss << separator;
+        oss << quotes[0] << dp->d_name << quotes[1];
+        firstEntry = false;
     }
     closedir(dirp);
 }
