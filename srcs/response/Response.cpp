@@ -104,7 +104,16 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	if (route.path == "/cgi")
 	{
 		Cgi cgi("./cgi-bin/name.py", "GET", req.getQueryStrings("name"));
- 		return cgi.makeResponse();
+ 		try
+ 		{
+  	    		cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
 	}
 	else if (route.path == "/time")
 	{
@@ -112,7 +121,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		Cgi cgi("./cgi-bin/time.out", "GET", "");
  		try
  		{
-  	    	cgi.CgiHandler();
+  	    		cgi.CgiHandler();
 		}
 		catch(const std::exception& e)
 		{
@@ -124,7 +133,16 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	else if (route.path == "/gallery")
 	{
 		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
- 		return cgi.makeResponse();
+ 		try
+ 		{
+  	    		cgi.CgiHandler();
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
+		}
+		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());;
 	}
 	else {
 		std::string filename;
