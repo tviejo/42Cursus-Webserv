@@ -57,10 +57,56 @@ OutgoingData*	Response::handleTextPost(const HTTPRequest& req, const t_route& ro
 	}
 }
 
-OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& route)
+struct formPart
 {
+	std::string	name;
+	std::string	filename;
+	std::string	contentType;
+	std::string	content;
 }
 
+OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& route)
+{
+	try 
+	{
+		std::map<std::string, std::string>::const_iterator headerIt = req.getHeaders().find("Content-Type");
+		if (headerIt == req.getHeaders().end())
+			return makeResponse(400, "Bad Request", "text/plain",
+					   "No boundary found in multipart/form-data");
+
+		size_t boundaryPos = headerIt->second.find("boundary=");
+		if (boundaryPos == std::string::npos)
+			return makeResponse(400, "Bad Request", "text/plain",
+					   "No boundary found in multipart/form-data");
+
+		std::string				boundary = "--" + headerIt->second.substr(boundaryPos + 9);	
+		std::vector<formPart>	parts = parseMultipartform(req.getBody(), boundary);
+
+		//create upload directory here if needed
+		std::string					uploadDir = "www/upload";
+		std::vector<std::string>	uploadedFiles;
+
+		for (std::vector<formPart>::iterator it = parts.begin(); it != parts.end(); it++)
+		{
+			if (it->filename.empty())
+			continue;
+			if (it->content.size() > 10 * 1024 * 1024) // 10 MB
+			{
+				return makeResponse(413, "Payload Too Large", "text/plain",
+						"File size exceeds maximum allowed");
+			}
+			//std::string safeFileName = sanitizeFileName(it->fileName);
+			std::string fullPath = uploadDir + "/" + safeFileName;
+			//handle duplicate  file names here
+		}
+	}
+	catch (std::exception& e)
+	{
+		return makeResponse(500, "Internal Server Error", "text/plain",
+					  std::string("Failed to process upload: ") + e.what());
+	}
+}
+ 
 OutgoingData*	Response::handleFormSubmission(const HTTPRequest& req, const t_route& route)
 {
 }
