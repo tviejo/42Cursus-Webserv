@@ -60,10 +60,10 @@ OutgoingData*	Response::handleTextPost(const HTTPRequest& req, const t_route& ro
 struct formPart
 {
 	std::string	name;
-	std::string	filename;
+	std::string	fileName;
 	std::string	contentType;
 	std::string	content;
-}
+};
 
 OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& route)
 {
@@ -88,17 +88,31 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& 
 
 		for (std::vector<formPart>::iterator it = parts.begin(); it != parts.end(); it++)
 		{
-			if (it->filename.empty())
-			continue;
+			if (it->fileName.empty())
+				continue;
 			if (it->content.size() > 10 * 1024 * 1024) // 10 MB
-			{
 				return makeResponse(413, "Payload Too Large", "text/plain",
 						"File size exceeds maximum allowed");
-			}
 			//std::string safeFileName = sanitizeFileName(it->fileName);
-			std::string fullPath = uploadDir + "/" + safeFileName;
+			std::string fullPath = uploadDir + "/" + it->fileName;// + safeFileName;
 			//handle duplicate  file names here
+			std::ofstream outFile(fullPath.c_str(), std::ios::binary);
+			if (!outFile)
+				throw std::runtime_error("Failed to create outFile: " + fullPath);
+			outFile.write(it->content.data(), it->content.size());
+			outFile.close();
+			if (!outFile)
+				throw std::runtime_error("Failed to write to outFile: " + fullPath);
+			uploadedFiles.push_back(it->fileName);
 		}
+		if (uploadedFiles.empty())
+			return makeResponse(400, "Bad Request", "text/plain",
+					   "No files were uploaded");
+	
+		std::string response = "Successfully uploaded " + std::to_string(uploadedFiles.size()) + " file(s):\n";
+		for (std::vector<std::string>::const_iterator it = uploadedFiles.begin(); it != uploadedFiles.end(); it++)
+			response += "- " + *it + "\n";
+		return makeResponse(201, "Created", "text/plain", response);
 	}
 	catch (std::exception& e)
 	{
