@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:56:20 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/20 03:52:32 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/25 18:09:11 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ void    Config::initRoute(t_route &route)
 
 void    Config::initServer(t_server &server)
 {
+	//server.ServerObject = NULL;
 	server.server_name.clear();
 	server.host.clear();
 	server.port = 0;

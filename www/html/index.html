@@ -19,6 +19,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
         }
 
@@ -36,11 +37,12 @@
         nav {
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         nav a {
-            margin: 0 15px;
-            padding: 10px 20px;
+            margin: 5px 10px;
+            padding: 10px 15px;
             color: white;
             text-decoration: none;
             font-size: 18px;
@@ -54,8 +56,10 @@
         }
 
         main {
-            margin-top: 70px;
+            margin-top: 200px;
             text-align: center;
+            max-width: 800px;
+            width: 100%;
         }
 
         h1 {
@@ -69,12 +73,13 @@
         }
 
         footer {
-            position: absolute;
-            bottom: 10px;
             text-align: center;
             width: 100%;
+            padding: 10px 0;
             font-size: 0.9rem;
             color: #888;
+            background-color: #333;
+            margin-top: auto;
         }
     </style>
     <script>
@@ -95,7 +100,7 @@
         }
 
         function checkName() {
-            let userName = getCookie("username");
+            let userName = getCookie("QueryString");
             if (userName) {
                 document.getElementById("greeting").innerHTML = "Welcome back, " + userName + "!";
             }
@@ -110,6 +115,7 @@
             <a href="cgi.html">CGI</a>
             <a href="time.html">Time</a>
             <a href="gallery.html">Gallery</a>
+            <a href="delete.html">Delete</a>
             <a href="upload/upload.html">Upload</a>
             <a href="graphfx/index.html">Graph fx</a>
             <a href="mandel/index.html">WebGL fractal</a>

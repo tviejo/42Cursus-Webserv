@@ -28,6 +28,8 @@ class Server
 		//std::map<int, std::ofstream>	_requestStreams;
 		
 		std::map<int, class OutgoingData *>	_responses;
+		std::string		_displayDirHtmlPart1;
+		std::string		_displayDirHtmlPart2;
 	
 		Server();
 	public:
@@ -43,6 +45,10 @@ class Server
 		void	sendResponse(int clientSocket, OutgoingData *response);
 		void	handleOutgoingData(int clientSocket);
 		ssize_t	safeRecv(int socketfd, void *buffer, size_t len, int flags);
+		void	closeConnection(int clientSocket, uint32_t event);
 		void	shutDown();
 		bool	isAlive();
+		bool    loadDisplayDirectoryHtmlFiles();
+		const std::string	&getDisplayDirHtmlP1() const { return _displayDirHtmlPart1; };
+		const std::string	&getDisplayDirHtmlP2() const { return _displayDirHtmlPart2; };
 };
