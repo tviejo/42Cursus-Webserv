@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 11:53:48 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/27 12:05:33 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,16 +104,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	if (route.cgi.empty() == false)
 	{
 		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
-		try
-		{
-			cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		return cgi.handleCgi();
 	}
 	else {
 		std::string filename;
@@ -162,19 +153,11 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
 	}
-	if (route.path == "/cgi")
+	req.printRequest();
+	if (route.cgi.empty() == false)
 	{
-		Cgi cgi("./cgi-bin/name.py", "GET", "name=thomas");
- 		try
- 		{
-  	    	cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
+		return cgi.handleCgi();
 	}
 	else
 	{

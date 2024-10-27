@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 16:19:21 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/27 12:00:03 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,4 +148,18 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     header += "Content-Length: " + contentLength_string + "\r\n";
     header += "\r\n";
     return (header);
+}
+
+class OutgoingData *Cgi::handleCgi()
+{
+    try
+    {
+        CgiHandler();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return new OutgoingData(createHeader(500, "Internal Server Error", "text/plain", 500, ""), "500 Internal Server Error");
+    }
+    return new OutgoingData(GetHeader(), GetResponse());
 }
