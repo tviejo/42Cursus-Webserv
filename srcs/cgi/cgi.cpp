@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 12:14:19 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/27 12:43:01 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,16 +150,17 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     return (header);
 }
 
-class OutgoingData *Cgi::handleCgi()
+class OutgoingData *Cgi::handleCgi(std::string root, std::string error, int clientSocket)
 {
     try
     {
-        CgiHandler();
+        this->CgiHandler();
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
-        return new OutgoingData(createHeader(500, "Internal Server Error", "text/plain", 500, ""), "500 Internal Server Error");
+        return Response::makeErrorResponse(500, "Internal Server Error", root, error, clientSocket);
     }
-    return new OutgoingData(GetHeader(), GetResponse());
+    return new OutgoingData(this->_header, this->_response);
+    
 }

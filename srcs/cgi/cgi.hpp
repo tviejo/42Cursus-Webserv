@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:59 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 12:01:14 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/27 12:42:09 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ class Cgi
 	public:
 		Cgi(std::string path, std::string method, std::string info);
 		~Cgi();
-		class OutgoingData *handleCgi();
+		class OutgoingData *handleCgi(std::string root, std::string error, int clientSocket);
 };
 
 #endif

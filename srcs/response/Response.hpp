@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:33 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 20:00:02 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/27 13:10:26 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,15 @@ public:
 										 const std::string & contentType,
 									 	 const std::string & content,
 										 const std::string & addHeader = "");
+	static OutgoingData *	makeErrorResponse(uint32_t status,
+												const std::string &statusMessage,
+												const t_server &server,
+												int clientSocket);
+	static OutgoingData *	makeErrorResponse(uint32_t status,
+												const std::string &statusMessage,
+												std::string root,
+												std::string error,
+												int clientSocket);
 	static void				setupContentTypeMap();
 	static std::string		getContentType(const std::string & uri);
 };
