@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 16:15:19 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/27 13:38:52 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -232,8 +232,8 @@ OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest
 	std::cerr << "     route found: " << route.path << std::endl;
 	if (route.path == "/delete")
 	{
-		std::string file = "./www/html/uploadedFiles/" + req.getQueryStrings("file");
-		std::cerr << "     file: " << file << std::endl;
+		if (req.getQueryStrings("file").find("..") != std::string::npos)
+			return makeResponse(403, "Forbidden", "text/plain", "403 Forbidden");
  		if (std::remove(( "./www/html/uploadedFiles/" + req.getQueryStrings("file")).c_str()) != 0)
 			return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 		else
