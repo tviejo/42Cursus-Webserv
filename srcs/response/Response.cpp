@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 16:15:19 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/27 11:53:48 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,12 +101,12 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
 	}
-	if (route.path == "/cgi")
+	if (route.cgi.empty() == false)
 	{
-		Cgi cgi("./cgi-bin/name.py", "GET", req.getQueryStrings("name"));
- 		try
- 		{
-  	    		cgi.CgiHandler();
+		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
+		try
+		{
+			cgi.CgiHandler();
 		}
 		catch(const std::exception& e)
 		{
@@ -114,35 +114,6 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
 		}
 		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
-	}
-	else if (route.path == "/time")
-	{
-		std::cerr << "\nTIME CGI\n\n";
-		Cgi cgi("./cgi-bin/time.out", "GET", "");
- 		try
- 		{
-  	    		cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
-	}
-	else if (route.path == "/gallery")
-	{
-		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
- 		try
- 		{
-  	    		cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());;
 	}
 	else {
 		std::string filename;
