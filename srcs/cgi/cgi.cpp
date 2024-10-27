@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 12:00:03 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/27 12:14:19 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
 char    **Cgi::getEnvp()
 {
     char **envp = new char*[2];
-    envp[0] = ft_strdup(this->_env.c_str());
+    envp[0] = strdup(this->_env.c_str());
     envp[1] = NULL;
     return (envp);
 }
