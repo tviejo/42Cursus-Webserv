@@ -44,9 +44,9 @@ public:
 												int clientSocket);
 	static void				setupContentTypeMap();
 	static std::string		getContentType(const std::string & uri);
-	static OutgoingData*	handleTextPost(const HTTPRequest& req, const t_route& route);
-	static OutgoingData*	handleFileUpload(const HTTPRequest& req, const t_route& route);
-	static OutgoingData*	handleUrlEncodedForm(const HTTPRequest& req, const t_route& route);
-	static OutgoingData*	handleJsonPost(const HTTPRequest& req, const t_route& route);
+	static OutgoingData*	handleTextPost(const HTTPRequest& req);
+	static OutgoingData*	handleFileUpload(const HTTPRequest& req);
+	static OutgoingData*	handleUrlEncodedForm(const HTTPRequest& req);
+	static OutgoingData*	handleJsonPost(const HTTPRequest& req);
 	static std::string		urlDecode(const std::string& encoded);
 };

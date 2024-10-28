@@ -15,6 +15,50 @@
 
 /* Parse string request received from client
 */
+bool	HTTPRequest::hasBody()
+{
+	std::map<std::string, std::string>::const_iterator it = _headers.find("Content-Length");
+	if (it != _headers.end() && std::atol(it->second.c_str()) > 0)
+		return true;	
+	it = _headers.find("transfer-encoding");
+	if (it != _headers.end() && it->second.find("chunked") != std::string::npos)
+		return true;
+	return false;
+}
+
+void	HTTPRequest::parseBody(std::istringstream& lineStream)
+{
+	std::map<std::string, std::string>::iterator lengthIt = _headers.find("Content-Length");
+	if (lengthIt != _headers.end())
+	{
+		std::cerr << "ParseBody first branch: " << std::endl;
+		size_t length = std::atol(lengthIt->second.c_str());
+		std::vector<char> buffer;
+		buffer.resize(length);
+	
+		lineStream.read(&buffer[0], length);
+		std::streamsize bytesRead = lineStream.gcount();
+		if (bytesRead > 0)
+		{
+			std::cerr << "buffer vector contents: " << std::endl;
+			for (std::vector<char>::iterator it = buffer.begin(); it != buffer.end(); it++)
+			{
+				std::cerr << "byte: ";
+				std::cerr << *it << " " << std::endl;
+			}
+			_body.assign(&buffer[0], bytesRead);
+		}
+		else
+			std::cerr << "No data was read from the stream" << std::endl;
+	}
+	else
+	{
+		std::ostringstream	bodyStream;
+		bodyStream << lineStream.rdbuf();
+		_body = bodyStream.str();
+	}
+}
+
 HTTPRequest::HTTPRequest(const std::string& request)
 {
 	std::istringstream	stream(request);
@@ -34,8 +78,6 @@ HTTPRequest::HTTPRequest(const std::string& request)
 			_headers[key] = value;
 		}
 	}
-	extractQueryString();
-
 	// A modifier/supprimer : le body devrait etre considéré comme un flux binaire
 	// (ou bien tenir compte du content-type) et surtout faire l'objet d'un traitement
 	// postérieur notemment dans le cas d'un POST avec un fichier quelconque.
@@ -43,10 +85,10 @@ HTTPRequest::HTTPRequest(const std::string& request)
 	// ce qui permettra déjà de décider si serveur refuse ou accepte la requete et
 	// ensuite seuleument de recupérer le body avec par exemple un objet IngoingData
 	// (classe qui reste à faire !)
-	std::ostringstream	bodyStream;
-	bodyStream << lineStream.rdbuf();
-	_body = bodyStream.str();
+	if (hasBody())
+		parseBody(stream);
 	_empty_string = "";
+	extractQueryString();
 }
 
 void HTTPRequest::extractQueryString()

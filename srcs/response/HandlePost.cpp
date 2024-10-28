@@ -1,7 +1,7 @@
 #include "webserv.hpp"
 #include "Response.hpp"
 
-//static std::string	extractFilename(const std::string& body, const std::string& filenameKey)
+//static std::string	extractFilename(const std::string& body, const std::string& filnameKey)
 //{
 //	size_t filenameStart = body.find(filenameKey);
 //
@@ -39,14 +39,14 @@ std::string sanitizeFileName(const std::string& fileName)
 	return safe;
 }
 
-OutgoingData*	Response::handleTextPost(const HTTPRequest& req, const t_route& route)
+OutgoingData*	Response::handleTextPost(const HTTPRequest& req)
 {
 	try
 	{
 		const std::string&	content = req.getBody();
 		std::string			fileName = getDate(req.getBody()) + ".txt";
 		std::string			safeFileName = sanitizeFileName(fileName);
-		const std::string	path = "www/upload/" + fileName;
+		const std::string	path = "www/html/uploadedFiles/" + fileName;
 		std::string			line;
 		//set max length to protect against ddos
 		//check if directory exist and handle it if it does not
@@ -130,7 +130,7 @@ std::vector<formPart>	parseMultipartForm(const std::string& body, const std::str
 	return partsVec;
 }
 
-OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& route)
+OutgoingData*	Response::handleFileUpload(const HTTPRequest& req)
 {
 	try 
 	{
@@ -148,7 +148,7 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& 
 		std::vector<formPart>	parts = parseMultipartForm(req.getBody(), boundary);
 
 		//create upload directory here if needed
-		std::string					uploadDir = "www/upload";
+		std::string					uploadDir = "www/html/uploadedFiles/";
 		std::vector<std::string>	uploadedFiles;
 
 		for (std::vector<formPart>::iterator it = parts.begin(); it != parts.end(); it++)
@@ -175,8 +175,9 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& 
 		if (uploadedFiles.empty())
 			return makeResponse(400, "Bad Request", "text/plain",
 					   "No files were uploaded");
-	
-		std::string response = "Successfully uploaded " + std::to_string(uploadedFiles.size()) + " file(s):\n";
+		std::ostringstream oss;
+		oss << "Successfully uploaded " << uploadedFiles.size() << " file(s):\n";
+		std::string	response = oss.str();
 		for (std::vector<std::string>::const_iterator it = uploadedFiles.begin(); it != uploadedFiles.end(); it++)
 			response += "- " + *it + "\n";
 		return makeResponse(201, "Created", "text/plain", response);
@@ -213,7 +214,7 @@ std::string Response::urlDecode(const std::string& encoded)
 	return result;
 }
 
-OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, const t_route& route)
+OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req)
 {
 	std::string							body = req.getBody();
 	std::string							fileName = getDate(body);
@@ -245,7 +246,7 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, const t_rou
 		ss << it->first << ": " << it->second << "\n";
 		it++;
 	}
-	std::string fullPath = "www/upload/" + fileName;
+	std::string fullPath = "www/html/uploadedFiles/" + fileName;
 	std::ofstream outFile(fullPath.c_str(), std::ios::binary);
 	if (!outFile)
 		throw std::runtime_error("Failed to create outFile: " + fullPath);
@@ -254,10 +255,11 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, const t_rou
 	outFile.close();
 	if (!outFile)
 		throw std::runtime_error("Failed to write to outFile: " + fullPath);
-	return makeResponse(201, "Created", "text/plain", response);
+
+	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath);
 }
 
-OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const t_route& route)
+OutgoingData*	Response::handleJsonPost(const HTTPRequest& req)
 {
 	try
 	{
@@ -266,7 +268,7 @@ OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const t_route& ro
 			return makeResponse(400, "Bad Request", "application/json", "{\"error\": \"Empty request body\"}");
 		if (content.length() > 10 * 1024 * 1024) // 10 MB
 			return makeResponse(413, "Payload Too Large", "application/json", "{\"error\": \"Request body too large\"}");
-		std::string	uploadDir = "www/upload";
+		std::string	uploadDir = "/upload";
 		//check for existing uploadDir here and also maybe make another one for json
 		std::string		fileName = getDate(req.getBody()) + ".json";
 		std::string		fullPath = uploadDir + "/" + sanitizeFileName(fileName);
@@ -281,6 +283,6 @@ OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const t_route& ro
 	}
 	catch (const std::exception& e)
 	{
-		return makeResponse(500, "Inernal Server Error", "application/json", "{\"error\"}: \"" + std::string(e.what()) + "\"}");
+		return makeResponse(500, "Internal Server Error", "application/json", "{\"error\"}: \"" + std::string(e.what()) + "\"}");
 	}
 }

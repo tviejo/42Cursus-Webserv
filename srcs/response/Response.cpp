@@ -187,7 +187,7 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	(void)clientSocket;
 	std::string			uri = req.getUriWithoutQString();
 	const t_route		*routeptr = getRouteFromUri(server, uri);
-	std::map<std::string, std::string>::const_iterator contentType = req.getHeaders().find("content-type");
+	std::map<std::string, std::string>::const_iterator contentType = req.getHeaders().find("Content-Type");
 
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
@@ -201,6 +201,7 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
 	req.printRequest();
+	std::cerr << "Body: " << req.getBody() << std::endl;
 	if (route.cgi.empty() == false)
 	{
 		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
@@ -209,13 +210,13 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	else if (contentType == req.getHeaders().end())
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	else if (contentType->second.find("text/plain") != std::string::npos)
-		return handleTextPost(req, route);
+		return handleTextPost(req);
 	else if (contentType->second.find("multipart/form-data") != std::string::npos)
-		return handleFileUpload(req, route);
+		return handleFileUpload(req);
 	else if (contentType->second.find("application/x-www-form-urlencoded") != std::string::npos)
-		return handleEncodedForm(req, route);
+		return handleUrlEncodedForm(req);
 	else if (contentType->second.find("application/json") != std::string::npos)
-		return handleJsonPost(req, route);
+		return handleJsonPost(req);
 	else
 		return makeResponse(415, "Unsupported Media Type", "text/plain", "415 Unsupported Media Type: " + contentType->second);
 }
