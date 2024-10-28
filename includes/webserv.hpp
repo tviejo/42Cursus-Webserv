@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:52:56 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 11:29:51 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/27 13:05:11 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,6 @@
 #include <cstdlib>
 #include "Array.hpp"
 
-extern "C" {
-	#include "../libft/includes/libft.h"
-}
 #include "../srcs/cgi/cgi.hpp"
 #include "../srcs/config/config.hpp"
 #include "../srcs/utils/timer.hpp"

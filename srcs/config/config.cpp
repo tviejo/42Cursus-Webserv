@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:56:20 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 18:09:11 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/27 11:24:23 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ void    Config::initRoute(t_route &route)
 	route.methods.clear();
 	route.upload.clear();
 	route.directory.clear();
+	route.cgi.clear();
 	route.autoindex = false;
 	route.max_body_size = 0;
 }
@@ -82,6 +83,7 @@ void    Config::printConfig()
 			std::cout << "  directory: " << it->second.directory << std::endl;
 			std::cout << "  autoindex: " << it->second.autoindex << std::endl;
 			std::cout << "  max_body_size: " << it->second.max_body_size << std::endl;
+			std::cout << "  cgi: " << it->second.cgi << std::endl;
 		}
 		std::cout << std::endl << std::endl;
 	}
@@ -131,6 +133,8 @@ void    Config::parseRoute(std::string &routePath, std::ifstream &file, t_route 
 			route.autoindex = server.autoindex; // if autoindex is not defined for route get the global server value
 		if (line.find("max_body_size = ") != std::string::npos)
 			route.max_body_size = std::atol(line.substr(line.find("max_body_size = ") + 16).c_str());
+		if (line.find("cgi = ") != std::string::npos)
+			route.cgi = line.substr(line.find("cgi = ") + 6);
 		else
 			route.max_body_size = server.max_body_size; // if max_body_size is not defined for route get the global server value
 	}

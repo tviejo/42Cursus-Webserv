@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:57:38 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 18:08:56 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/10/27 11:20:09 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ typedef struct route
 	std::set<std::string> methods;  // allowed methods (GET, POST, DELETE)
 	std::string         upload;     // upload directory
 	std::string         directory;  // server directory for route (exple: "/srv/www/html" for "/")
+	std::string         cgi;		// cgi path and extension
 	bool                autoindex;
 	size_t              max_body_size;
 } t_route;

@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 15:17:50 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/27 11:51:07 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,6 +138,13 @@ const std::string	&HTTPRequest::getQueryStrings(const std::string &key) const
 		return _empty_string;
 	else
 		return _queryStrings.at(key);
+}
+
+const std::string	&HTTPRequest::getFirstQueryString() const
+{
+	if (_queryStrings.empty())
+		return _empty_string;
+	return _queryStrings.begin()->second;
 }
 
 std::ostream & operator << (std::ostream &os, const HTTPRequest &req)
