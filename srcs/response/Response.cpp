@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 13:10:33 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/28 09:39:22 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -232,9 +232,9 @@ OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest
 	std::cerr << "     route found: " << route.path << std::endl;
 	if (route.path == "/delete")
 	{
-		std::string file = "./www/html/uploadedFiles/" + req.getQueryStrings("file");
-		std::cerr << "     file: " << file << std::endl;
- 		if (std::remove(( "./www/html/uploadedFiles/" + req.getQueryStrings("file")).c_str()) != 0)
+		if (req.getFirstQueryString().find("..") != std::string::npos)
+			return makeErrorResponse(403, "Forbidden", server, clientSocket);
+ 		if (std::remove(( "./www/html/uploadedFiles/" + req.getFirstQueryString()).c_str()) != 0)
 			return makeErrorResponse(404, "Not Found", server, clientSocket);
 		else
 			return makeResponse(200, "OK", "text/plain", "200 OK");
