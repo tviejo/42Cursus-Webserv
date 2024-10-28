@@ -31,7 +31,6 @@ void	HTTPRequest::parseBody(std::istringstream& lineStream)
 	std::map<std::string, std::string>::iterator lengthIt = _headers.find("Content-Length");
 	if (lengthIt != _headers.end())
 	{
-		std::cerr << "ParseBody first branch: " << std::endl;
 		size_t length = std::atol(lengthIt->second.c_str());
 		std::vector<char> buffer;
 		buffer.resize(length);
@@ -39,17 +38,7 @@ void	HTTPRequest::parseBody(std::istringstream& lineStream)
 		lineStream.read(&buffer[0], length);
 		std::streamsize bytesRead = lineStream.gcount();
 		if (bytesRead > 0)
-		{
-			std::cerr << "buffer vector contents: " << std::endl;
-			for (std::vector<char>::iterator it = buffer.begin(); it != buffer.end(); it++)
-			{
-				std::cerr << "byte: ";
-				std::cerr << *it << " " << std::endl;
-			}
 			_body.assign(&buffer[0], bytesRead);
-		}
-		else
-			std::cerr << "No data was read from the stream" << std::endl;
 	}
 	else
 	{
