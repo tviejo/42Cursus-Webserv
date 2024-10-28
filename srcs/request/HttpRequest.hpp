@@ -6,7 +6,7 @@
 /*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 15:17:18 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/27 11:50:54 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class HTTPRequest
 		const std::string	&getBody() const;
 		const std::map<std::string, std::string>	&getHeaders() const;
 		const std::string	&getQueryStrings(const std::string &key) const;
+		const std::string	&getFirstQueryString() const;
 		void printRequest() const;
 };
 

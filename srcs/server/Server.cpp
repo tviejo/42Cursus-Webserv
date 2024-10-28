@@ -163,7 +163,7 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	else if (request.get_method() == "DELETE")
 		response = Response::handleDelete(*_sockets[clientSocket].server, request, clientSocket);
 	else
-		response = Response::makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+		response = Response::makeErrorResponse(405, "Method Not Allowed", *_sockets[clientSocket].server, clientSocket);
 	sendResponse(clientSocket, response);
 }
 

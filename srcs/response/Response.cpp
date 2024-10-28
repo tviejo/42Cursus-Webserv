@@ -6,7 +6,7 @@
 /*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 16:15:19 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/28 11:26:13 by jteissie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,58 @@ OutgoingData *	Response::makeResponse(uint32_t status,
 	return new OutgoingData(response.str(), content);
 }
 
+OutgoingData *Response::makeErrorResponse(uint32_t status, const std::string &statusMessage, const t_server &server, int clientSocket)
+{
+	std::string filename = server.root + server.error;
+	ssize_t filesize = getFileSize(filename);
+
+	if (filesize == -1)
+	{
+		std::ostringstream content;
+		content << status << " " << statusMessage;
+		return makeResponse(status, statusMessage, "text/plain", content.str());
+	}
+	std::ifstream file(filename.c_str());
+	std::string htmlContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	std::ostringstream statusCodeStr;
+	statusCodeStr << status;
+	size_t pos;
+	pos = htmlContent.find("{{statusCode}}");
+	if (pos != std::string::npos)
+		htmlContent.replace(pos, 14, statusCodeStr.str());
+	pos = htmlContent.find("{{errorMessage}}");
+	if (pos != std::string::npos)
+		htmlContent.replace(pos, 16, statusMessage);
+	std::string header = makeResponseHeader(status, statusMessage, getContentType("html"), htmlContent.size(), clientSocket);
+	return new OutgoingData(header, htmlContent);
+}
+
+OutgoingData *Response::makeErrorResponse(uint32_t status, const std::string &statusMessage, std::string root, std::string error, int clientSocket)
+{
+	std::string filename = root + error;
+	ssize_t filesize = getFileSize(filename);
+
+	if (filesize == -1)
+	{
+		std::ostringstream content;
+		content << status << " " << statusMessage;
+		return makeResponse(status, statusMessage, "text/plain", content.str());
+	}
+	std::ifstream file(filename.c_str());
+	std::string htmlContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	std::ostringstream statusCodeStr;
+	statusCodeStr << status;
+	size_t pos;
+	pos = htmlContent.find("{{statusCode}}");
+	if (pos != std::string::npos)
+		htmlContent.replace(pos, 14, statusCodeStr.str());
+	pos = htmlContent.find("{{errorMessage}}");
+	if (pos != std::string::npos)
+		htmlContent.replace(pos, 16, statusMessage);
+	std::string header = makeResponseHeader(status, statusMessage, getContentType("html"), htmlContent.size(), clientSocket);
+	return new OutgoingData(header, htmlContent);
+}
+
 /* Return first route that match 'uri'
  * if not found with full uri retry in a loop with uri without the last (1,2,3,...) folder(s)
  * it will ultimately match with "/" if this route exits or return NULL
@@ -91,57 +143,19 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
-		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	}
 	const t_route &route = *routeptr;
 	std::cout << "     route found: " << route.path << std::endl;
 	if (route.methods.find(req.get_method()) == route.methods.end())
 	{
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
-		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
-	if (route.path == "/cgi")
+	if (route.cgi.empty() == false)
 	{
-		Cgi cgi("./cgi-bin/name.py", "GET", req.getQueryStrings("name"));
- 		try
- 		{
-  	    		cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
-	}
-	else if (route.path == "/time")
-	{
-		std::cerr << "\nTIME CGI\n\n";
-		Cgi cgi("./cgi-bin/time.out", "GET", "");
- 		try
- 		{
-  	    		cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
-	}
-	else if (route.path == "/gallery")
-	{
-		Cgi cgi("./cgi-bin/gallery.cgi", "GET", "");
- 		try
- 		{
-  	    		cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());;
+		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
+		return cgi.handleCgi(server.root, server.error, clientSocket);
 	}
 	else {
 		std::string filename;
@@ -151,7 +165,7 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 			filename = route.directory + "/" + uri.erase(0, route.path.length());
 		if (isDirectory(filename)) {
 			if (filename[filename.length() - 1] != '/')  //if no final slash on directory: redirection 301 with uri + '/'
-				return makeResponse(301, "Moved Permanently", "text/plain", "301 Moved Permanently", "location: /" + uri + '/');
+				return makeErrorResponse(301, "Moved Permanently", server, clientSocket);
 			std::ostringstream htmlContent;
 			htmlContent << serverObj.getDisplayDirHtmlP1();
 			readDirectory(filename, htmlContent, ",", "''");
@@ -160,14 +174,8 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		}
 		ssize_t filesize = getFileSize(filename);
 		std::cerr << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
-		if (filesize == -1) {
-			filename = server.root + server.error;
-			filesize = getFileSize(filename);
-			if (filesize == -1)  // 404 error page is missing
-				return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
-			std::string header = makeResponseHeader(404, "Not Found", getContentType("html"), filesize, clientSocket);
-			return new OutgoingData(header, filename, true);
-		}
+		if (filesize == -1)
+			return makeErrorResponse(404, "Not Found", server, clientSocket);
 		std::string header = makeResponseHeader(200, "OK", getContentType(uri), filesize, clientSocket);
 		return new OutgoingData(header, filename, true);
 	}
@@ -183,31 +191,23 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
-		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	}
 	const t_route &route = *routeptr;
 	std::cout << "     route found: " << route.path << std::endl;
 	if (route.methods.find(req.get_method()) == route.methods.end())
 	{
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
-		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
-	if (route.path == "/cgi")
+	req.printRequest();
+	if (route.cgi.empty() == false)
 	{
-		Cgi cgi("./cgi-bin/name.py", "GET", "name=thomas");
- 		try
- 		{
-  	    	cgi.CgiHandler();
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return makeResponse(500, "Internal Server Error", "text/plain", "500 Internal Server Error");
-		}
-		return new OutgoingData(cgi.GetHeader(), cgi.GetResponse());
+		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
+		return cgi.handleCgi(server.root, server.error, clientSocket);
 	}
 	else if (contentType == req.getHeaders().end())
-		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	else if (contentType->second.find("text/plain") != std::string::npos)
 		return handleTextPost(req, route);
 	else if (contentType->second.find("multipart/form-data") != std::string::npos)
@@ -230,25 +230,25 @@ OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
 		std::cerr << "     no route found from uri: " << uri << std::endl;
-		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	}
 	std::cerr << uri << std::endl;
 	const t_route &route = *routeptr;
 	if (route.methods.find(req.get_method()) == route.methods.end())
 	{
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
-		return makeResponse(405, "Method Not Allowed", "text/plain", "405 Method Not Allowed");
+		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
 	std::cerr << "     route found: " << route.path << std::endl;
 	if (route.path == "/delete")
 	{
-		std::string file = "./www/html/uploadedFiles/" + req.getQueryStrings("file");
-		std::cerr << "     file: " << file << std::endl;
- 		if (std::remove(( "./www/html/uploadedFiles/" + req.getQueryStrings("file")).c_str()) != 0)
-			return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		if (req.getFirstQueryString().find("..") != std::string::npos)
+			return makeErrorResponse(403, "Forbidden", server, clientSocket);
+ 		if (std::remove(( "./www/html/uploadedFiles/" + req.getFirstQueryString()).c_str()) != 0)
+			return makeErrorResponse(404, "Not Found", server, clientSocket);
 		else
 			return makeResponse(200, "OK", "text/plain", "200 OK");
 	}
 	else
-		return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
+		return makeErrorResponse(404, "Not Found", server, clientSocket);
 }

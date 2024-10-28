@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/26 16:19:21 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/27 12:43:01 by tviejo           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
 char    **Cgi::getEnvp()
 {
     char **envp = new char*[2];
-    envp[0] = ft_strdup(this->_env.c_str());
+    envp[0] = strdup(this->_env.c_str());
     envp[1] = NULL;
     return (envp);
 }
@@ -148,4 +148,19 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     header += "Content-Length: " + contentLength_string + "\r\n";
     header += "\r\n";
     return (header);
+}
+
+class OutgoingData *Cgi::handleCgi(std::string root, std::string error, int clientSocket)
+{
+    try
+    {
+        this->CgiHandler();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return Response::makeErrorResponse(500, "Internal Server Error", root, error, clientSocket);
+    }
+    return new OutgoingData(this->_header, this->_response);
+    
 }
