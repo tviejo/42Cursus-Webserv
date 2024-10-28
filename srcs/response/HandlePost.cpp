@@ -187,15 +187,74 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const t_route& 
 					  std::string("Failed to process upload: ") + e.what());
 	}
 }
- 
-OutgoingData*	Response::handleFormSubmission(const HTTPRequest& req, const t_route& route)
+
+std::string Response::urlDecode(const std::string& encoded)
 {
+	std::string	result;
+	for (size_t i = 0; i < encoded.length(); i++)
+	{
+		if (encoded[i] == '%')
+		{
+			if (i + 2 < encoded.length())
+			{
+				std::string hex = encoded.substr(i + 1, 2);
+				char ch = static_cast<char>(strtol(hex.c_str(), NULL, 16));
+				result += ch;
+				i += 2;
+			}
+			else if (encoded[i] == '+')
+			{
+				result += ' ';
+			}
+			else
+	  			result += encoded[i];
+		}
+	}
+	return result;
 }
 
-bool isValidJson(const std::string& content)
+OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, const t_route& route)
 {
-	//horror going to happen here
-	return true;
+	std::string							body = req.getBody();
+	std::string							fileName = getDate(body);
+	std::map<std::string, std::string>	formData;
+	size_t								start = 0;
+	size_t								end = body.find('&');
+
+	while (start < body.length())
+	{
+		std::string	pair = body.substr(start, end - start);
+		size_t		separator = pair.find('=');
+		if (separator != std::string::npos)
+		{
+			std::string key = urlDecode(pair.substr(0, separator));
+			std::string value = urlDecode(pair.substr(separator + 1));
+
+			formData[key] = value;
+		}
+		if (end == std::string::npos)
+			break;
+		start = end + 1;
+		end = body.find('&', start);
+	}
+	std::stringstream	ss;
+	ss << "Received form data:\n";
+	std::map<std::string, std::string>::const_iterator it = formData.begin();
+	while (it != formData.end())
+	{
+		ss << it->first << ": " << it->second << "\n";
+		it++;
+	}
+	std::string fullPath = "www/upload/" + fileName;
+	std::ofstream outFile(fullPath.c_str(), std::ios::binary);
+	if (!outFile)
+		throw std::runtime_error("Failed to create outFile: " + fullPath);
+	std::string	content = ss.str();
+	outFile.write(content.c_str(), content.size());
+	outFile.close();
+	if (!outFile)
+		throw std::runtime_error("Failed to write to outFile: " + fullPath);
+	return makeResponse(201, "Created", "text/plain", response);
 }
 
 OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const t_route& route)
@@ -207,8 +266,6 @@ OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const t_route& ro
 			return makeResponse(400, "Bad Request", "application/json", "{\"error\": \"Empty request body\"}");
 		if (content.length() > 10 * 1024 * 1024) // 10 MB
 			return makeResponse(413, "Payload Too Large", "application/json", "{\"error\": \"Request body too large\"}");
-		if (!isValidJson(content))
-			return makeResponse(400, "Bad Request", "application/json", "{\"error\": \"Invalid JSON format\"}");
 		std::string	uploadDir = "www/upload";
 		//check for existing uploadDir here and also maybe make another one for json
 		std::string		fileName = getDate(req.getBody()) + ".json";

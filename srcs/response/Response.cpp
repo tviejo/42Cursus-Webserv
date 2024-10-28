@@ -213,7 +213,7 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	else if (contentType->second.find("multipart/form-data") != std::string::npos)
 		return handleFileUpload(req, route);
 	else if (contentType->second.find("application/x-www-form-urlencoded") != std::string::npos)
-		return handleFormSubmission(req, route);
+		return handleEncodedForm(req, route);
 	else if (contentType->second.find("application/json") != std::string::npos)
 		return handleJsonPost(req, route);
 	else

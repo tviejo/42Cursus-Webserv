@@ -46,6 +46,7 @@ public:
 	static std::string		getContentType(const std::string & uri);
 	static OutgoingData*	handleTextPost(const HTTPRequest& req, const t_route& route);
 	static OutgoingData*	handleFileUpload(const HTTPRequest& req, const t_route& route);
-	static OutgoingData*	handleFormSubmission(const HTTPRequest& req, const t_route& route);
+	static OutgoingData*	handleUrlEncodedForm(const HTTPRequest& req, const t_route& route);
 	static OutgoingData*	handleJsonPost(const HTTPRequest& req, const t_route& route);
+	static std::string		urlDecode(const std::string& encoded);
 };
