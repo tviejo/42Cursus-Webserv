@@ -223,9 +223,6 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 
 OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
-	(void)server;
-	(void)clientSocket;
-	return makeResponse(404, "Not Found", "text/plain", "404 Not Found");
 	std::cerr << "\nDELETE REQUEST\n\n";
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);

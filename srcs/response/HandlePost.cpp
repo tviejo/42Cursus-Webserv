@@ -80,21 +80,32 @@ std::vector<formPart>	parseMultipartForm(const std::string& body, const std::str
 	std::vector<formPart>	partsVec;
 	size_t					pos = 0;
 		
-	while (true)
+	size_t	firstBoundary = body.find(boundary);
+	if (firstBoundary == std::string::npos)
+		return partsVec;
+	pos = firstBoundary;
+	while (pos < body.length())
 	{
 		size_t	boundaryPos = body.find(boundary, pos);
 		if (boundaryPos == std::string::npos)
 			break;
-		pos = boundaryPos + boundary.length() + 2;
-		if (body.substr(boundaryPos + boundary.length(), 4) == "--\r\n")
+		pos = boundaryPos + boundary.length();
+		if (pos + 2 > body.length())
 			break ;
+		if (body[pos] == '-' && body[pos + 1] == '-')
+			break ;
+		pos += 2;
 
 		formPart	part;
-		while (pos < body.length())
+		bool	headersEnd = false;
+		while (!headersEnd && pos < body.length())
 		{
 			size_t	lineEnd = body.find("\r\n", pos);
+			if (lineEnd == std::string::npos)
+				break;
 			if (lineEnd == pos)
 			{
+				headersEnd = true;
 				pos += 2;
 				break;
 			}
@@ -107,25 +118,39 @@ std::vector<formPart>	parseMultipartForm(const std::string& body, const std::str
 				{
 					namePos += 6;
 					size_t	nameEnd = header.find("\"", namePos);
-					part.name = header.substr(namePos, nameEnd - namePos);
+					if (nameEnd != std::string::npos)
+					{
+						part.name = header.substr(namePos, nameEnd - namePos);
+						std::cerr << "name: " << part.name << std::endl;
+					}
 				}
 				size_t filenamePos = header.find("filename=\"");
 				if (filenamePos != std::string::npos)
 				{
 					filenamePos += 10;
 					size_t	filenameEnd = header.find("\"", filenamePos);
-					part.fileName = header.substr(filenamePos, filenameEnd - filenamePos);
+					if (filenameEnd != std::string::npos)
+					{
+						part.fileName = header.substr(filenamePos, filenameEnd - filenamePos);
+						std::cerr << "fileName: " << part.fileName << std::endl;
+					}
 				}
 			}
 			else if (header.find("Content-Type: ") == 0)
+			{
 				part.contentType = header.substr(14);
+				std::cerr << "contentType: " << part.contentType << std::endl;
+			}
 		}
-		size_t	contentEnd = body.find("\r\n" + boundary, pos);
-		if (contentEnd == std::string::npos)
-			break;
-		part.content = body.substr(pos, contentEnd - pos);
-		pos = contentEnd + 2;
+		size_t	nextBoundary = body.find(boundary, pos);
+		if (nextBoundary == std::string::npos)
+			nextBoundary = body.length() - 1;
+		size_t	contentLength = nextBoundary - pos - 2;
+		std::cerr << "contentLength: " << contentLength << std::endl;
+		part.content = body.substr(pos, contentLength);
+		std::cerr << "content: " << part.content << std::endl;
 		partsVec.push_back(part);
+		pos = nextBoundary;
 	}
 	return partsVec;
 }
