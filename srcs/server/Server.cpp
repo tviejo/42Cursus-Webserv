@@ -207,14 +207,29 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			{
 				std::cout << "   [EPOLLIN] " << bytesRead << " bytes received\n";
 				_partialRequest[clientSocket].append(buffer, bytesRead);
-				// Attention ici on s'arrete dès la fin des headers HTTP, on ne lit pas le body.
-				// Si il y a un body il faudra le lire par la suite avant l'appel à processRequest() ou apres un
-				// premier appel a processRequest qui permettra deja de refuser ou d'accepter
-				// la requete en attendant de lire le body (requete POST).
-				if (_partialRequest[clientSocket].find("\r\n\r\n") != std::string::npos)
+				size_t headerEndPos = _partialRequest[clientSocket].find("\r\n\r\n");
+				if (headerEndPos != std::string::npos)
 				{
-					processRequest(clientSocket, _partialRequest[clientSocket]);
-					_partialRequest.erase(clientSocket);
+					size_t contentLengthPos = _partialRequest[clientSocket].find("Content-Length: ");
+					if (contentLengthPos != std::string::npos)
+					{
+						contentLengthPos += 16;
+						size_t contentLengthEnd = _partialRequest[clientSocket].find("\r\n", contentLengthPos);
+						std::string contentLengthStr = _partialRequest[clientSocket].substr(contentLengthPos, contentLengthEnd);
+						std::cerr << "contentLengthStr: " << contentLengthStr << std::endl;
+						size_t contentLength = atol(contentLengthStr.c_str());
+						size_t bodyStartPos = headerEndPos + 4;
+						if (_partialRequest[clientSocket].size() >= bodyStartPos + contentLength)
+						{
+							processRequest(clientSocket, _partialRequest[clientSocket]);
+							_partialRequest.erase(clientSocket);
+						}
+					}
+					else
+					{
+						processRequest(clientSocket, _partialRequest[clientSocket]);
+						_partialRequest.erase(clientSocket);
+					}
 				}
 			}
 			else if (bytesRead == 0)

@@ -119,36 +119,24 @@ std::vector<formPart>	parseMultipartForm(const std::string& body, const std::str
 					namePos += 6;
 					size_t	nameEnd = header.find("\"", namePos);
 					if (nameEnd != std::string::npos)
-					{
 						part.name = header.substr(namePos, nameEnd - namePos);
-						std::cerr << "name: " << part.name << std::endl;
-					}
 				}
 				size_t filenamePos = header.find("filename=\"");
 				if (filenamePos != std::string::npos)
 				{
 					filenamePos += 10;
 					size_t	filenameEnd = header.find("\"", filenamePos);
-					if (filenameEnd != std::string::npos)
-					{
 						part.fileName = header.substr(filenamePos, filenameEnd - filenamePos);
-						std::cerr << "fileName: " << part.fileName << std::endl;
-					}
 				}
 			}
 			else if (header.find("Content-Type: ") == 0)
-			{
 				part.contentType = header.substr(14);
-				std::cerr << "contentType: " << part.contentType << std::endl;
-			}
 		}
 		size_t	nextBoundary = body.find(boundary, pos);
 		if (nextBoundary == std::string::npos)
 			nextBoundary = body.length() - 1;
 		size_t	contentLength = nextBoundary - pos - 2;
-		std::cerr << "contentLength: " << contentLength << std::endl;
 		part.content = body.substr(pos, contentLength);
-		std::cerr << "content: " << part.content << std::endl;
 		partsVec.push_back(part);
 		pos = nextBoundary;
 	}
