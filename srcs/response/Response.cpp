@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/28 09:39:22 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/28 11:26:13 by jteissie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
-#include <string>
 
 std::map<std::string,std::string> Response::_contentTypeMap;
 
@@ -110,7 +109,7 @@ OutgoingData *Response::makeErrorResponse(uint32_t status, const std::string &st
 		htmlContent.replace(pos, 16, statusMessage);
 	std::string header = makeResponseHeader(status, statusMessage, getContentType("html"), htmlContent.size(), clientSocket);
 	return new OutgoingData(header, htmlContent);
-}	
+}
 
 /* Return first route that match 'uri'
  * if not found with full uri retry in a loop with uri without the last (1,2,3,...) folder(s)
@@ -184,10 +183,12 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 
 OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
-	(void)server;
 	(void)clientSocket;
-	std::string uri = req.getUriWithoutQString();
-	const t_route *routeptr = getRouteFromUri(server, uri);
+	size_t	maxBodySize = server.max_body_size;
+	std::string			uri = req.getUriWithoutQString();
+	const t_route		*routeptr = getRouteFromUri(server, uri);
+	std::map<std::string, std::string>::const_iterator contentType = req.getHeaders().find("Content-Type");
+
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
@@ -199,22 +200,28 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
-	req.printRequest();
+//	req.printRequest();
 	if (route.cgi.empty() == false)
 	{
 		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
 		return cgi.handleCgi(server.root, server.error, clientSocket);
 	}
-	else
-	{
+	else if (contentType == req.getHeaders().end())
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
-	}
+	else if (contentType->second.find("text/plain") != std::string::npos)
+		return handleTextPost(req, maxBodySize);
+	else if (contentType->second.find("multipart/form-data") != std::string::npos)
+		return handleFileUpload(req, maxBodySize);
+	else if (contentType->second.find("application/x-www-form-urlencoded") != std::string::npos)
+		return handleUrlEncodedForm(req, maxBodySize);
+	else if (contentType->second.find("application/json") != std::string::npos)
+		return handleJsonPost(req, maxBodySize);
+	else
+		return makeResponse(415, "Unsupported Media Type", "text/plain", "415 Unsupported Media Type: " + contentType->second);
 }
 
 OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
-	(void)server;
-	(void)clientSocket;
 	std::cerr << "\nDELETE REQUEST\n\n";
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);

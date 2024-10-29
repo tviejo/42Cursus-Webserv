@@ -44,6 +44,8 @@ class HTTPRequest
 		const std::map<std::string, std::string>	&getHeaders() const;
 		const std::string	&getQueryStrings(const std::string &key) const;
 		const std::string	&getFirstQueryString() const;
+		bool				hasBody();
+		void				parseBody(std::istringstream& lineStream);
 		void printRequest() const;
 };
 
