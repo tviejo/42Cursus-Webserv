@@ -127,7 +127,6 @@ void	Server::handleOutgoingData(int clientSocket)
 	if (bytes_sent < 0)
 		throw std::runtime_error("[handleOutgoingData/send] error while sending response to client");
 	
-	//std::cout << std::string(toSend->getbufptr(), toSend->getbuflen()) << "\n";
 	if (bytes_sent < toSend->getbuflen())
 	{
 		toSend->bufferForward(bytes_sent);
@@ -181,7 +180,6 @@ void	Server::sendResponse(int clientSocket, OutgoingData *response)
 
 void	Server::handleClientEvent(int clientSocket, uint32_t event)
 {
-	// getpeername() and getsockname() for debug/info:
 	sockaddr_in	cliAddr, srvAddr;
 	socklen_t	cliAddrLen = sizeof(cliAddr), srvAddrLen = sizeof(srvAddr);
 	char cliIP[16], srvIP[16];
@@ -216,7 +214,6 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 						contentLengthPos += 16;
 						size_t contentLengthEnd = _partialRequest[clientSocket].find("\r\n", contentLengthPos);
 						std::string contentLengthStr = _partialRequest[clientSocket].substr(contentLengthPos, contentLengthEnd);
-						std::cerr << "contentLengthStr: " << contentLengthStr << std::endl;
 						size_t contentLength = atol(contentLengthStr.c_str());
 						size_t bodyStartPos = headerEndPos + 4;
 						if (_partialRequest[clientSocket].size() >= bodyStartPos + contentLength)

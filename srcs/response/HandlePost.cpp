@@ -1,20 +1,19 @@
 #include "webserv.hpp"
 #include "Response.hpp"
 
-//static std::string	extractFilename(const std::string& body, const std::string& filnameKey)
-//{
-//	size_t filenameStart = body.find(filenameKey);
-//
-//	if (filenameStart == std::string::npos)
-//		throw std::runtime_error("No filename for uploaded file");
-//	filenameStart += filenameKey.length();
-//
-//	size_t	filenameEnd = body.find("\"", filenameStart);
-//	if (filenameEnd == std::string::npos)
-//		throw std::runtime_error("No filename for uploaded file");
-//
-//	return body.substr(filenameStart, filenameEnd - filenameStart);
-//}
+static std::string	extractFilename(const std::string& body, const std::string& filenameKey)
+{
+	size_t filenameStart = body.find(filenameKey);
+
+	if (filenameStart == std::string::npos)
+		return "";
+	filenameStart += filenameKey.length();
+
+	size_t	filenameEnd = body.find("\"", filenameStart);
+	if (filenameEnd == std::string::npos)
+		return "";
+	return body.substr(filenameStart, filenameEnd - filenameStart);
+}
 
 static	std::string getDate(const std::string& body)
 {
@@ -30,7 +29,7 @@ static	std::string getDate(const std::string& body)
 	return body.substr(dateStart, dateEnd - dateStart);
 }
 
-std::string sanitizeFileName(const std::string& fileName)
+static std::string sanitizeFileName(const std::string& fileName)
 {
 	std::string safe = fileName;
 	std::string banned = "\\/:*?\"<>|";
@@ -39,22 +38,21 @@ std::string sanitizeFileName(const std::string& fileName)
 	return safe;
 }
 
-OutgoingData*	Response::handleTextPost(const HTTPRequest& req)
+OutgoingData*	Response::handleTextPost(const HTTPRequest& req, const size_t maxBodySize)
 {
 	try
 	{
 		const std::string&	content = req.getBody();
-		std::string			fileName = getDate(req.getBody()) + ".txt";
+		std::string			fileName = getDate(req.getBody()) + extractFilename(req.getBody(), "filename=") + ".txt";
 		std::string			safeFileName = sanitizeFileName(fileName);
 		const std::string	path = "www/html/uploadedFiles/" + fileName;
 		std::string			line;
-		//set max length to protect against ddos
-		//check if directory exist and handle it if it does not
-		//check if file already exists and handle that case
-		//sanitize filename
-		std::ofstream		outFile(path.c_str(), std::ios::out | std::ios::binary);
+		std::ofstream		outFile(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!outFile)
 			throw std::runtime_error("Could not open file: " + path);
+		if (content.length() > maxBodySize)
+				return makeResponse(413, "Payload Too Large", "text/plain",
+						"File size exceeds maximum allowed");
 		outFile.write(content.c_str(), content.length());
 		outFile.close();
 		if (!outFile)
@@ -143,7 +141,7 @@ std::vector<formPart>	parseMultipartForm(const std::string& body, const std::str
 	return partsVec;
 }
 
-OutgoingData*	Response::handleFileUpload(const HTTPRequest& req)
+OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t maxBodySize)
 {
 	try 
 	{
@@ -160,23 +158,18 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req)
 		std::string				boundary = "--" + headerIt->second.substr(boundaryPos + 9);	
 		std::vector<formPart>	parts = parseMultipartForm(req.getBody(), boundary);
 
-		//create upload directory here if needed
 		std::string					uploadDir = "www/html/uploadedFiles/";
 		std::vector<std::string>	uploadedFiles;
-
 		for (std::vector<formPart>::iterator it = parts.begin(); it != parts.end(); it++)
 		{
 			if (it->fileName.empty())
 				continue;
-			if (it->content.size() > 10 * 1024 * 1024) // 10 MB
+			if (it->content.size() > maxBodySize)
 				return makeResponse(413, "Payload Too Large", "text/plain",
 						"File size exceeds maximum allowed");
 			std::string safeFileName = sanitizeFileName(it->fileName);
 			std::string fullPath = uploadDir + "/" + safeFileName;
-			
-			//handle duplicate  file names here with access()
-
-			std::ofstream outFile(fullPath.c_str(), std::ios::binary);
+			std::ofstream outFile(fullPath.c_str(), std::ios::binary | std::ios::trunc);
 			if (!outFile)
 				throw std::runtime_error("Failed to create outFile: " + fullPath);
 			outFile.write(it->content.data(), it->content.size());
@@ -227,10 +220,10 @@ std::string Response::urlDecode(const std::string& encoded)
 	return result;
 }
 
-OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req)
+OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxBodySize)
 {
 	std::string							body = req.getBody();
-	std::string							fileName = getDate(body);
+	std::string							fileName = getDate(body) + extractFilename(req.getBody(), "filename=");
 	std::map<std::string, std::string>	formData;
 	size_t								start = 0;
 	size_t								end = body.find('&');
@@ -259,6 +252,9 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req)
 		ss << it->first << ": " << it->second << "\n";
 		it++;
 	}
+	if (ss.str().length() > maxBodySize)
+		return makeResponse(413, "Payload Too Large", "text/plain",
+				"File size exceeds maximum allowed");
 	std::string fullPath = "www/html/uploadedFiles/" + fileName;
 	std::ofstream outFile(fullPath.c_str(), std::ios::binary);
 	if (!outFile)
@@ -268,24 +264,22 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req)
 	outFile.close();
 	if (!outFile)
 		throw std::runtime_error("Failed to write to outFile: " + fullPath);
-
 	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath);
 }
 
-OutgoingData*	Response::handleJsonPost(const HTTPRequest& req)
+OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const size_t maxBodySize)
 {
 	try
 	{
 		const std::string&	content = req.getBody();
 		if (content.empty())
 			return makeResponse(400, "Bad Request", "application/json", "{\"error\": \"Empty request body\"}");
-		if (content.length() > 10 * 1024 * 1024) // 10 MB
+		if (content.length() > maxBodySize)
 			return makeResponse(413, "Payload Too Large", "application/json", "{\"error\": \"Request body too large\"}");
 		std::string	uploadDir = "/upload";
-		//check for existing uploadDir here and also maybe make another one for json
-		std::string		fileName = getDate(req.getBody()) + ".json";
+		std::string		fileName = getDate(req.getBody()) + extractFilename(req.getBody(), "filename=") + ".json";
 		std::string		fullPath = uploadDir + "/" + sanitizeFileName(fileName);
-		std::ofstream	outFile(fullPath.c_str(), std::ios::out | std::ios::binary);
+		std::ofstream	outFile(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!outFile)
 			throw std::runtime_error("Could not create output file");
 		outFile.write(content.c_str(), content.length());

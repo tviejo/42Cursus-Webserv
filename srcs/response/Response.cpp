@@ -183,8 +183,8 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 
 OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req, int clientSocket)
 {
-	(void)server;
 	(void)clientSocket;
+	size_t	maxBodySize = server.max_body_size;
 	std::string			uri = req.getUriWithoutQString();
 	const t_route		*routeptr = getRouteFromUri(server, uri);
 	std::map<std::string, std::string>::const_iterator contentType = req.getHeaders().find("Content-Type");
@@ -200,8 +200,7 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
-	req.printRequest();
-	std::cerr << "Body: " << req.getBody() << std::endl;
+//	req.printRequest();
 	if (route.cgi.empty() == false)
 	{
 		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
@@ -210,13 +209,13 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 	else if (contentType == req.getHeaders().end())
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	else if (contentType->second.find("text/plain") != std::string::npos)
-		return handleTextPost(req);
+		return handleTextPost(req, maxBodySize);
 	else if (contentType->second.find("multipart/form-data") != std::string::npos)
-		return handleFileUpload(req);
+		return handleFileUpload(req, maxBodySize);
 	else if (contentType->second.find("application/x-www-form-urlencoded") != std::string::npos)
-		return handleUrlEncodedForm(req);
+		return handleUrlEncodedForm(req, maxBodySize);
 	else if (contentType->second.find("application/json") != std::string::npos)
-		return handleJsonPost(req);
+		return handleJsonPost(req, maxBodySize);
 	else
 		return makeResponse(415, "Unsupported Media Type", "text/plain", "415 Unsupported Media Type: " + contentType->second);
 }
