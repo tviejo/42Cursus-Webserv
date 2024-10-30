@@ -1,0 +1,14 @@
+Package: hurl
+Version: 5.0.1
+Section: web
+Architecture: amd64
+Priority: optional
+Standards-Version: 3.9.4
+Maintainer: Fabrice Reix <fabrice.reix@orange.com>
+Depends:  libc6 (>= 2.17), libcurl4, zlib1g, libxml2
+Description: Run and test HTTP requests
+ Hurl is an HTTP client that performs HTTP requests defined in a simple plain
+ text format.
+ Hurl is very versatile, it enables to chain HTTP requests, capture values
+ from HTTP responses and make asserts.
+

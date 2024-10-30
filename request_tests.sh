@@ -3,6 +3,8 @@
 SERVER_EXEC="./webserv"
 CONFIG_FILE="configs/default.conf"
 HURL_TEST_DIR="./tests"
+HURL = "./home/jteissie/Desktop/webserv/hurl_5.0.1_amd64/usr/bin"
+
 
 echo "Compiling server..."
 make all
@@ -20,7 +22,7 @@ sleep 1
 echo "Running Hurl tests..."
 for hurl_file in "$HURL_TEST_DIR"/*.hurl; do
   echo "Testing $hurl_file..."
-  hurl "$hurl_file"
+  $HURL "$hurl_file"
   
   if [ $? -ne 0 ]; then
     echo "Test failed for $hurl_file"
