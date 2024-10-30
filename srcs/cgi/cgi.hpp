@@ -55,4 +55,11 @@ class Cgi
 		class OutgoingData *handleCgi(std::string root, std::string error, int clientSocket);
 };
 
+class TimeoutException : public std::exception
+{
+	public:
+		virtual const char *what() const throw() { return "Timeout"; }
+		virtual ~TimeoutException() throw() {}
+};
+
 #endif
