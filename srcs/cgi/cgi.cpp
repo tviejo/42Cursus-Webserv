@@ -12,6 +12,14 @@
 
 # include "cgi.hpp"
 
+volatile sig_atomic_t timeout_flag = 0;
+
+void alarm_handler(int signum)
+{
+    (void)signum;
+    timeout_flag = 1;
+}
+
 Cgi::Cgi()
 {
 }
@@ -37,7 +45,6 @@ Cgi &Cgi::operator=(const Cgi &copy)
 
 Cgi::Cgi(std::string path, std::string method, std::string info)
 {
-    std::cerr << "Cgi constructor\n";
     this->_header = "";
     this->_contentLength = 0;
     this->_isDone = false;
@@ -46,71 +53,104 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
     if (info.empty())
         this->_env = "";
     else
-        this->_env = "QueryString="+ info;
-    std::cerr << "Cgi constructor end\n";
-
+        this->_env = "QueryString=" + info;
 }
 
-
-
-char    **Cgi::getEnvp()
+char **Cgi::getEnvp()
 {
     char **envp = new char*[2];
     envp[0] = strdup(this->_env.c_str());
     envp[1] = NULL;
-    return (envp);
+    return envp;
 }
 
-void    Cgi::deleteEnvp(char **envp)
+void Cgi::deleteEnvp(char **envp)
 {
-    delete[] envp;
+    if (envp)
+    {
+        free(envp[0]);
+        delete[] envp;
+    }
 }
 
-void    Cgi::execute()
+void Cgi::execute()
 {
     int fd[2];
-    pipe(fd);
+    if (pipe(fd) == -1)
+    {
+        throw std::runtime_error("Failed to create pipe");
+    }
+    struct sigaction sa;
+    sa.sa_handler = alarm_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, NULL);
+    timeout_flag = 0;
+    alarm(1);
     int pid = fork();
     if (pid == 0)
     {
-        std::cerr << "Cgi execute\n";
         close(fd[0]);
         dup2(fd[1], 1);
         close(fd[1]);
+
         char **envp = this->getEnvp();
         char *args[] = {strdup(this->_path.c_str()), NULL};
-        std::cerr << "execve\n";
         execve(this->_path.c_str(), args, envp);
-        std::cerr << "execve failed\n";
-        throw std::runtime_error("execve failed");
-        exit(0);
+        deleteEnvp(envp);
+        exit(1);
     }
-    else
+    else if (pid > 0)
     {
         close(fd[1]);
         char buffer[4096];
         size_t size = 0;
         while ((size = read(fd[0], buffer, 4096)) > 0)
         {
+            if (timeout_flag)
+                break;
             this->_response += std::string(buffer, size);
             this->_contentLength += size;
         }
         close(fd[0]);
         int status;
-        waitpid(pid, &status, 0);
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-            throw std::runtime_error("Cgi script failed");
+        if (!timeout_flag)
+        {
+            waitpid(pid, &status, 0); 
+        }
         else
+        {
+            kill(pid, SIGKILL);
+            waitpid(pid, &status, 0);
+            alarm(0);
+            sigaction(SIGALRM, NULL, NULL);
+            throw TimeoutException();
+        }
+        alarm(0);
+
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+        {
+            throw TimeoutException();
+        }
+        else if (!timeout_flag)
         {
             this->_header = this->createHeader(200, "OK", "text/html", this->_contentLength, _env);
             this->_isDone = true;
         }
+
         std::cerr << _header << std::endl;
         std::cerr << _response << std::endl;
     }
+    else
+    {
+        close(fd[0]);
+        close(fd[1]);
+        throw std::runtime_error("Fork failed");
+    }
+    sigaction(SIGALRM, NULL, NULL);
 }
 
-void    Cgi::CgiHandler()
+void Cgi::CgiHandler()
 {
     if (this->_path.empty())
     {
@@ -147,7 +187,7 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
     header += "Content-Type: " + contentType + "\r\n";
     header += "Content-Length: " + contentLength_string + "\r\n";
     header += "\r\n";
-    return (header);
+    return header;
 }
 
 class OutgoingData *Cgi::handleCgi(std::string root, std::string error, int clientSocket)
@@ -156,11 +196,15 @@ class OutgoingData *Cgi::handleCgi(std::string root, std::string error, int clie
     {
         this->CgiHandler();
     }
-    catch(const std::exception& e)
+    catch (const TimeoutException& e)
+    {
+        std::cerr << e.what() << '\n';
+        return Response::makeErrorResponse(504, "Gateway Timeout", root, error, clientSocket);
+    }
+    catch (const std::exception& e)
     {
         std::cerr << e.what() << '\n';
         return Response::makeErrorResponse(500, "Internal Server Error", root, error, clientSocket);
     }
     return new OutgoingData(this->_header, this->_response);
-    
 }

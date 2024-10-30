@@ -2,6 +2,12 @@
 
 UPLOAD_DIR="./www/html/uploadedFiles/"
 
+# while true
+# do
+#     sleep 1
+# done
+
+
 cat <<EOF
 <!DOCTYPE html>
 <html lang="en">
