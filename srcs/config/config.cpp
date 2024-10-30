@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:56:20 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 11:24:23 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/30 16:07:23 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,20 +43,22 @@ void    Config::initRoute(t_route &route)
 	route.directory.clear();
 	route.cgi.clear();
 	route.autoindex = false;
+	route.dir_listing = false;
 	route.max_body_size = 0;
 }
 
 void    Config::initServer(t_server &server)
 {
-	//server.ServerObject = NULL;
 	server.server_name.clear();
 	server.host.clear();
 	server.port = 0;
 	server.autoindex = false;
+	server.dir_listing = false;
 	server.root.clear();
 	server.error.clear();
 	server.max_body_size = 0;
 	server.routes.clear();
+	server.redirs.clear();
 }
 
 void    Config::printConfig()
@@ -70,6 +72,10 @@ void    Config::printConfig()
 		std::cout << "root: " << servers[i].root << std::endl;
 		std::cout << "error: " << servers[i].error << std::endl;
 		std::cout << "max_body_size: " << servers[i].max_body_size << std::endl;
+		for (std::map<std::string,std::string>::iterator it = servers[i].redirs.begin(); it != servers[i].redirs.end(); it++)
+		{
+			std::cout << "redirection: " << it->first << " => " << it->second << std::endl;
+		}
 		for (std::map<std::string,t_route>::iterator it = servers[i].routes.begin(); it != servers[i].routes.end(); it++)
 		{
 			std::cout << std::endl;
@@ -101,13 +107,13 @@ void    Config::parseRoute(std::string &routePath, std::ifstream &file, t_route 
 	{
 		if (line.find("}") != std::string::npos)
 			break;
-		/*if (line.find("path = ") != std::string::npos)
-			route.path = line.substr(line.find("path = ") + 7);*/
-		if (line.find("index = ") != std::string::npos)
-			route.index = line.substr(line.find("index =") + 8);
-		if (line.find("methods = ") != std::string::npos)
+		
+		if (line.find("index =") != std::string::npos)
+			route.index = trim(line.substr(line.find("=") + 1));
+		
+		if (line.find("methods =") != std::string::npos)
 		{
-			std::string methods = line.substr(line.find("methods =") + 10);
+			std::string methods = trim(line.substr(line.find("=") + 1));
 			std::string method;
 			for (size_t i = 0; i < methods.size(); i++)
 			{
@@ -121,22 +127,29 @@ void    Config::parseRoute(std::string &routePath, std::ifstream &file, t_route 
 			}
 			route.methods.insert(method);
 		}
-		if (line.find("upload = ") != std::string::npos)
+		if (line.find("upload =") != std::string::npos)
 			route.upload = server.root + trim(line.substr(line.find("=") + 1));
-		/*if (line.find("directory = ") != std::string::npos)
-			route.directory = line.substr(line.find("directory = ") + 12);*/
-		if (line.find("root = ") != std::string::npos)
+		
+		if (line.find("directory =") != std::string::npos)
 			route.directory = server.root + trim(line.substr(line.find("=") + 1));
-		if (line.find("autoindex = ") != std::string::npos)
-			route.autoindex = line.substr(line.find("autoindex = ") + 12) == "on" ? true : false;
+		
+		if (line.find("autoindex =") != std::string::npos)
+			route.autoindex = trim(line.substr(line.find("=") + 1)) == "on";
 		else
 			route.autoindex = server.autoindex; // if autoindex is not defined for route get the global server value
-		if (line.find("max_body_size = ") != std::string::npos)
-			route.max_body_size = std::atol(line.substr(line.find("max_body_size = ") + 16).c_str());
-		if (line.find("cgi = ") != std::string::npos)
-			route.cgi = line.substr(line.find("cgi = ") + 6);
+		
+		if (line.find("dir_listing =") != std::string::npos)
+			route.dir_listing = trim(line.substr(line.find("=") + 1)) == "on";
+		else
+			route.dir_listing = server.dir_listing; // if dir_listing is not defined for route get the global server value
+		
+		if (line.find("max_body_size =") != std::string::npos)
+			route.max_body_size = std::atol(line.substr(line.find("=") + 1).c_str());
 		else
 			route.max_body_size = server.max_body_size; // if max_body_size is not defined for route get the global server value
+		
+		if (line.find("cgi =") != std::string::npos)
+			route.cgi = trim(line.substr(line.find("=") + 1));
 	}
 }
 
@@ -148,26 +161,38 @@ void    Config::parseServer(std::ifstream &file, t_server &server)
 	{
 		if (line.find("}") != std::string::npos)
 			break;
-		if (line.find("server_name = ") != std::string::npos)
-			server.server_name = line.substr(line.find("server_name = ") + 14);
-		if (line.find("host = ") != std::string::npos)
-			server.host = line.substr(line.find("host = ") + 7);
-		if (line.find("port = ") != std::string::npos)
-			server.port = std::atol(line.substr(line.find("port = ") + 7).c_str());
-		if (line.find("autoindex = ") != std::string::npos)
-			server.autoindex = line.substr(line.find("autoindex = ") + 12) == "on" ? true : false;
-		if (line.find("root = ") != std::string::npos)
-			server.root = line.substr(line.find("root = ") + 7);
-		if (line.find("error = ") != std::string::npos)
-			server.error = line.substr(line.find("error = ") + 8);
-		if (line.find("max_body_size = ") != std::string::npos)
-			server.max_body_size = std::atol(line.substr(line.find("max_body_size = ") + 16).c_str());
-		if (line.find("route = ") != std::string::npos)
+		if (line.find("server_name =") != std::string::npos)
+			server.server_name = trim(line.substr(line.find("=") + 1));
+		if (line.find("host =") != std::string::npos)
+			server.host = trim(line.substr(line.find("=") + 1));
+		if (line.find("port =") != std::string::npos)
+			server.port = std::atol(line.substr(line.find("=") + 1).c_str());
+		if (line.find("autoindex =") != std::string::npos)
+			server.autoindex = trim(line.substr(line.find("=") + 1)) == "on";
+		if (line.find("dir_listing =") != std::string::npos)
+			server.dir_listing = trim(line.substr(line.find("=") + 1)) == "on";
+		if (line.find("root =") != std::string::npos)
+			server.root = trim(line.substr(line.find("=") + 1));
+		if (line.find("error =") != std::string::npos)
+			server.error = trim(line.substr(line.find("=") + 1));
+		if (line.find("max_body_size =") != std::string::npos)
+			server.max_body_size = std::atol(line.substr(line.find("=") + 1).c_str());
+		
+		if (line.find("redirection ") != std::string::npos)
+		{
+			try {
+				std::string routePath = line.substr(12, line.find_first_of('=') - 12);
+				std::string targetPath = line.substr(line.find_first_of('=') + 1);
+				server.redirs[trimRef(routePath, "\" \t\n\r\f\v")] = trimRef(targetPath, "\" \t\n\r\f\v");
+			} catch (std::exception &e) {
+				std::cerr << "[Config::parseServer] invalid redirection (ignored): " << e.what() << "\n";
+			}
+		}
+		if (line.find("route =") != std::string::npos)
 		{
 			t_route route;
 			std::string path = line.substr(line.find("=") + 1);
 			parseRoute(trimRef(path, "\" \t\n\r\f\v"), file, route, server);
-			//server.routes.push_back(route);
 			server.routes[route.path] = route;
 		}
 	}

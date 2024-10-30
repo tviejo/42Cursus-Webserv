@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jteissie <jteissie@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/28 11:26:13 by jteissie         ###   ########.fr       */
+/*   Updated: 2024/10/30 16:41:35 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,6 +140,13 @@ std::string Response::getContentType(const std::string & uri)
 OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket, Server &serverObj)
 {
 	std::string uri = req.getUriWithoutQString();
+	// Process routes redirections in first place
+	std::map<std::string,std::string>::const_iterator it = server.redirs.begin();
+	for (; it != server.redirs.end(); it++)
+		if (it->first == uri)
+			return makeResponse(301, "Moved Permanently", "text/plain", "301 Moved Permanently",
+				"location: " + it->second);
+	
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
@@ -152,33 +159,35 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
-	if (route.cgi.empty() == false)
+	if (!route.cgi.empty())
 	{
 		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
 		return cgi.handleCgi(server.root, server.error, clientSocket);
 	}
-	else {
-		std::string filename;
-		if (uri == route.path && route.autoindex)
-			filename = route.directory + "/" + route.index;
-		else
-			filename = route.directory + "/" + uri.erase(0, route.path.length());
-		if (isDirectory(filename)) {
-			if (filename[filename.length() - 1] != '/')  //if no final slash on directory: redirection 301 with uri + '/'
-				return makeErrorResponse(301, "Moved Permanently", server, clientSocket);
-			std::ostringstream htmlContent;
-			htmlContent << serverObj.getDisplayDirHtmlP1();
-			readDirectory(filename, htmlContent, ",", "''");
-			htmlContent << serverObj.getDisplayDirHtmlP2();
-			return makeResponse(200, "OK", "text/html", htmlContent.str());
-		}
-		ssize_t filesize = getFileSize(filename);
-		std::cerr << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
-		if (filesize == -1)
-			return makeErrorResponse(404, "Not Found", server, clientSocket);
-		std::string header = makeResponseHeader(200, "OK", getContentType(uri), filesize, clientSocket);
-		return new OutgoingData(header, filename, true);
+	
+	std::string filename;
+	if (uri == route.path && route.autoindex)
+		filename = route.directory + "/" + route.index;
+	else
+		filename = route.directory + "/" + uri.erase(0, route.path.length());
+	if (isDirectory(filename)) {
+		if (!route.dir_listing)
+			return makeErrorResponse(405, "Directory listing not allowed", server, clientSocket);
+		if (filename[filename.length() - 1] != '/')  //if no final slash on directory: redirection 301 with uri + '/'
+			return makeResponse(301, "Moved Permanently", "text/plain", "301 Moved Permanently",
+				"location: /" + uri + '/');
+		std::ostringstream htmlContent;
+		htmlContent << serverObj.getDisplayDirHtmlP1();
+		readDirectory(filename, htmlContent, ",", "''");
+		htmlContent << serverObj.getDisplayDirHtmlP2();
+		return makeResponse(200, "OK", "text/html", htmlContent.str());
 	}
+	ssize_t filesize = getFileSize(filename);
+	std::cerr << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
+	if (filesize == -1)
+		return makeErrorResponse(404, "Not Found", server, clientSocket);
+	std::string header = makeResponseHeader(200, "OK", getContentType(uri), filesize, clientSocket);
+	return new OutgoingData(header, filename, true);
 }
 
 OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req, int clientSocket)

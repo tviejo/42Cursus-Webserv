@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:57:38 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 11:20:09 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/10/30 14:38:39 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,28 +19,30 @@
 
 typedef struct route
 {
-	std::string         path;       // route path ("/", "/top-secret")
-	std::string         index;      // index file
-	std::set<std::string> methods;  // allowed methods (GET, POST, DELETE)
-	std::string         upload;     // upload directory
-	std::string         directory;  // server directory for route (exple: "/srv/www/html" for "/")
-	std::string         cgi;		// cgi path and extension
-	bool                autoindex;
-	size_t              max_body_size;
+	std::string         path;          // route path ("/", "/top-secret")
+	std::string         index;         // index file (exple: 'index.html')
+	std::set<std::string> methods;     // allowed methods (GET, POST, DELETE)
+	std::string         upload;        // upload directory
+	std::string         directory;     // directory for route: made from server.root + route.directory from config file
+									   //     exple: www/my-route-dir ('www' + '/my-route-dir')
+	std::string         cgi;		   // cgi path and extension
+	bool                autoindex;     // if true (on) send index file if GET request is route path
+	bool				dir_listing;   // allow directory listing
+	size_t              max_body_size; // the (in)famous one ! :-)
 } t_route;
 
 typedef struct server
 {
-	//class Server*       ServerObject;  // lately initilized in Server constructor
 	std::string         server_name;
 	std::string         host;
 	int                 port;
-	bool                autoindex;
-	std::string         root;   // server root directory (exple: "/srv/www")
-	std::string         error;  // default error page
+	bool                autoindex;     // send index file if GET request is route path
+	bool				dir_listing;   // allow directory listing
+	std::string         root;          // server root directory (absolute or relative exple: '/srv/www', 'www')
+	std::string         error;         // default error page
 	size_t              max_body_size;
-	//std::vector<t_route> routes;
 	std::map<std::string, t_route> routes;  // map<path, t_route>
+	std::map<std::string, std::string> redirs;  // redirections (send 301 HTTP response)
 } t_server;
 
 class Config
