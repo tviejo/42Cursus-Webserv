@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>42 Project</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <title>AJT Web Server</title>
     <style>
         * {
             margin: 0;
@@ -80,12 +81,30 @@
             background-color: #333;
             margin-top: auto;
         }
+        
         footer a {
             color: #888;
             text-decoration: none;
             margin-left: 10px;
             text-decoration: underline;
         }
+
+        span.author {
+            color:lightgreen;    
+        }
+        
+        .sphereSpan {
+            opacity: 1;
+            position: relative;
+        }
+        .sphereImg {
+            position: absolute;
+            bottom: 3px; left: 0;
+            opacity: 0;
+            z-index: 1;
+            transition: 1.666s ease;
+        }
+        
     </style>
     <script>
         function getCookie(name) {
@@ -110,6 +129,19 @@
                 document.getElementById("greeting").innerHTML = "Welcome back, " + userName + "!";
             }
         }
+        function displayAuthor(name) {
+            leftImg = document.getElementById('leftSphereImg');
+            midImg = document.getElementById('midSphereImg');
+            if (name === null) {
+                leftImg.style.opacity = 0;
+                midImg.style.opacity = 0;
+            } else {
+                leftImg.src = 'img/sphere192AJT' + name + '.png';
+                midImg.src = 'img/sphere192' + name + '.png';
+                leftImg.style.opacity = 1;
+                midImg.style.opacity = 1;
+            }
+        }
     </script>
 </head>
 <body onload="checkName()">
@@ -129,12 +161,25 @@
     </header>
 
     <main>
-        <h1 id="greeting">Welcome to Webserv</h1>
-        <p>Are you Ready?</p>
+        <h1 id="greeting">Welcome to our Web Server</h1>
+        <span class="sphereSpan">
+            <img class='sphereImg0' src="img/sphere192nAJT.png" alt="" />
+            <img id="leftSphereImg" class='sphereImg' src="img/sphere192nAJT.png" alt="" title="Web Server AJT, le serveur qui en a ! Déjà une..." />
+        </span>
+        <span class="sphereSpan">
+            <img class="sphereImg0" src="img/sphere192.png" alt="" />
+            <img id="midSphereImg" class='sphereImg' src="img/sphere192.png" alt="" title="...et de deux..." />
+        </span>
+        <img src="img/sphere192AJT42.png" alt="" title="...et même trois ! :-)" />
+        <p><br />Are you Ready?</p>
     </main>
 
     <footer>
-        &copy; 2024 Webserv 42 - ade-sarr jteissie tviejo - All Rights Reserved
+        &copy; 2024 Web Server 42 -
+              <span class="author" onmousemove="displayAuthor('ade-sarr')" onmouseout="displayAuthor(null)">ade-sarr</span>
+            & <span class="author" onmousemove="displayAuthor('jteissie')" onmouseout="displayAuthor(null)">jteissie</span>
+            & <span class="author" onmousemove="displayAuthor('tviejo')" onmouseout="displayAuthor(null)">tviejo</span>
+            - All Rights Reserved
         <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Legal Mentions</a>
     </footer>
 
