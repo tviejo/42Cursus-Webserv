@@ -158,8 +158,8 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t ma
 		std::string				boundary = "--" + headerIt->second.substr(boundaryPos + 9);	
 		std::vector<formPart>	parts = parseMultipartForm(req.getBody(), boundary);
 
-		std::string					uploadDir = "www/html/uploadedFiles/";
-		std::vector<std::string>	uploadedFiles;
+		std::string				uploadDir = "www/html/uploadedFiles/";
+		stringvec				uploadedFiles;
 		for (std::vector<formPart>::iterator it = parts.begin(); it != parts.end(); it++)
 		{
 			if (it->fileName.empty())
@@ -181,12 +181,12 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t ma
 		if (uploadedFiles.empty())
 			return makeResponse(400, "Bad Request", "text/plain",
 					   "No files were uploaded");
-		std::ostringstream oss;
-		oss << "Successfully uploaded " << uploadedFiles.size() << " file(s):\n";
-		std::string	response = oss.str();
-		for (std::vector<std::string>::const_iterator it = uploadedFiles.begin(); it != uploadedFiles.end(); it++)
-			response += "- " + *it + "\n";
-		return makeResponse(201, "Created", "text/plain", response);
+		std::ostringstream ossResponse;
+		ossResponse << "Successfully uploaded " << uploadedFiles.size() << " file(s):\n";
+		for (stringvec::const_iterator it = uploadedFiles.begin(); it != uploadedFiles.end(); it++)
+			ossResponse << " - " << *it << "\n";
+		ossResponse << "\r\n";  // this solve the problem of missing last char for last file name
+		return makeResponse(201, "Created", "text/plain", ossResponse.str());
 	}
 	catch (const std::exception& e)
 	{
