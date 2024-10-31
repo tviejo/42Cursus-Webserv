@@ -16,7 +16,6 @@
 # include "webserv.hpp"
 
 
-
 typedef struct route
 {
 	std::string         path;          // route path ("/", "/top-secret")
@@ -56,6 +55,8 @@ class Config
 		void    initServer(t_server &server);
 		void    initRoute(t_route &route);
 		bool    ServerIsValid(t_server &server);
+		bool    RouteISValid(t_route &route);
+		bool    MethodIsValid(std::set<std::string> methods);
 	public:
 		Config(std::string file);
 		~Config();

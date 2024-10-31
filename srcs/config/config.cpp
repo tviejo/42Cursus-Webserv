@@ -13,27 +13,35 @@
 #include "webserv.hpp"
 #include "config.hpp"
 
+
+bool	CheckIfAllPortAreDifferent(std::vector<t_server> servers)
+{
+	for (size_t i = 0; i < servers.size(); i++)
+	{
+		for (size_t j = i + 1; j < servers.size(); j++)
+		{
+			if (servers[i].port == servers[j].port)
+				return false;
+		}
+	}
+	return true;
+}
+
 Config::Config(std::string conffile)
 {
-	try
-	{
 		parseConfig(conffile);
 		for (size_t i = 0; i < servers.size(); i++)
 		{
 			if (!ServerIsValid(servers[i]))
 				throw std::runtime_error("Error: server is not valid");
 		}
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
+		if (!CheckIfAllPortAreDifferent(servers))
+			throw std::runtime_error("Error: ports are not unique");
 }
 
 Config::~Config()
 {
 }
-
 void    Config::initRoute(t_route &route)
 {
 	route.path.clear();
@@ -215,20 +223,45 @@ void    Config::parseConfig(std::string conffile)
 	}
 }
 
+bool   Config::MethodIsValid(std::set<std::string> methods)
+{
+	for (std::set<std::string>::iterator it = methods.begin(); it != methods.end(); it++)
+	{
+		if (*it != "GET" && *it != "POST" && *it != "DELETE")
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+bool	Config::RouteISValid(t_route &route)
+{
+	if (route.path.empty() || route.directory.empty())
+	{
+		throw std::runtime_error("Error: route path is not valid");
+		return false;
+	}
+	if (MethodIsValid(route.methods) == false)
+	{
+		throw std::runtime_error("Error: route methods are not valid");
+		return false;
+	}
+
+	return true;
+}
+
 bool    Config::ServerIsValid(t_server &server)
 {
-	if (server.host.empty() || server.port == 0 || server.root.empty() || server.error.empty())
+	if (server.host.empty() || server.port == 0)
 	{
 		throw std::runtime_error("Error: server is not valid");
 		return false;
 	}
 	for (std::map<std::string,t_route>::iterator it = server.routes.begin(); it != server.routes.end(); it++)
 	{
-		if (it->second.methods.empty() || it->second.index.empty())
-		{
-			throw std::runtime_error("Error: route is not valid");
+		if (!RouteISValid(it->second))
 			return false;
-		}
 	}
 	return true;
 }
