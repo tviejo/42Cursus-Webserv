@@ -247,7 +247,6 @@ bool	Config::RouteISValid(t_route &route)
 		throw std::runtime_error("Error: route methods are not valid");
 		return false;
 	}
-
 	return true;
 }
 
@@ -258,6 +257,19 @@ bool    Config::ServerIsValid(t_server &server)
 		throw std::runtime_error("Error: server is not valid");
 		return false;
 	}
+	if (server.error.empty())
+	{
+		server.error = "/html/errors/errors.html";
+	}
+	if (server.max_body_size == 0)
+	{
+		server.max_body_size = 5000000;
+	}
+	if (server.max_body_size > 100000000)
+	{
+		throw std::runtime_error("Error: max_body_size is too big");
+		return false;
+	}
 	for (std::map<std::string,t_route>::iterator it = server.routes.begin(); it != server.routes.end(); it++)
 	{
 		if (!RouteISValid(it->second))
@@ -265,7 +277,6 @@ bool    Config::ServerIsValid(t_server &server)
 	}
 	return true;
 }
-
 const std::vector<t_server>& Config::getServers() const
 {
 	return servers;
