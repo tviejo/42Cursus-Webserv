@@ -20,13 +20,20 @@ static	std::string getDate(const std::string& body)
 	size_t dateStart = body.find("Date: ");
 
 	if (dateStart == std::string::npos)
-		return "01.01.1990";
+		return ""; //"01.01.1990";
 	dateStart += 6;
 	size_t dateEnd = body.find("G", dateStart);
 	dateEnd -= 2;
 	if (dateEnd == std::string::npos)
-		return "01.01.1990";
+		return ""; //"01.01.1990";
 	return body.substr(dateStart, dateEnd - dateStart);
+}
+
+static std::string getUpldFilesDir(const t_server &server)
+{
+	//return "www/uploadedFiles/";
+	return	server.routes.count("/upload") > 0 ?
+			server.routes.at("/upload").upload : "";
 }
 
 static std::string sanitizeFileName(const std::string& fileName)
@@ -43,9 +50,11 @@ OutgoingData*	Response::handleTextPost(const HTTPRequest& req, const size_t maxB
 	try
 	{
 		const std::string&	content = req.getBody();
-		std::string			fileName = getDate(req.getBody()) + extractFilename(req.getBody(), "filename=") + ".txt";
+		std::string			fileName = getDate(req.getBody())
+									 + extractFilename(req.getBody(), "filename=")
+									 + "_" + ltoa(get_time()) + ".txt";
 		std::string			safeFileName = sanitizeFileName(fileName);
-		const std::string	path = "www/html/uploadedFiles/" + fileName;
+		const std::string	path = getUpldFilesDir(req.getServer()) + "/" + safeFileName;
 		std::string			line;
 		std::ofstream		outFile(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!outFile)
@@ -158,7 +167,7 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t ma
 		std::string				boundary = "--" + headerIt->second.substr(boundaryPos + 9);	
 		std::vector<formPart>	parts = parseMultipartForm(req.getBody(), boundary);
 
-		std::string				uploadDir = "www/html/uploadedFiles/";
+		std::string				uploadDir = getUpldFilesDir(req.getServer());
 		stringvec				uploadedFiles;
 		for (std::vector<formPart>::iterator it = parts.begin(); it != parts.end(); it++)
 		{
@@ -200,22 +209,19 @@ std::string Response::urlDecode(const std::string& encoded)
 	std::string	result;
 	for (size_t i = 0; i < encoded.length(); i++)
 	{
-		if (encoded[i] == '%')
+		if ((encoded[i] == '%') && (i + 2 < encoded.length()))
 		{
-			if (i + 2 < encoded.length())
-			{
-				std::string hex = encoded.substr(i + 1, 2);
-				char ch = static_cast<char>(strtol(hex.c_str(), NULL, 16));
-				result += ch;
-				i += 2;
-			}
-			else if (encoded[i] == '+')
-			{
-				result += ' ';
-			}
-			else
-	  			result += encoded[i];
+			std::string hexByte = encoded.substr(i + 1, 2);
+			char ch = static_cast<char>(strtol(hexByte.c_str(), NULL, 16));
+			result += ch;
+			i += 2;
 		}
+		else if (encoded[i] == '+')
+		{
+			result += ' ';
+		}
+		else
+			result += encoded[i];
 	}
 	return result;
 }
@@ -255,7 +261,7 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxB
 	if (ss.str().length() > maxBodySize)
 		return makeResponse(413, "Payload Too Large", "text/plain",
 				"File size exceeds maximum allowed");
-	std::string fullPath = "www/html/uploadedFiles/" + fileName;
+	std::string fullPath = getUpldFilesDir(req.getServer()) + "/" + sanitizeFileName(fileName) + "_" + ltoa(get_time());
 	std::ofstream outFile(fullPath.c_str(), std::ios::binary);
 	if (!outFile)
 		throw std::runtime_error("Failed to create outFile: " + fullPath);
@@ -264,7 +270,7 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxB
 	outFile.close();
 	if (!outFile)
 		throw std::runtime_error("Failed to write to outFile: " + fullPath);
-	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath);
+	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath + "\r\n");
 }
 
 OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const size_t maxBodySize)
@@ -276,8 +282,10 @@ OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const size_t maxB
 			return makeResponse(400, "Bad Request", "application/json", "{\"error\": \"Empty request body\"}");
 		if (content.length() > maxBodySize)
 			return makeResponse(413, "Payload Too Large", "application/json", "{\"error\": \"Request body too large\"}");
-		std::string	uploadDir = "/upload";
-		std::string		fileName = getDate(req.getBody()) + extractFilename(req.getBody(), "filename=") + ".json";
+		
+		std::string		uploadDir = getUpldFilesDir(req.getServer());
+		std::string		fileName = getDate(req.getBody()) + extractFilename(req.getBody(), "filename=")
+								 + "_" + ltoa(get_time()) + ".json";
 		std::string		fullPath = uploadDir + "/" + sanitizeFileName(fileName);
 		std::ofstream	outFile(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!outFile)
@@ -286,7 +294,7 @@ OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const size_t maxB
 		outFile.close();
 
 		return makeResponse(201, "Created", "application/json",
-					 "{\"status\": \"success\", \"file\": \"" + fileName + "\"}");
+					 "{\"status\": \"success\", \"file\": \"" + fileName + "\"}\r\n");
 	}
 	catch (const std::exception& e)
 	{

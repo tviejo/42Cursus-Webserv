@@ -1,6 +1,7 @@
 #!/bin/bash
 
-UPLOAD_DIR="./www/html/uploadedFiles/"
+#UPLOAD_DIR="./www/uploadedFiles/"
+UPLOAD_DIR=$QueryString
 
 # while true
 # do
@@ -98,7 +99,7 @@ for file in "$UPLOAD_DIR"/*; do
         ext="${file##*.}"
         if [[ "$ext" == "jpg" || "$ext" == "jpeg" || "$ext" == "png" || "$ext" == "gif" ]]; then
             filename=$(basename "$file")
-            echo "      <img src=\"/uploadedFiles/$filename\" alt=\"$filename\">"
+            echo "      <img src=\"/upldFiles/$filename\" alt=\"$filename\">"
         fi
     fi
 done
@@ -114,7 +115,23 @@ for file in "$UPLOAD_DIR"/*; do
         ext="${file##*.}"
         if [[ "$ext" == "txt" || "$ext" == "pdf" || "$ext" == "doc" || "$ext" == "docx" ]]; then
             filename=$(basename "$file")
-            echo "      <a href=\"/uploadedFiles/$filename\">$filename</a>"
+            echo "      <a href=\"/upldFiles/$filename\">$filename</a>"
+        fi
+    fi
+done
+
+cat <<EOF
+    </div>
+    <h2>Others files</h2>
+    <div class="documents">
+EOF
+
+for file in "$UPLOAD_DIR"/*; do
+    if [[ -f "$file" ]]; then
+        ext="${file##*.}"
+        if [[ "$ext" != "txt" && "$ext" != "pdf" && "$ext" != "doc" && "$ext" != "docx" && "$ext" != "jpg" && "$ext" != "jpeg" && "$ext" != "png" && "$ext" != "gif" ]]; then
+            filename=$(basename "$file")
+            echo "      <a href=\"/upldFiles/$filename\">$filename</a>"
         fi
     fi
 done

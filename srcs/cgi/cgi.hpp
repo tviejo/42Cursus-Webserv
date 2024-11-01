@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cgi.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:59 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 12:42:09 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/11/01 05:01:01 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ class Cgi
 		std::string _response;
 		std::string _header;
 		size_t _contentLength;
+		bool _isUserNameCgi;
 		bool _isDone;
 	
 	public:

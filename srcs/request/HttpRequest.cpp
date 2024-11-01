@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 11:51:07 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/11/01 12:15:04 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ void	HTTPRequest::parseBody(std::istringstream& lineStream)
 	}
 }
 
-HTTPRequest::HTTPRequest(const std::string& request)
+HTTPRequest::HTTPRequest(const std::string& request, t_server &server): _server(server)
 {
 	std::istringstream	stream(request);
 	std::string			request_line;
@@ -86,7 +86,7 @@ void HTTPRequest::extractQueryString()
 
 	if (sepPos == std::string::npos)
 	{
-		_uriWithoutQString = _uri;
+		_uriWithoutQString = Response::urlDecode(_uri);
 		return ;
 	}
 	_uriWithoutQString = _uri.substr(0, sepPos);
@@ -108,7 +108,7 @@ void HTTPRequest::extractQueryString()
 	}
 }
 
-HTTPRequest::HTTPRequest(const HTTPRequest& copy)
+HTTPRequest::HTTPRequest(const HTTPRequest& copy): _server(copy._server)
 {
     *this = copy;
 }
@@ -117,6 +117,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& copy)
 {
     if (this != &copy)
     {
+		this->_server = copy._server;
 		this->_method = copy._method;
 		this->_uri = copy._uri;
 		this->_uriWithoutQString = copy._uriWithoutQString;
@@ -124,6 +125,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& copy)
 		this->_headers = copy._headers;
 		this->_queryStrings = copy._queryStrings;
 		this->_body = copy._body;
+		this->_empty_string = copy._empty_string;
     }
     return *this;
 }
@@ -176,6 +178,11 @@ const std::string	&HTTPRequest::getFirstQueryString() const
 	if (_queryStrings.empty())
 		return _empty_string;
 	return _queryStrings.begin()->second;
+}
+
+const t_server	&HTTPRequest::getServer() const
+{
+	return _server;
 }
 
 std::ostream & operator << (std::ostream &os, const HTTPRequest &req)

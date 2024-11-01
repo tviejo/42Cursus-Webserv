@@ -6,12 +6,14 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:05 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/25 18:03:47 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/01 10:49:35 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef UTILS_HPP
 # define UTILS_HPP
+
+#include <sys/time.h>
 
 typedef std::vector<std::string> stringvec;
 
@@ -34,5 +36,14 @@ void readDirectory(const std::string& name, stringvec& sv);
 void readDirectory(const std::string& name, std::ostringstream& oss);
 void readDirectory(const std::string& name, std::ostringstream& oss, const std::string& separator, const std::string& quotes);
 std::streampos getFileSize(const std::string & filename);
+
+typedef long t_time_ms;
+typedef long t_duree_ms;
+
+t_time_ms	get_time(void);
+t_duree_ms	get_duree(t_time_ms time0);
+t_duree_ms	get_duree_update_t0(t_time_ms *time0);
+
+std::string ltoa(long n);
 
 #endif

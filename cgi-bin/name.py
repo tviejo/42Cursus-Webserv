@@ -4,13 +4,13 @@ import os
 import cgi
 import cgitb
 
-name_env = os.environ.get('QueryString')
+name_env = os.environ.get('UserName')
 
 if name_env:
     name = name_env
 else:
     form = cgi.FieldStorage()
-    name = form.getvalue('QueryString', 'Guest')
+    name = form.getvalue('UserName', 'Guest')
  
 html_content = f"""<!DOCTYPE html>
 <html lang="en">
