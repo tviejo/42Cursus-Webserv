@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 12:15:04 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/01 15:08:53 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,19 +165,19 @@ const std::map<std::string, std::string>	&HTTPRequest::getQueryStrings() const
 	return _queryStrings;
 }
 
-const std::string	&HTTPRequest::getQueryStrings(const std::string &key) const
+const std::string	HTTPRequest::getQueryStrings(const std::string &key, bool decoded) const
 {
 	if (_queryStrings.find(key) == _queryStrings.end())
 		return _empty_string;
 	else
-		return _queryStrings.at(key);
+		return decoded ? Response::urlDecode(_queryStrings.at(key)) : _queryStrings.at(key);
 }
 
-const std::string	&HTTPRequest::getFirstQueryString() const
+const std::string	HTTPRequest::getFirstQueryString(bool decoded) const
 {
 	if (_queryStrings.empty())
 		return _empty_string;
-	return _queryStrings.begin()->second;
+	return decoded ? Response::urlDecode(_queryStrings.begin()->second) : _queryStrings.begin()->second;
 }
 
 const t_server	&HTTPRequest::getServer() const

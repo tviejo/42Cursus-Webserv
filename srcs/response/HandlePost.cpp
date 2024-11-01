@@ -194,7 +194,7 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t ma
 		ossResponse << "Successfully uploaded " << uploadedFiles.size() << " file(s):\n";
 		for (stringvec::const_iterator it = uploadedFiles.begin(); it != uploadedFiles.end(); it++)
 			ossResponse << " - " << *it << "\n";
-		ossResponse << "\r\n";  // this solve the problem of missing last char for last file name
+		//ossResponse << "\r\n";  // this solve the problem of missing last char for last file name
 		return makeResponse(201, "Created", "text/plain", ossResponse.str());
 	}
 	catch (const std::exception& e)
@@ -270,7 +270,7 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxB
 	outFile.close();
 	if (!outFile)
 		throw std::runtime_error("Failed to write to outFile: " + fullPath);
-	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath + "\r\n");
+	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath /*+ "\r\n"*/);
 }
 
 OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const size_t maxBodySize)
@@ -294,7 +294,7 @@ OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const size_t maxB
 		outFile.close();
 
 		return makeResponse(201, "Created", "application/json",
-					 "{\"status\": \"success\", \"file\": \"" + fileName + "\"}\r\n");
+					 "{\"status\": \"success\", \"file\": \"" + fileName + "\"}"/*\r\n"*/);
 	}
 	catch (const std::exception& e)
 	{

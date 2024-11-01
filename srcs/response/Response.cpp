@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 02:56:33 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/01 15:21:22 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,8 @@ OutgoingData *	Response::makeResponse(uint32_t status,
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
 	response << "Content-Type: " << contentType << "\r\n";
 	response << "Content-Length: " << content.length() << "\r\n";
-	response << addHeader << "\r\n";
+	if (!addHeader.empty())
+		response << addHeader << "\r\n";
 	response << "\r\n";
 	return new OutgoingData(response.str(), content);
 }
@@ -254,11 +255,13 @@ OutgoingData * Response::handleDelete(const HTTPRequest & req, int clientSocket)
 	{
 		if (req.getFirstQueryString().find("..") != std::string::npos)
 			return makeErrorResponse(403, "Forbidden", server, clientSocket);
- 		std::string uploadDirectory = server.routes.count("/upload") > 0 ?
+ 		/*std::string uploadDirectory = server.routes.count("/upload") > 0 ?
 									  server.routes.at("/upload").upload : "";
 		if (uploadDirectory.empty())
-			return makeErrorResponse(404, "Not Found", server, clientSocket);
-		if (std::remove((uploadDirectory + req.getFirstQueryString()).c_str()) != 0)
+			return makeErrorResponse(404, "Not Found", server, clientSocket);*/
+		std::string filePathToDelete = route.directory + '/' + req.getFirstQueryString(true);
+		std::cout << "deleting : " << filePathToDelete << std::endl; 
+		if (std::remove(filePathToDelete.c_str()) != 0)
 			return makeErrorResponse(404, "Not Found", server, clientSocket);
 		else
 			return makeResponse(200, "OK", "text/plain", "200 OK");
