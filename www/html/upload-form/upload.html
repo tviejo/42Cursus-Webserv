@@ -55,7 +55,7 @@
         }
 
         main {
-            margin-top: 0px;
+            margin-top: 60px;
             text-align: center;
             max-width: 800px;
             width: 100%;
@@ -160,12 +160,6 @@
         <h1>File Upload</h1>
         
         <div class="button-container">
-            <!--form action="/upldFiles" method="GET">
-                <button type="submit">Directory Listing</button>
-            </form>
-            <form action="/gallery/gallery.cgi" method="GET">
-                <button type="submit">View File Gallery</button>
-            </form-->
             <a href="/upldFiles">Directory Listing</a>
             <a href="/gallery/gallery.cgi?dir=www/uploadedFiles">File(s) Gallery</a>
             <a href="/delete.html">Delete File</a>
@@ -175,7 +169,7 @@
             Upload your file(s) using the form below. The server will process the upload.
         </p>
 
-        <form action="action" method="POST" enctype="multipart/form-data">
+        <form id="uploadForm" action="action" method="POST" enctype="multipart/form-data">
             <label for="file">Please choose at least one file :</label>
             <input type="file" id="file" name="file" accept="*.*" required>
             <input type="file" id="file2" name="file2" accept="*.*" >
@@ -191,5 +185,28 @@
         &copy; 2024 Webserv 42 - ade-sarr jteissie tviejo - All Rights Reserved
     </footer>
 
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('File uploaded successfully');
+                } else {
+                    console.error('Failed to upload file');
+                    alert('Failed to upload the file');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during the upload.');
+            });
+        });
+    </script>
 </body>
 </html>
