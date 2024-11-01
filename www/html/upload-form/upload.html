@@ -55,7 +55,7 @@
         }
 
         main {
-            margin-top: 0px;
+            margin-top: 60px;
             text-align: center;
             max-width: 800px;
             width: 100%;
@@ -126,11 +126,9 @@
 
     <main>
         <h1>File Upload</h1>
-        <p>
-            Upload your text file using the form below. The server will process the upload.
-        </p>
+        <p>Upload your text file using the form below. The server will process the upload.</p>
         
-        <form action="action" method="POST" enctype="multipart/form-data">
+        <form id="uploadForm" action="action" method="POST" enctype="multipart/form-data">
             <label for="file">Choose a text file:</label>
             <input type="file" id="file" name="file" accept=".txt" required>
             <input type="submit" value="Upload">
@@ -143,5 +141,28 @@
         &copy; 2024 Webserv 42 - ade-sarr jteissie tviejo - All Rights Reserved
     </footer>
 
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('File uploaded successfully');
+                } else {
+                    console.error('Failed to upload file');
+                    alert('Failed to upload the file');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during the upload.');
+            });
+        });
+    </script>
 </body>
 </html>
