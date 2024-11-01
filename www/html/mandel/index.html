@@ -1,186 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mandelbrot Set in WebGL2 by mig29-at-noos.fr</title>
-    <link rel="stylesheet" href="mandel.css">
-  </head>
-  <body>
-    <canvas id="c"></canvas>
-    <!--
-    for most samples webgl-utils only provides shader compiling/linking and
-    canvas resizing because why clutter the examples with code that's the same in every sample.
-    See https://webgl2fundamentals.org/webgl/lessons/webgl-boilerplate.html
-    and https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    for webgl-utils, m3, m4, and webgl-lessons-ui.
-    -->
-    <script src="webgl2-utils/webgl-utils.js"></script>
-    <script src="webgl2-utils/m4.js"></script>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Mandelbrot Set in WebGL2</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
 
-    <script id="shader-vs" type="x-shader/x-vertex">#version 300 es 
-        precision highp float;
-        
-        in vec4 a_position;
-        out vec2 C_point;
+		body {
+			font-family: 'Arial', sans-serif;
+			background-color: #f4f4f4;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 105vh;
+		}
 
-        uniform mat4 matMVP;
-        uniform mat4 matFSetRange;
+		header {
+			width: 100%;
+			background-color: #333;
+			padding: 10px 0;
+			text-align: center;
+			position: fixed;
+			top: 0;
+			left: 0;
+			z-index: 1000;
+		}
 
-        void main() {
-            C_point = vec2(matFSetRange * a_position);
-            gl_Position = matMVP * a_position;
-        }
-    </script> 
-    
-    <script id="shader-fs" type="x-shader/x-fragment">#version 300 es 
-        // fragment shaders don't have a default precision so we need
-        // to pick one. highp is a good default. It means "high precision"
-        precision highp float;
+		nav {
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
 
-        in vec2 C_point;
-        // we need to declare an output for the fragment shader
-        out vec4 outColor;
+		nav a {
+			margin: 5px 10px;
+			padding: 10px 15px;
+			color: white;
+			text-decoration: none;
+			font-size: 18px;
+			background-color: #555;
+			border-radius: 5px;
+			transition: background-color 0.3s ease;
+		}
 
-        uniform int iterMax;
-        uniform int colorShift;
-        
-        void main() {
-          vec2 z = C_point;
-          // don't render inside M1 and M2 bulbs - https://iquilezles.org/articles/mset1bulb
-          float z2 = dot(z, z); 
-          if ((256.0*z2*z2 - 96.0*z2 + 32.0*z.x < 3.0) || (16.0*(z2 + 2.0*z.x + 1.0) < 1.0)) {
-            outColor = vec4(0.0, 0.0, 0.0, 0.0);
-            return;
-          }
-          //int i = iterMax;
-          float imax = float(iterMax);
-          float /*iter,*/ smooth_iter;
-          float colShift = float(colorShift);
-          vec3 color;
-          //while (i-- != 0) {
-          for (float i = 0.0; i < imax; i++) {
-            if (dot(z,z) > 4.0) {
-              //iter = float((iterMax - i + colorShift) % iterMax);
-              smooth_iter = mod(i + colShift, imax) + 1.0 - log(log(dot(z,z)))/log(2.0);
-              color = cos(vec3(1.1, 1.2, 1.3) * sqrt(2.0*smooth_iter));
-              outColor = vec4(color, 1.0/*0.94*/);
-              return;
-            }
-            z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + C_point;
-          }
-          
-          outColor = vec4(0.0, 0.0, 0.0, 0.0);
-        }
-    </script>
-    
+		nav a:hover {
+			background-color: #42b883;
+		}
 
-    <script id="shader-vs_pos_uv" type="x-shader/x-vertex">#version 300 es 
-      precision highp float;
-      
-      in vec4 a_position;
-      in vec2 a_uv;
-      out vec2 uv;
+		main {
+			margin-top: 0px;
+			text-align: center;
+			max-width: 800px;
+			width: 100%;
+		}
 
-      uniform mat4 matMVP;
-      
-      void main() {
-          uv = a_uv;
-          gl_Position = matMVP * a_position;
-      }
-    </script>
+		h1 {
+			font-size: 2.0rem;
+			margin-bottom: 20px;
+		}
 
-    <script id="shader-fs_kishi" type="x-shader/x-fragment">#version 300 es 
-        //https://www.youtube.com/@kishimisu
-        //https://www.youtube.com/watch?v=f4s1h2YETNY
-        //https://www.shadertoy.com/view/mtyGWy  
-        
-        precision highp float;
+		p {
+			font-size: 1.2rem;
+			color: #666;
+		}
 
-        in vec2 uv;
-        out vec4 outColor;
+		form[method="POST"], .button-container {
+			margin-top: 10px;
+			margin-bottom: 10px;
+			padding: 13px 13px 8px 13px;
+			background-color: #fff;
+			border-radius: 5px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		}
 
-        uniform float timeSec;
-        uniform vec2 uvShiftPerS;
-        
-        //https://iquilezles.org/articles/palettes/
-        vec3 palette( float t ) {
-            vec3 a = vec3(0.5, 0.5, 0.5);
-            vec3 b = vec3(0.5, 0.5, 0.5);
-            vec3 c = vec3(1.0, 1.0, 1.0);
-            vec3 d = vec3(0.263,0.416,0.557);
+		form label {
+			display: inline-block;
+			color: navy;
+			margin-bottom: 6px;
+		}
 
-            return a + b*cos( 6.28318*(c*t+d) );
-        }
+		input[type="file"], input[type="submit"] {
+			padding: 6px;
+			margin: 6px 0;
+			width: 100%;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+		}
 
-        void main() {
-            //vec2 uv = (fragCoord * 2.0 - iResolution.xy) / iResolution.y;
-            vec2 uv_ = uv*6.0 + uvShiftPerS * timeSec;
-            uv_ = mod(uv_ + 1.0, 2.0) - 1.0;
-            vec2 uv0 = uv*6.0;
-            vec2 uv0_ = uv_;
-            vec3 finalColor = vec3(0.0);
+		input[type="submit"] {
+			background-color: #333;
+			color: white;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
 
-            for (float i = 0.0; i < 6.0; i++) {
-                uv_ = fract(uv_ * 1.6) - 0.5;
+		input[type="submit"]:hover {
+			background-color: #42b883;
+		}
 
-                float d = length(uv_) * exp(-length(uv0));
+		.button-container {
+			margin-top: 20px;
+		}
 
-                vec3 col = palette(length(uv0_) + i*0.4 + timeSec*0.4);
+		.button-container form {
+			display: inline-block;
+		}
 
-                d = sin(d*8.0 + timeSec)/8.0;
-                d = abs(d);
+		.button-container button {
+			padding: 10px 20px;
+			background-color: #333;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 1rem;
+			transition: background-color 0.3s ease;
+		}
 
-                d = pow(0.01 / d, 1.2);
+		.button-container button:hover {
+			background-color: #42b883;
+		}
+		
+		footer {
+			position: absolute;
+			bottom: 10px;
+			text-align: center;
+			width: 100%;
+			font-size: 0.9rem;
+			color: #888;
+		}
+	</style>
+	<script>
+		function openFullscreen(element)
+		{
+			if (element.requestFullscreen) {
+				element.requestFullscreen();
+			} else if (element.mozRequestFullScreen) { // Firefox
+				element.mozRequestFullScreen();
+			} else if (element.webkitRequestFullscreen) { // Chrome, Safari, and Opera
+				element.webkitRequestFullscreen();
+			} else if (element.msRequestFullscreen) { // IE/Edge
+				element.msRequestFullscreen();
+			}
+			//element.classList.add('fullscreen');
+		}
+		function fullscreen()
+		{
+			openFullscreen(document.getElementById("mandelWebGL"));
+		}
+	</script>
+</head>
+<body>
 
-                finalColor += col * d;
-            }
-                
-            outColor = vec4(pow(finalColor, vec3(1.5,1.5,1.5)), 1.0);
-        }
-    </script>
+	<header>
+		<nav>
+			<a href="../index.html">Home</a>
+			<a href="../cgi.html">CGI</a>
+			<a href="../time.html">Time</a>
+			<!--a href="../gallery.html">Gallery</a>
+			<a href="../delete.html">Delete</a-->
+			<a href="../postform.html">POST</a>
+			<a href="../upload/upload.html">Upload</a>
+			<a href="../graphfx/index.html">Graph fx</a>
+			<a href="../mandel/index.html">WebGL fractal</a>
+			<a href="../raytracing/index.html">Ray tracing gallery</a>
+		</nav>
+	</header>
 
+	<main>
+		<h1>Mandelbrot Set in WebGL2</h1>
+		
+		<div class="button-container">
+			<form action="." method="GET">
+				<button type="submit">Directory Listing</button>
+			</form>
+			<form action="javascript:fullscreen();" method="GET">
+				<button type="submit">Full Screen Display</button>
+			</form>
+		</div>
+		
+		<iframe id="mandelWebGL"
+			title="Mandelbrot Set WebGL rendering demo"
+			width="100%"
+			height="500"
+			src="mandel.html">
+		</iframe>
 
-    <script id="shader-fs_mandel" type="x-shader/x-fragment">#version 300 es
-      //https://github.com/d0x2f/WebGL2-Mandelbrot/blob/master/shaders/fragment.glsl
-      precision highp float;
+	</main>
 
-      in vec4 vertex;
-      out vec4 output_colour;
-      uniform float continuous_cycle;
-      uniform vec2 julia_constant;
+	<footer>
+		&copy; 2024 Webserv 42 - ade-sarr & jteissie & tviejo - All Rights Reserved
+	</footer>
 
-      void main() {
-        vec2 p = vertex.xy;
-        vec2 c;
-
-        if (julia_constant.x == 0.0 && julia_constant.y == 0.0) {
-          c = p;
-        } else {
-          c = julia_constant;
-        }
-
-        vec3 color = vec3(0.0, 0.0, 0.0);
-
-        for(int i=0;i<1024;i++){
-          p = vec2(
-            p.x * p.x - p.y * p.y,
-            2.0 * p.x * p.y
-          ) + c;
-
-          if (dot(p, p) > 4.0) {
-            float regulator = float(i) - continuous_cycle - log(log(dot(p, p)) / log(2.0)) / log(2.0);
-            color = vec3(0.95 + .012 * regulator, 1.0, .1 + .4 * (1.0 + sin(.3 * regulator)));
-            break;
-          }
-        }
-        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-        vec3 m = abs(fract(color.xxx + K.xyz) * 6.0 - K.www);
-        output_colour.rgb = color.z * mix(K.xxx, clamp(m - K.xxx, 0.0, 1.0), color.y);
-        output_colour.a=1.0;
-      }
-    </script>
-
-    <script src="mandel.js"></script>
-  </body>
+</body>
 </html>

@@ -62,7 +62,7 @@
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.0rem;
             margin-bottom: 20px;
         }
 
@@ -71,17 +71,24 @@
             color: #666;
         }
 
-        form {
-            margin-top: 20px;
-            padding: 20px;
+        form[method="POST"], .button-container {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 13px 13px 8px 13px;
             background-color: #fff;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
+        form label {
+            display: inline-block;
+            color: navy;
+            margin-bottom: 6px;
+        }
+
         input[type="file"], input[type="submit"] {
-            padding: 10px;
-            margin: 10px 0;
+            padding: 6px;
+            margin: 6px 0;
             width: 100%;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -98,6 +105,30 @@
             background-color: #42b883;
         }
 
+        .button-container {
+            margin-top: 20px;
+        }
+
+        .button-container form, a {
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .button-container button, a {
+            padding: 10px 20px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container button:hover, a:hover {
+            background-color: #42b883;
+        }
+        
         footer {
             position: absolute;
             bottom: 10px;
@@ -115,8 +146,9 @@
             <a href="../index.html">Home</a>
             <a href="../cgi.html">CGI</a>
             <a href="../time.html">Time</a>
-            <a href="../gallery.html">Gallery</a>
-            <a href="../delete.html">Delete</a>
+            <!--a href="../gallery.html">Gallery</a>
+            <a href="../delete.html">Delete</a-->
+            <a href="../postform.html">POST</a>
             <a href="../upload/upload.html">Upload</a>
             <a href="../graphfx/index.html">Graph fx</a>
             <a href="../mandel/index.html">WebGL fractal</a>
@@ -126,11 +158,23 @@
 
     <main>
         <h1>File Upload</h1>
-        <p>Upload your text file using the form below. The server will process the upload.</p>
         
+        <div class="button-container">
+            <a href="/upldFiles">Directory Listing</a>
+            <a href="/gallery/gallery.cgi?dir=www/uploadedFiles">File(s) Gallery</a>
+            <a href="/delete.html">Delete File</a>
+        </div>
+        
+        <p>
+            Upload your file(s) using the form below. The server will process the upload.
+        </p>
+
         <form id="uploadForm" action="action" method="POST" enctype="multipart/form-data">
-            <label for="file">Choose a text file:</label>
-            <input type="file" id="file" name="file" accept=".txt" required>
+            <label for="file">Please choose at least one file :</label>
+            <input type="file" id="file" name="file" accept="*.*" required>
+            <input type="file" id="file2" name="file2" accept="*.*" >
+            <input type="file" id="file3" name="file3" accept="*.*" >
+            <input type="file" id="file4" name="file4" accept="*.*" >
             <input type="submit" value="Upload">
         </form>
 

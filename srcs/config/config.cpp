@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:56:20 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/30 16:07:23 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/01 13:49:21 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,7 +252,7 @@ bool	Config::RouteISValid(t_route &route)
 
 bool    Config::ServerIsValid(t_server &server)
 {
-	if (server.host.empty() || server.port == 0)
+	if (server.host.empty() || server.port == 0 || server.root.empty() || server.server_name.empty())
 	{
 		throw std::runtime_error("Error: server is not valid");
 		return false;

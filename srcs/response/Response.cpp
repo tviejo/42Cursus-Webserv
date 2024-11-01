@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/30 16:41:35 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/01 15:21:22 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,8 @@ OutgoingData *	Response::makeResponse(uint32_t status,
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
 	response << "Content-Type: " << contentType << "\r\n";
 	response << "Content-Length: " << content.length() << "\r\n";
-	response << addHeader << "\r\n";
+	if (!addHeader.empty())
+		response << addHeader << "\r\n";
 	response << "\r\n";
 	return new OutgoingData(response.str(), content);
 }
@@ -137,8 +138,9 @@ std::string Response::getContentType(const std::string & uri)
 	return _contentTypeMap[ext];
 }
 
-OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & req, int clientSocket, Server &serverObj)
+OutgoingData * Response::handleGet(const HTTPRequest & req, int clientSocket, Server &serverObj)
 {
+	const t_server & server = req.getServer();
 	std::string uri = req.getUriWithoutQString();
 	// Process routes redirections in first place
 	std::map<std::string,std::string>::const_iterator it = server.redirs.begin();
@@ -169,13 +171,15 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 	if (uri == route.path && route.autoindex)
 		filename = route.directory + "/" + route.index;
 	else
-		filename = route.directory + "/" + uri.erase(0, route.path.length());
+		filename = route.directory + "/" + uri.substr(route.path.length());
 	if (isDirectory(filename)) {
 		if (!route.dir_listing)
 			return makeErrorResponse(405, "Directory listing not allowed", server, clientSocket);
-		if (filename[filename.length() - 1] != '/')  //if no final slash on directory: redirection 301 with uri + '/'
+		std::cout << "     uri: " << uri << "\n";
+		std::cout << "     directory: " << filename << "\n";
+		if (uri[uri.length() - 1] != '/')  //if no final slash on directory: redirection 301 with uri + '/'
 			return makeResponse(301, "Moved Permanently", "text/plain", "301 Moved Permanently",
-				"location: /" + uri + '/');
+				"location: " + uri + '/');
 		std::ostringstream htmlContent;
 		htmlContent << serverObj.getDisplayDirHtmlP1();
 		readDirectory(filename, htmlContent, ",", "''");
@@ -183,16 +187,16 @@ OutgoingData * Response::handleGet(const t_server & server, const HTTPRequest & 
 		return makeResponse(200, "OK", "text/html", htmlContent.str());
 	}
 	ssize_t filesize = getFileSize(filename);
-	std::cerr << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
+	std::cout << "     filename: '" << filename << "'  filesize: " << filesize << "\n";
 	if (filesize == -1)
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	std::string header = makeResponseHeader(200, "OK", getContentType(uri), filesize, clientSocket);
 	return new OutgoingData(header, filename, true);
 }
 
-OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest & req, int clientSocket)
+OutgoingData * Response::handlePost(const HTTPRequest & req, int clientSocket)
 {
-	(void)clientSocket;
+	const t_server & server = req.getServer();
 	size_t	maxBodySize = server.max_body_size;
 	std::string			uri = req.getUriWithoutQString();
 	const t_route		*routeptr = getRouteFromUri(server, uri);
@@ -210,7 +214,7 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
 //	req.printRequest();
-	if (route.cgi.empty() == false)
+	if (!route.cgi.empty())
 	{
 		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
 		return cgi.handleCgi(server.root, server.error, clientSocket);
@@ -229,9 +233,10 @@ OutgoingData * Response::handlePost(const t_server & server, const HTTPRequest &
 		return makeResponse(415, "Unsupported Media Type", "text/plain", "415 Unsupported Media Type: " + contentType->second);
 }
 
-OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest & req, int clientSocket)
+OutgoingData * Response::handleDelete(const HTTPRequest & req, int clientSocket)
 {
 	std::cerr << "\nDELETE REQUEST\n\n";
+	const t_server & server = req.getServer();
 	std::string uri = req.getUriWithoutQString();
 	const t_route *routeptr = getRouteFromUri(server, uri);
 	if (routeptr == NULL) {
@@ -250,7 +255,13 @@ OutgoingData * Response::handleDelete(const t_server & server, const HTTPRequest
 	{
 		if (req.getFirstQueryString().find("..") != std::string::npos)
 			return makeErrorResponse(403, "Forbidden", server, clientSocket);
- 		if (std::remove(( "./www/html/uploadedFiles/" + req.getFirstQueryString()).c_str()) != 0)
+ 		/*std::string uploadDirectory = server.routes.count("/upload") > 0 ?
+									  server.routes.at("/upload").upload : "";
+		if (uploadDirectory.empty())
+			return makeErrorResponse(404, "Not Found", server, clientSocket);*/
+		std::string filePathToDelete = route.directory + '/' + req.getFirstQueryString(true);
+		std::cout << "deleting : " << filePathToDelete << std::endl; 
+		if (std::remove(filePathToDelete.c_str()) != 0)
 			return makeErrorResponse(404, "Not Found", server, clientSocket);
 		else
 			return makeResponse(200, "OK", "text/plain", "200 OK");

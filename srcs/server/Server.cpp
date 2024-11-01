@@ -150,19 +150,19 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 {
 	std::cout << "processRequest()   socket: " << clientSocket << "\n";
 	
-	HTTPRequest	request(clientRequest);
+	HTTPRequest	request(clientRequest, *_sockets[clientSocket].server);
 	std::cout << "  -> " << request << std::endl;
 	OutgoingData *response;
 
 	std::cerr << " METHOD: " << request.get_method() << std::endl;
 	if (request.get_method() == "GET")
-		response = Response::handleGet(*_sockets[clientSocket].server, request, clientSocket, *this);
+		response = Response::handleGet(request, clientSocket, *this);
 	else if (request.get_method() == "POST")
-		response = Response::handlePost(*_sockets[clientSocket].server, request, clientSocket);
+		response = Response::handlePost(request, clientSocket);
 	else if (request.get_method() == "DELETE")
-		response = Response::handleDelete(*_sockets[clientSocket].server, request, clientSocket);
+		response = Response::handleDelete(request, clientSocket);
 	else
-		response = Response::makeErrorResponse(405, "Method Not Allowed", *_sockets[clientSocket].server, clientSocket);
+		response = Response::makeErrorResponse(405, "Method Not Allowed", request.getServer(), clientSocket);
 	sendResponse(clientSocket, response);
 }
 

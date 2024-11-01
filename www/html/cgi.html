@@ -63,7 +63,7 @@
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.0rem;
             margin-bottom: 20px;
         }
 
@@ -108,6 +108,12 @@
             color: #888;
         }
     </style>
+    <script>
+        function validate(cgiform) {
+            //cgiform.name.value = encodeURI(cgiform.name.value);
+            return true;
+        }
+    </script>
 </head>
 <body>
 
@@ -116,8 +122,9 @@
             <a href="/index.html">Home</a>
             <a href="cgi.html">CGI</a>
             <a href="time.html">Time</a>
-            <a href="gallery.html">Gallery</a>
-            <a href="delete.html">Delete</a>
+            <!--a href="gallery.html">Gallery</a>
+            <a href="delete.html">Delete</a-->
+            <a href="postform.html">POST</a>
             <a href="upload/upload.html">Upload</a>
             <a href="graphfx/index.html">Graph fx</a>
             <a href="mandel/index.html">WebGL fractal</a>
@@ -132,7 +139,7 @@
             generate web pages dynamically. Here you can test CGI functionality easily.
         </p>
         
-        <form action="/cgi/name.cgi" method="GET">
+        <form action="/cgi/name.cgi" method="GET" onsubmit="return validate(this);">
             <label for="name">Enter your name:</label>
             <input type="text" id="name" name="name" required placeholder="Your Name">
             <input type="submit" value="Submit">

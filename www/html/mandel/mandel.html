@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandelbrot Set in WebGL2 by mig29-at-noos.fr</title>
+    <link rel="stylesheet" href="mandel.css">
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <!--
+    for most samples webgl-utils only provides shader compiling/linking and
+    canvas resizing because why clutter the examples with code that's the same in every sample.
+    See https://webgl2fundamentals.org/webgl/lessons/webgl-boilerplate.html
+    and https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+    for webgl-utils, m3, m4, and webgl-lessons-ui.
+    -->
+    <script src="webgl2-utils/webgl-utils.js"></script>
+    <script src="webgl2-utils/m4.js"></script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">#version 300 es 
+        precision highp float;
+        
+        in vec4 a_position;
+        out vec2 C_point;
+
+        uniform mat4 matMVP;
+        uniform mat4 matFSetRange;
+
+        void main() {
+            C_point = vec2(matFSetRange * a_position);
+            gl_Position = matMVP * a_position;
+        }
+    </script> 
+    
+    <script id="shader-fs" type="x-shader/x-fragment">#version 300 es 
+        // fragment shaders don't have a default precision so we need
+        // to pick one. highp is a good default. It means "high precision"
+        precision highp float;
+
+        in vec2 C_point;
+        // we need to declare an output for the fragment shader
+        out vec4 outColor;
+
+        uniform int iterMax;
+        uniform int colorShift;
+        
+        void main() {
+          vec2 z = C_point;
+          // don't render inside M1 and M2 bulbs - https://iquilezles.org/articles/mset1bulb
+          float z2 = dot(z, z); 
+          if ((256.0*z2*z2 - 96.0*z2 + 32.0*z.x < 3.0) || (16.0*(z2 + 2.0*z.x + 1.0) < 1.0)) {
+            outColor = vec4(0.0, 0.0, 0.0, 0.0);
+            return;
+          }
+          //int i = iterMax;
+          float imax = float(iterMax);
+          float /*iter,*/ smooth_iter;
+          float colShift = float(colorShift);
+          vec3 color;
+          //while (i-- != 0) {
+          for (float i = 0.0; i < imax; i++) {
+            if (dot(z,z) > 4.0) {
+              //iter = float((iterMax - i + colorShift) % iterMax);
+              smooth_iter = mod(i + colShift, imax) + 1.0 - log(log(dot(z,z)))/log(2.0);
+              color = cos(vec3(1.1, 1.2, 1.3) * sqrt(2.0*smooth_iter));
+              outColor = vec4(color, 1.0/*0.94*/);
+              return;
+            }
+            z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + C_point;
+          }
+          
+          outColor = vec4(0.0, 0.0, 0.0, 0.0);
+        }
+    </script>
+    
+
+    <script id="shader-vs_pos_uv" type="x-shader/x-vertex">#version 300 es 
+      precision highp float;
+      
+      in vec4 a_position;
+      in vec2 a_uv;
+      out vec2 uv;
+
+      uniform mat4 matMVP;
+      
+      void main() {
+          uv = a_uv;
+          gl_Position = matMVP * a_position;
+      }
+    </script>
+
+    <script id="shader-fs_kishi" type="x-shader/x-fragment">#version 300 es 
+        //https://www.youtube.com/@kishimisu
+        //https://www.youtube.com/watch?v=f4s1h2YETNY
+        //https://www.shadertoy.com/view/mtyGWy  
+        
+        precision highp float;
+
+        in vec2 uv;
+        out vec4 outColor;
+
+        uniform float timeSec;
+        uniform vec2 uvShiftPerS;
+        
+        //https://iquilezles.org/articles/palettes/
+        vec3 palette( float t ) {
+            vec3 a = vec3(0.5, 0.5, 0.5);
+            vec3 b = vec3(0.5, 0.5, 0.5);
+            vec3 c = vec3(1.0, 1.0, 1.0);
+            vec3 d = vec3(0.263,0.416,0.557);
+
+            return a + b*cos( 6.28318*(c*t+d) );
+        }
+
+        void main() {
+            //vec2 uv = (fragCoord * 2.0 - iResolution.xy) / iResolution.y;
+            vec2 uv_ = uv*6.0 + uvShiftPerS * timeSec;
+            uv_ = mod(uv_ + 1.0, 2.0) - 1.0;
+            vec2 uv0 = uv*6.0;
+            vec2 uv0_ = uv_;
+            vec3 finalColor = vec3(0.0);
+
+            for (float i = 0.0; i < 6.0; i++) {
+                uv_ = fract(uv_ * 1.6) - 0.5;
+
+                float d = length(uv_) * exp(-length(uv0));
+
+                vec3 col = palette(length(uv0_) + i*0.4 + timeSec*0.4);
+
+                d = sin(d*8.0 + timeSec)/8.0;
+                d = abs(d);
+
+                d = pow(0.01 / d, 1.2);
+
+                finalColor += col * d;
+            }
+                
+            outColor = vec4(pow(finalColor, vec3(1.5,1.5,1.5)), 1.0);
+        }
+    </script>
+
+
+    <script id="shader-fs_mandel" type="x-shader/x-fragment">#version 300 es
+      //https://github.com/d0x2f/WebGL2-Mandelbrot/blob/master/shaders/fragment.glsl
+      precision highp float;
+
+      in vec4 vertex;
+      out vec4 output_colour;
+      uniform float continuous_cycle;
+      uniform vec2 julia_constant;
+
+      void main() {
+        vec2 p = vertex.xy;
+        vec2 c;
+
+        if (julia_constant.x == 0.0 && julia_constant.y == 0.0) {
+          c = p;
+        } else {
+          c = julia_constant;
+        }
+
+        vec3 color = vec3(0.0, 0.0, 0.0);
+
+        for(int i=0;i<1024;i++){
+          p = vec2(
+            p.x * p.x - p.y * p.y,
+            2.0 * p.x * p.y
+          ) + c;
+
+          if (dot(p, p) > 4.0) {
+            float regulator = float(i) - continuous_cycle - log(log(dot(p, p)) / log(2.0)) / log(2.0);
+            color = vec3(0.95 + .012 * regulator, 1.0, .1 + .4 * (1.0 + sin(.3 * regulator)));
+            break;
+          }
+        }
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 m = abs(fract(color.xxx + K.xyz) * 6.0 - K.www);
+        output_colour.rgb = color.z * mix(K.xxx, clamp(m - K.xxx, 0.0, 1.0), color.y);
+        output_colour.a=1.0;
+      }
+    </script>
+
+    <script src="mandel.js"></script>
+  </body>
+</html>

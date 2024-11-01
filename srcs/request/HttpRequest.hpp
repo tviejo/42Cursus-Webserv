@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tviejo <tviejo@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/27 11:50:54 by tviejo           ###   ########.fr       */
+/*   Updated: 2024/11/01 15:05:58 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 class HTTPRequest
 {
 	private:
+		t_server &  _server;
 		std::string	_method;
 		std::string	_uri;
 		std::string	_uriWithoutQString;
@@ -32,7 +33,7 @@ class HTTPRequest
 		void extractQueryString();
 	public:
 		~HTTPRequest() {};
-		HTTPRequest(const std::string& request);
+		HTTPRequest(const std::string& request, t_server &server);
 		HTTPRequest(const HTTPRequest& copy);
 		HTTPRequest& operator=(const HTTPRequest& copy);
 		const std::string	&get_method() const;
@@ -42,8 +43,10 @@ class HTTPRequest
 		const std::string	&getHttpVersion() const;
 		const std::string	&getBody() const;
 		const std::map<std::string, std::string>	&getHeaders() const;
-		const std::string	&getQueryStrings(const std::string &key) const;
-		const std::string	&getFirstQueryString() const;
+		//const std::map<std::string, std::string>	&getQueryStrings() const;
+		const std::string	getQueryStrings(const std::string &key, bool decoded = false) const;
+		const std::string	getFirstQueryString(bool decoded = false) const;
+		const t_server		&getServer() const;
 		bool				hasBody();
 		void				parseBody(std::istringstream& lineStream);
 		void printRequest() const;
