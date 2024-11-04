@@ -244,6 +244,12 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 					sendResponse(clientSocket, Response::makeResponse(413, "Entity Too Large", "text/plain", "Maximum headers size exceeded."));
 					//closeConnection(clientSocket, event);
 				}
+				else
+				{
+					const t_server& server = *_sockets[clientSocket].server;
+					OutgoingData* response = Response::makeErrorResponse(400, "Bad Request", server, clientSocket);
+					sendResponse(clientSocket, response);
+				}
 			}
 			else if (bytesRead == 0)
 			{
