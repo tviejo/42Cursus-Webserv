@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:05 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 10:49:35 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/03 17:12:29 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 # define UTILS_HPP
 
 #include <sys/time.h>
-
-typedef std::vector<std::string> stringvec;
 
 inline std::string &trimRef(std::string &str, const std::string &charToTrim = " \t\n\r\f\v")
 {
@@ -32,7 +30,7 @@ inline std::string trim(std::string str, const std::string &charToTrim = " \t\n\
 }
 
 bool isDirectory(const std::string& name);
-void readDirectory(const std::string& name, stringvec& sv);
+void readDirectory(const std::string& name, vec_str& sv);
 void readDirectory(const std::string& name, std::ostringstream& oss);
 void readDirectory(const std::string& name, std::ostringstream& oss, const std::string& separator, const std::string& quotes);
 std::streampos getFileSize(const std::string & filename);

@@ -1,191 +1,120 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-<!--  Created by Aurélien de Sarrau  -->
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>Grapheur f(x) par mig29</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<style type="text/css">
-<!--
-input.number {text-align:right}
-canvas.graphic { position:absolute }
--->
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <title>Graph fx</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            background-color: #333;
+            padding: 10px 0;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            margin: 5px 10px;
+            padding: 10px 15px;
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            background-color: #555;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        nav a:hover {
+            background-color: #42b883;
+        }
+
+        main {
+            margin-top: 0px;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.0rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        .button-container a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-container a:hover {
+            background-color: #42b883;
+        }
+
+        #graphfx {
+            position: relative;
+            top: 70px;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
 </head>
+<body>
 
-<body onload="init();">
-<form name="fo" action="javascript:drawGraph(this);" onsubmit="return false;">
-	<input name="cf1" type="checkbox" checked> f(x) = <input name="fx1" style="color:#0000FF" type="text" class="input" size="40" value="1/x"> &nbsp;
-	<input name="cf2" type="checkbox" checked> f(x) = <input name="fx2" style="color:#FF0000" type="text" class="input" size="40" value="Math.cos(3*x)/x">
-	<div style="height:4px"></div>
-	<input name="cf3" type="checkbox" checked> f(x) = <input name="fx3" style="color:#008000" type="text" class="input" size="40" value="Math.cos(2*x)+Math.cos(12*x)/2-4"> &nbsp;
-	<input name="cf4" type="checkbox" checked> f(x) = <input name="fx4" style="color:#FFA500" type="text" class="input" size="40" value="Math.cos(4*x)-0.15*x*x+4">
-	<div style="height:4px"></div>
-	<input name="cf5" type="checkbox"> r(t) = <input name="fx5" style="color:#00FFFF" type="text" class="input" size="40" value="-t/Math.PI"> &nbsp;
-	<input name="cf6" type="checkbox" checked> r(t) = <input name="fx6" style="color:#FF00FF" type="text" class="input" size="40" value="6*Math.sin(0.66667*t)">
-	<div style="height:8px"></div>
-	<input type="submit" class="bouton" value="Tracer le Graphe" onclick="drawGraph(this.form); return false;">
-	&nbsp;&nbsp;&nbsp; Résolution 
-	X : <input name="xdim" type="text" class="number" size="4" value="600" onchange="repereChanged=true;"> &nbsp;
-	Y : <input name="ydim" type="text" class="number" size="4" value="600" onchange="repereChanged=true;">
-	&nbsp;&nbsp;&nbsp; Polar Range 
-	Tmin : <input name="tmin" type="text" class="number" size="4" value="0" onchange="repereChanged=true;">π &nbsp;
-	Tmax : <input name="tmax" type="text" class="number" size="4" value="6" onchange="repereChanged=true;">π
-	<div style="height:4px"></div>
-	Xmin : <input name="xmin" type="text" class="number" size="4" value="-6" onchange="repereChanged=true;"> &nbsp;
-	Xmax : <input name="xmax" type="text" class="number" size="4" value="6" onchange="repereChanged=true;">
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	Ymin : <input name="ymin" type="text" class="number" size="4" value="-6" onchange="repereChanged=true;"> &nbsp;
-	Ymax : <input name="ymax" type="text" class="number" size="4" value="6" onchange="repereChanged=true;">
-	<div style="height:8px"></div>
-	<canvas id="Repere" class="graphic"></canvas>
-	<canvas id="Graph" class="graphic"></canvas>
-</form>
+    <header>
+        <nav>
+            <a href="/index.html">Home</a>
+            <a href="/cgi.html">CGI</a>
+            <a href="/time.html">Time</a>
+            <a href="/postform.html">POST</a>
+            <a href="/upload/upload.html">Upload</a>
+            <a href="/graphfx/index.html">Graph fx</a>
+            <a href="/mandel/index.html">WebGL fractal</a>
+            <a href="/raytracing/index.html">Ray tracing gallery</a>
+        </nav>
+    </header>
 
-<script type="text/javascript">
-<!--
-var canvasGraph, canvasRepere;
-var gg, rg;   // canvas graphic context (2D)
-var repereChanged;
-
-function init()
-{
-	canvasGraph = document.getElementById('Graph');
-	canvasRepere = document.getElementById('Repere');
-	gg = canvasGraph.getContext('2d');
-	rg = canvasRepere.getContext('2d');
-	repereChanged = true;
-	drawGraph(document.forms['fo']);
-}
-
-function drawLine(canvasCtx, x0, y0, x1, y1)
-{
-	canvasCtx.moveTo(x0, y0);
-	canvasCtx.lineTo(x1, y1);
-}
-
-function drawGraph(frm)
-{
-  var e = frm.elements;
-  var fcts = [e['fx1'].value+";", e['fx2'].value+";", e['fx3'].value+";", e['fx4'].value+";", e['fx5'].value+";", e['fx6'].value+";"];
-  var fxcl = [e['fx1'].style['color'], e['fx2'].style['color'], e['fx3'].style['color'], e['fx4'].style['color'], e['fx5'].style['color'], e['fx6'].style['color']];
-  var fxok = [e['cf1'].checked, e['cf2'].checked, e['cf3'].checked, e['cf4'].checked, e['cf5'].checked, e['cf6'].checked];
-  var xdim = parseInt(e['xdim'].value);
-  var ydim = parseInt(e['ydim'].value);
-  var xmin = parseFloat(e['xmin'].value);
-  var xmax = parseFloat(e['xmax'].value);
-  var ymin = parseFloat(e['ymin'].value);
-  var ymax = parseFloat(e['ymax'].value);
-  var xstep = (xmax-xmin) / xdim;
-  var ystep = (ymax-ymin) / ydim;
-  var tmin = parseFloat(e['tmin'].value)*Math.PI;
-  var tmax = parseFloat(e['tmax'].value)*Math.PI;
-  
-  
-  if (repereChanged)
-  {
-	// (re)sizing & clearing canvas
-	canvasRepere.width  = canvasGraph.width  = xdim;
-	canvasRepere.height = canvasGraph.height = ydim;
-	//rg.lineWidth = 1;
-	//rg.lineCap = "square";
-	
-	rg.beginPath();
-	rg.strokeStyle = "#B0B0B0"; // le quadrillage est tracé en gris
-	for (var i=parseInt(xmin); i<=xmax; i++)
-		{ c = (i-xmin)/xstep - 1;   drawLine(rg, c, 0, c, ydim-1); }
-	for (var j=parseInt(ymin); j<=ymax; j++)
-		{ l = (-j-ymin)/ystep - 1;  drawLine(rg, 0, l, xdim-1, l); }
-	rg.stroke();
-	
-	rg.beginPath();
-	rg.strokeStyle = "#000000"; // les axes sont tracés en noir
-	drawLine(rg, 0, ydim/2-1, xdim-1, ydim/2-1);
-	drawLine(rg, xdim/2-1, 0, xdim/2-1, ydim-1);
-	rg.stroke();
-	repereChanged = false;
-  }
-  else
-	canvasGraph.width = xdim;  // clearing Graph canvas
-  
-  
-  // Fonctions f(x)
-  for (var i=0; i<4; i++) if (fxok[i])
-  {
-	var fx = fcts[i];
-	var x = xmin;
-	var y;
-	try {
-		y = eval(fx);
-	}
-	catch (err) {
-		alert ("Erreur de syntaxe dans l'expression de la fonction : "+fx+"\n\n(Veuillez respecter la syntaxe JavaScript)\n\n" + err);
-		return;
-	}
-	  
-	gg.beginPath();
-	gg.strokeStyle = fxcl[i];
-	var xpix = ( x-xmin)/xstep - 1;
-	var ypix = (-y-ymin)/ystep - 1;
-	var lastxpix = xpix;
-	var lastypix = ypix;
-	  
-	for (x+=xstep; x<xmax; x+=xstep)
-	{
-		y = eval(fx);
-		xpix = ( x-xmin)/xstep - 1;
-		ypix = (-y-ymin)/ystep - 1;
-		if ((lastypix<ydim && lastypix>=0) || (ypix<ydim && ypix>=0))
-			drawLine(gg, lastxpix, Math.min(Math.max(lastypix, /*-ydim*/0), /*2**/ydim-1),
-						    xpix, Math.min(Math.max(    ypix, /*-ydim*/0), /*2**/ydim-1));
-		lastxpix = xpix;
-		lastypix = ypix;
-	}
-	gg.stroke();
-  }
-  
-  // Fonctions polaires r(t)
-  for (var i=4; i<6; i++) if (fxok[i])
-  {
-	var rt = fcts[i];
-	var x, y, r;
-	var t = tmin;
-	var tstep = (tmax-tmin)/1000.0;
-	try {
-		r = eval(rt);
-		x = r*Math.cos(t);
-		y = r*Math.sin(t);
-	}
-	catch (err) {
-		alert ("Erreur de syntaxe dans l'expression de la fonction : "+rt+"\n\n(Veuillez respecter la syntaxe JavaScript)\n\n" + err);
-		return;
-	}
-	  
-	gg.beginPath();
-	gg.strokeStyle = fxcl[i];
-	var xpix = ( x-xmin)/xstep - 1;
-	var ypix = (-y-ymin)/ystep - 1;
-	var lastxpix = xpix;
-	var lastypix = ypix;
-	  
-	for (t+=tstep; t<tmax; t+=tstep)
-	{
-		r = eval(rt);
-		x = r*Math.cos(t);
-		y = r*Math.sin(t);
-		xpix = ( x-xmin)/xstep - 1;
-		ypix = (-y-ymin)/ystep - 1;
-		if ((lastypix<ydim && lastypix>=0 && lastxpix<xdim && lastxpix>=0) || (ypix<ydim && ypix>=0 && xpix<xdim && xpix>=0))
-			drawLine(gg, Math.min(Math.max(lastxpix, 0), xdim-1), Math.min(Math.max(lastypix, /*-ydim*/0), /*2**/ydim-1),
-						Math.min(Math.max(    xpix, 0), xdim-1), Math.min(Math.max(    ypix, /*-ydim*/0), /*2**/ydim-1));
-		lastxpix = xpix;
-		lastypix = ypix;
-	}
-	gg.stroke();
-  }
-
-}
-//-->
-</script> 
+    <main>
+        <iframe id="graphfx" src="graphfx.html" frameborder="0"></iframe>
+    </main>
 </body>
 </html>

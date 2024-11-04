@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:56:20 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 13:49:21 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/04 06:38:14 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -267,8 +267,14 @@ bool    Config::ServerIsValid(t_server &server)
 	}
 	if (server.max_body_size > 100000000)
 	{
-		throw std::runtime_error("Error: max_body_size is too big");
-		return false;
+		//throw std::runtime_error("Error: max_body_size is too big");
+		//return false;
+		std::cout << "============================================================================\n";
+		std::cout << "  WARNING : The server SHOULD NOT be started with huge max body size value.\n";
+		std::cout << "============================================================================\n";
+		std::cout << "        --- press y to continue or any other key to abort ---\n";
+		if (Terminal::getchWait() != 'y')
+			return false;
 	}
 	for (std::map<std::string,t_route>::iterator it = server.routes.begin(); it != server.routes.end(); it++)
 	{

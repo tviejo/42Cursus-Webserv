@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:33 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 09:05:55 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/03 17:08:39 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,13 @@ private:
 public:	
 	static const t_route *	getRouteFromUri(const t_server &, std::string uri);
 	static OutgoingData *	handleGet(const HTTPRequest &, int clientSocket, Server &serverObj);
-	static OutgoingData *	handlePost(const HTTPRequest &, int clientSocket);
+	static OutgoingData *	handlePost(HTTPRequest &, int clientSocket);
 	static OutgoingData *	handleDelete(const HTTPRequest &, int clientSocket);
+	
 	static std::string		makeResponseHeader(uint32_t status,
 										 const std::string & statusMessage,
 										 const std::string & contentType,
-									 	 size_t contentLength, int clientSocket);
+									 	 size_t contentLength, int ID_cookie);
 	static OutgoingData *	makeResponse(uint32_t status,
 										 const std::string & statusMessage,
 										 const std::string & contentType,
@@ -36,18 +37,16 @@ public:
 	static OutgoingData *	makeErrorResponse(uint32_t status,
 												const std::string &statusMessage,
 												const t_server &server,
-												int clientSocket);
-	static OutgoingData *	makeErrorResponse(uint32_t status,
-												const std::string &statusMessage,
-												std::string root,
-												std::string error,
-												int clientSocket);
+												int clientId);
+	
 	static void				setupContentTypeMap();
 	static std::string		getContentType(const std::string & uri);
 	
 	static OutgoingData*	handleTextPost(const HTTPRequest& req, const size_t maxBodySize);
 	static OutgoingData*	handleFileUpload(const HTTPRequest& req, const size_t maxBodySize);
-	static OutgoingData*	handleUrlEncodedForm(const HTTPRequest& req, const size_t maxBodySize);
+	static OutgoingData*	handleUrlEncodedForm(const HTTPRequest& req, const size_t maxBodySize,
+								map_str *toForm = NULL, int *respStatus = NULL,
+								std::string toFileName = "");
 	static OutgoingData*	handleJsonPost(const HTTPRequest& req, const size_t maxBodySize);
 	static std::string		urlDecode(const std::string& encoded);
 };

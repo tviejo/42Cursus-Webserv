@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Retro gaming</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Arial', sans-serif;
+			background-color: #f4f4f4;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 105vh;
+		}
+
+		header {
+			width: 100%;
+			background-color: #333;
+			padding: 10px 0;
+			text-align: center;
+			position: fixed;
+			top: 0;
+			left: 0;
+			z-index: 1000;
+		}
+
+		nav {
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+
+		nav a {
+			margin: 5px 10px;
+			padding: 10px 15px;
+			color: white;
+			text-decoration: none;
+			font-size: 18px;
+			background-color: #555;
+			border-radius: 5px;
+			transition: background-color 0.3s ease;
+		}
+
+		nav a:hover {
+			background-color: #42b883;
+		}
+
+		main {
+			display: flex;
+			position: relative;
+			flex-direction: row;
+			/*margin-top: 0px;*/
+			/*text-align: center;*/
+			/*max-width: 800px;*/
+			width: 100%;
+		}
+		div {
+			display: block;
+
+		}
+
+		h1 {
+			font-size: 2.0rem;
+			margin-bottom: 20px;
+		}
+
+		p {
+			font-size: 1.2rem;
+			color: #666;
+		}
+
+		.button-container {
+			margin-top: 10px;
+			margin-bottom: 10px;
+			padding: 13px 13px 8px 13px;
+			background-color: #fff;
+			border-radius: 5px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		}
+
+		form label {
+			display: inline-block;
+			color: navy;
+			margin-bottom: 6px;
+		}
+
+		input[type="file"], input[type="submit"] {
+			padding: 6px;
+			margin: 6px 0;
+			width: 100%;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+		}
+
+		input[type="submit"] {
+			background-color: #333;
+			color: white;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		input[type="submit"]:hover {
+			background-color: #42b883;
+		}
+
+		.button-container {
+			margin-top: 20px;
+		}
+
+		.button-container form {
+			display: inline-block;
+		}
+
+		.button-container button {
+			padding: 10px 20px;
+			background-color: #333;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 1rem;
+			transition: background-color 0.3s ease;
+		}
+
+		.button-container button:hover {
+			background-color: #42b883;
+		}
+		
+		footer {
+			position: absolute;
+			bottom: 10px;
+			text-align: center;
+			width: 100%;
+			font-size: 0.9rem;
+			color: #888;
+		}
+		main iframe {
+			width: 50vw;
+			height: 50vh;
+		}
+	</style>
+
+	<script>
+		function openFullscreen(element)
+		{
+			if (element.requestFullscreen) {
+				element.requestFullscreen();
+			} else if (element.mozRequestFullScreen) { // Firefox
+				element.mozRequestFullScreen();
+			} else if (element.webkitRequestFullscreen) { // Chrome, Safari, and Opera
+				element.webkitRequestFullscreen();
+			} else if (element.msRequestFullscreen) { // IE/Edge
+				element.msRequestFullscreen();
+			}
+			//element.classList.add('fullscreen');
+		}
+		function fullscreen()
+		{
+			openFullscreen(document.getElementById("mandelWebGL"));
+		}
+	</script>
+</head>
+<body>
+
+	<header>
+		<nav>
+			<a href="../index.html">Home</a>
+			<a href="../cgi.html">CGI</a>
+			<a href="../time.html">Time</a>
+			<!--a href="../gallery.html">Gallery</a>
+			<a href="../delete.html">Delete</a-->
+			<a href="../postform.html">POST</a>
+			<a href="../upload/upload.html">Upload</a>
+			<a href="../graphfx/index.html">Graph fx</a>
+			<a href="../mandel/index.html">WebGL fractal</a>
+			<a href="../raytracing/index.html">Ray tracing gallery</a>
+		</nav>
+	</header>
+
+	<main>
+	<div>
+		<iframe id="POP_book_fr"
+			title="La création de Prince of Persia. Carnets de bord de Jordan Mechner 1985-1993"
+			src="https://www.thirdeditions.com/retrogaming/385-la-creation-de-prince-of-persia-carnets-de-bord-de-jordan-mechner-1985-1993-9782377841639.html">
+		</iframe>
+		<iframe id="youtube_POP_makingof"
+			title="The Making of Prince of Persia - 30th Anniversary Edition"
+			src="https://youtu.be/Jbk5qH2-1S8">
+		</iframe>
+	</div>
+	<div>
+		<iframe id="jordanmechner"
+			title="www.jordanmechner.com/fr/"
+			src="https://www.jordanmechner.com/fr/">
+		</iframe>
+		<iframe id="StuntCarRacer"
+			title="Stunt Car Racer"
+			src="https://en.wikipedia.org/wiki/Stunt_Car_Racer">
+		</iframe>
+	</div>
+	</main>
+
+	<footer>
+		&copy; 2024 Webserv 42 - ade-sarr & jteissie & tviejo - All Rights Reserved
+	</footer>
+
+</body>
+</html>

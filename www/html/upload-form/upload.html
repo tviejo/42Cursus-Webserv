@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>CGI File Upload - 42 Project</title>
+    <title>File Upload - AJT 42 Web Server</title>
     <style>
         * {
             margin: 0;
@@ -55,7 +55,7 @@
         }
 
         main {
-            margin-top: 60px;
+            margin-top: 50px;
             text-align: center;
             max-width: 800px;
             width: 100%;
@@ -71,7 +71,7 @@
             color: #666;
         }
 
-        form[method="POST"], .button-container {
+        #uploadForm, .button-container {
             margin-top: 10px;
             margin-bottom: 10px;
             padding: 13px 13px 8px 13px;
@@ -86,7 +86,7 @@
             margin-bottom: 6px;
         }
 
-        input[type="file"], input[type="submit"] {
+        #uploadForm input /*[type="file"], input[type="submit"]*/ {
             padding: 6px;
             margin: 6px 0;
             width: 100%;
@@ -95,7 +95,7 @@
         }
 
         input[type="submit"] {
-            background-color: #333;
+            background-color: #555;
             color: white;
             cursor: pointer;
             transition: background-color 0.3s ease;
@@ -107,14 +107,27 @@
 
         .button-container {
             margin-top: 20px;
+            /*display: inline-block;
+            display: inline-flex;
+            flex-direction:row;*/
+            width:inherit;
+            
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .button-container form, a {
-            display: inline-block;
+            margin: 10px 30px;
+            /*padding: 10px 15px;
+            /*display: inline-block;
+            display: flex;
+            flex-direction: column;*/
+            margin-left: 10px;
             text-decoration: none;
         }
 
-        .button-container button, a {
+        /*.button-container button,*/ a, .button-container input {
             padding: 10px 20px;
             background-color: #555;
             color: white;
@@ -137,9 +150,21 @@
             font-size: 0.9rem;
             color: #888;
         }
+        #MaxUploadSize {
+            color: navy;
+            font-size: 1.0rem;
+        }
     </style>
+    <script>
+        function displayMaxUploadSize() {
+            fetch("/upload?getMaxUploadSize=1")
+            .then(response => {
+                document.getElementById('MaxUploadSize').innerHTML += (response.statusText / (1024 * 1024)).toFixed(2) + " MiB";
+            })
+        }
+    </script>
 </head>
-<body>
+<body onload="javascript:displayMaxUploadSize()">
 
     <header>
         <nav>
@@ -161,28 +186,34 @@
         
         <div class="button-container">
             <a href="/upldFiles">Directory Listing</a>
-            <a href="/gallery/gallery.cgi?dir=www/uploadedFiles">File(s) Gallery</a>
+            <a href="/gallery/gallery.cgi?GALLERY_DIR=uploadedFiles&GALLERY_ROUTE=/upldFiles">Gallery GET</a>
+            <form action="/gallery/gallery.cgi" method="post">
+                <input name="GALLERY_ROUTE" value="/upldFiles" hidden/>
+                <input name="GALLERY_DIR" value="uploadedFiles" hidden/>
+                <input type="submit" value="Gallery POST">
+            </form>
             <a href="/delete.html">Delete File</a>
         </div>
         
         <p>
-            Upload your file(s) using the form below. The server will process the upload.
+            Upload your file(s) using the form below.<br />
+            <span id="MaxUploadSize">Maximum total size: </span>
         </p>
 
-        <form id="uploadForm" action="action" method="POST" enctype="multipart/form-data">
-            <label for="file">Please choose at least one file :</label>
-            <input type="file" id="file" name="file" accept="*.*" required>
-            <input type="file" id="file2" name="file2" accept="*.*" >
-            <input type="file" id="file3" name="file3" accept="*.*" >
-            <input type="file" id="file4" name="file4" accept="*.*" >
-            <input type="submit" value="Upload">
+        <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+            <label for="file">Please choose at least one file:</label>
+            <input type="file" id="file" name="file" accept="*.*" required />
+            <input type="file" id="file2" name="file2" accept="*.*" />
+            <input type="file" id="file3" name="file3" accept="*.*" />
+            <input type="file" id="file4" name="file4" accept="*.*" />
+            <input type="submit" value="Upload" />
         </form>
 
         <p>After submitting, you will receive a confirmation of your upload.</p>
     </main>
 
     <footer>
-        &copy; 2024 Webserv 42 - ade-sarr jteissie tviejo - All Rights Reserved
+        &copy; 2024 Webserv 42 - ade-sarr & jteissie & tviejo - All Rights Reserved
     </footer>
 
     <script>
@@ -194,12 +225,14 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
+            .then(async response => {
+                respStatus = "Response status: " + response.status + " " + response.statusText
+                           + "\n" + await response.text();
                 if (response.ok) {
-                    alert('File uploaded successfully');
+                    alert('File(s) uploaded successfully.\n' + respStatus);
                 } else {
-                    console.error('Failed to upload file');
-                    alert('Failed to upload the file');
+                    console.error('Failed to upload file(s).\n' + respStatus);
+                    alert('Failed to upload file(s).\n' + respStatus);
                 }
             })
             .catch(error => {

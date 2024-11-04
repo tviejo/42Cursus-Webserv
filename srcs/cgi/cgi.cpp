@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:51:14 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 07:58:25 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/04 03:20:15 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ void alarm_handler(int signum)
 	timeout_flag = 1;
 }
 
-Cgi::Cgi()
+/*Cgi::Cgi()
 {
 }
 
@@ -41,7 +41,7 @@ Cgi &Cgi::operator=(const Cgi &copy)
 		this->_env = copy._env;
 	}
 	return (*this);
-}
+}*/
 
 std::string &replaceChar(std::string& str, char toFind, char toReplace)
 {
@@ -53,28 +53,47 @@ std::string &replaceChar(std::string& str, char toFind, char toReplace)
 	return str;
 }
 
-Cgi::Cgi(std::string path, std::string method, std::string info)
+Cgi::Cgi(std::string execPath, const HTTPRequest &req, int clientId) : _request(req)
 {
 	this->_header = "";
 	this->_contentLength = 0;
 	this->_isDone = false;
-	this->_path = path;
-	this->_method = method;
-	if (info.empty())
-		this->_env = "";
+	this->_execPath = execPath;
+	_clientId = clientId;
+	_isUserNameCgi = execPath.find("name.py") != std::string::npos;
+	
+	std::string Qstring;
+	if (req.get_method() == "GET") {
+		Qstring = req.getFirstQueryString();
+	}
+	else if (req.get_method() == "POST") {
+		Qstring = req.getFirstFormField();
+	}
+	if (Qstring.empty())
+		_env = "";
 	else {
-		if ((_isUserNameCgi = path.find("name.py") != std::string::npos))
-			_env = "UserName=" + replaceChar(info, '+', ' ');
+		if (_isUserNameCgi)
+			_env = "UserName=" + replaceChar(Qstring, '+', ' ');
 		else
-			_env = "QueryString=" + info;
+			_env = "QueryString=" + Qstring;
 	}
 }
 
 char **Cgi::getEnvp()
 {
-	char **envp = new char*[2];
+	const map_str &map = (_request.get_method() == "GET") ?
+		  _request.getQueryStrings()
+		: _request.getForm();
+
+	_nbVarsEnv = map.size() + 1;
+	char **envp = new char*[_nbVarsEnv + 1];
 	envp[0] = strdup(this->_env.c_str());
-	envp[1] = NULL;
+	int i = 1;
+	for (map_str_cite it = map.begin(); it != map.end(); it++, i++)
+	{
+		envp[i] = strdup((it->first + "=" + it->second).c_str());
+	}
+	envp[i] = NULL;
 	return envp;
 }
 
@@ -82,7 +101,8 @@ void Cgi::deleteEnvp(char **envp)
 {
 	if (envp)
 	{
-		free(envp[0]);
+		for (int i = 0; i < _nbVarsEnv; i++)
+			free(envp[i]);
 		delete[] envp;
 	}
 }
@@ -109,8 +129,9 @@ void Cgi::execute()
 		close(fd[1]);
 
 		char **envp = this->getEnvp();
-		char *args[] = {strdup(this->_path.c_str()), NULL};
-		execve(this->_path.c_str(), args, envp);
+		char *args[] = {strdup(_execPath.c_str()), NULL};	// is strup() needed for args[0] ?
+		execve(_execPath.c_str(), args, envp);				// and why not strdup() here ?
+		free(args[0]);										// added missing free (isn't it ?)
 		deleteEnvp(envp);
 		exit(1);
 	}
@@ -166,19 +187,20 @@ void Cgi::execute()
 
 void Cgi::CgiHandler()
 {
-	if (this->_path.empty())
+	if (this->_execPath.empty())
 	{
 		throw std::runtime_error("Empty cgi path");
 	}
-	if (this->_path.find("/cgi-bin/") == std::string::npos)
+	if (this->_execPath.find("/cgi-bin/") == std::string::npos)
 	{
 		throw std::runtime_error("Invalid cgi script");
 	}
-	if (access(this->_path.c_str(), F_OK) == -1)
+	if (access(this->_execPath.c_str(), F_OK) == -1)
 	{
 		throw std::runtime_error("Invalid cgi path");
 	}
-	if (this->_method == "GET" || this->_method == "POST" || this->_method == "DELETE")
+	const std::string method = _request.get_method();
+	if (method == "GET" || method == "POST" /*|| method == "DELETE"*/)
 	{
 		this->execute();
 	}
@@ -204,7 +226,7 @@ std::string Cgi::createHeader(size_t status, std::string message, std::string co
 	return header;
 }
 
-class OutgoingData *Cgi::handleCgi(std::string root, std::string error, int clientSocket)
+class OutgoingData *Cgi::handleCgi()
 {
 	try
 	{
@@ -213,12 +235,12 @@ class OutgoingData *Cgi::handleCgi(std::string root, std::string error, int clie
 	catch (const TimeoutException& e)
 	{
 		std::cerr << e.what() << '\n';
-		return Response::makeErrorResponse(504, "Gateway Timeout", root, error, clientSocket);
+		return Response::makeErrorResponse(504, "Gateway Timeout", _request.getServer(), _clientId);
 	}
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		return Response::makeErrorResponse(500, "Internal Server Error", root, error, clientSocket);
+		return Response::makeErrorResponse(500, "Internal Server Error", _request.getServer(), _clientId);
 	}
 	return new OutgoingData(this->_header, this->_response);
 }

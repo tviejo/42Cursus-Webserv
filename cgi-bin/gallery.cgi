@@ -1,13 +1,18 @@
 #!/bin/bash
 
-#UPLOAD_DIR="./www/uploadedFiles/"
-UPLOAD_DIR=$QueryString
+UPLOAD_DIR="uploadedFiles"
+ROOT_DIR="./www/"
+GALLERY_DIR=$ROOT_DIR$GALLERY_DIR
 
-# while true
-# do
-#     sleep 1
-# done
+#echo $GALLERY_ROUTE\<BR /\>
+#echo $GALLERY_DIR\<BR /\>
 
+# Safety measure: search '..' in path and if found: fallback to uploadedFiles directory
+if [ $(expr "$GALLERY_DIR" : ".*\(\.\.\)") ]
+then
+    GALLERY_DIR=$ROOT$UPLOAD_DIR
+    GALLERY_ROUTE="/upldFiles"
+fi
 
 cat <<EOF
 <!DOCTYPE html>
@@ -23,9 +28,9 @@ cat <<EOF
             text-align: center;
             padding-top: 20px;
         }
-        .gallery img {
-            width: 200px;
-            height: 150px;
+        .gallery img, video {
+            width: 320px;
+            height: 200px;
             margin: 10px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -36,6 +41,9 @@ cat <<EOF
         }
         .documents a {
             display: block;
+            /*display: inline-block;
+            display: flex;
+            flex-direction: column;*/
             margin: 10px;
             text-decoration: none;
             color: #333;
@@ -94,12 +102,16 @@ cat <<EOF
     <div class="gallery">
 EOF
 
-for file in "$UPLOAD_DIR"/*; do
+for file in "$GALLERY_DIR"/*; do
     if [[ -f "$file" ]]; then
         ext="${file##*.}"
-        if [[ "$ext" == "jpg" || "$ext" == "jpeg" || "$ext" == "png" || "$ext" == "gif" ]]; then
-            filename=$(basename "$file")
-            echo "      <img src=\"/upldFiles/$filename\" alt=\"$filename\">"
+        filename=$(basename "$file")
+        if [[ "$ext" == "jpg" || "$ext" == "jpeg" || "$ext" == "png" || "$ext" == "gif" || "$ext" == "webp" ]]; then
+            echo "      <img src=\"$GALLERY_ROUTE/$filename\" alt=\"$filename\" />"
+        fi
+        
+        if [[ "$ext" == "mp4" || "$ext" == "webm" ]]; then
+            echo "      <video controls><source src=\"$GALLERY_ROUTE/$filename\" type=\"video/$ext\" /></video>"
         fi
     fi
 done
@@ -110,12 +122,12 @@ cat <<EOF
     <div class="documents">
 EOF
 
-for file in "$UPLOAD_DIR"/*; do
+for file in "$GALLERY_DIR"/*; do
     if [[ -f "$file" ]]; then
         ext="${file##*.}"
         if [[ "$ext" == "txt" || "$ext" == "pdf" || "$ext" == "doc" || "$ext" == "docx" ]]; then
             filename=$(basename "$file")
-            echo "      <a href=\"/upldFiles/$filename\">$filename</a>"
+            echo "      <a href=\"$GALLERY_ROUTE/$filename\">$filename</a>"
         fi
     fi
 done
@@ -126,12 +138,12 @@ cat <<EOF
     <div class="documents">
 EOF
 
-for file in "$UPLOAD_DIR"/*; do
+for file in "$GALLERY_DIR"/*; do
     if [[ -f "$file" ]]; then
         ext="${file##*.}"
-        if [[ "$ext" != "txt" && "$ext" != "pdf" && "$ext" != "doc" && "$ext" != "docx" && "$ext" != "jpg" && "$ext" != "jpeg" && "$ext" != "png" && "$ext" != "gif" ]]; then
+        if [[ "$ext" != "txt" && "$ext" != "pdf" && "$ext" != "doc" && "$ext" != "docx" && "$ext" != "jpg" && "$ext" != "jpeg" && "$ext" != "png" && "$ext" != "gif" && "$ext" != "webp" && "$ext" != "mp4" && "$ext" != "webm" ]]; then
             filename=$(basename "$file")
-            echo "      <a href=\"/upldFiles/$filename\">$filename</a>"
+            echo "      <a href=\"$GALLERY_ROUTE/$filename\">$filename</a>"
         fi
     fi
 done

@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:47:41 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 15:08:53 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/03 17:07:19 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 */
 bool	HTTPRequest::hasBody()
 {
-	std::map<std::string, std::string>::const_iterator it = _headers.find("Content-Length");
+	map_str_ite it = _headers.find("Content-Length");
 	if (it != _headers.end() && std::atol(it->second.c_str()) > 0)
 		return true;	
 	it = _headers.find("transfer-encoding");
@@ -28,7 +28,7 @@ bool	HTTPRequest::hasBody()
 
 void	HTTPRequest::parseBody(std::istringstream& lineStream)
 {
-	std::map<std::string, std::string>::iterator lengthIt = _headers.find("Content-Length");
+	map_str_ite lengthIt = _headers.find("Content-Length");
 	if (lengthIt != _headers.end())
 	{
 		size_t length = std::atol(lengthIt->second.c_str());
@@ -101,7 +101,7 @@ void HTTPRequest::extractQueryString()
 		std::string val = (sepPos == std::string::npos) ? ""
 						: queryStrs.substr(sepPos + 1, endPos - sepPos - 1);
 		_queryStrings[key] = val;
-		std::cout << "        " << key << "='" << _queryStrings[key] << "'\n";
+		//std::cout << "        " << key << "='" << _queryStrings[key] << "'\n";
 		if (endPos == std::string::npos)
 			return;
 		queryStrs.erase(0, endPos + 1);
@@ -155,12 +155,12 @@ const std::string	&HTTPRequest::getBody() const
 	return _body;
 }
 
-const std::map<std::string, std::string>	&HTTPRequest::getHeaders() const
+const map_str	&HTTPRequest::getHeaders() const
 {
 	return _headers;
 }
 
-const std::map<std::string, std::string>	&HTTPRequest::getQueryStrings() const
+const map_str	&HTTPRequest::getQueryStrings() const
 {
 	return _queryStrings;
 }
@@ -180,6 +180,21 @@ const std::string	HTTPRequest::getFirstQueryString(bool decoded) const
 	return decoded ? Response::urlDecode(_queryStrings.begin()->second) : _queryStrings.begin()->second;
 }
 
+const std::string	&HTTPRequest::getFormField(const std::string &key) const
+{
+	if (_form.find(key) == _form.end())
+		return _empty_string;
+	else
+		return _form.at(key);
+}
+
+const std::string	&HTTPRequest::getFirstFormField() const
+{
+	if (_form.empty())
+		return _empty_string;
+	return _form.begin()->second;
+}
+
 const t_server	&HTTPRequest::getServer() const
 {
 	return _server;
@@ -190,24 +205,31 @@ std::ostream & operator << (std::ostream &os, const HTTPRequest &req)
 	return os << req.get_method() << " " << req.getUri() << " (" << req.getHttpVersion() << ")";
 }
 
-void	HTTPRequest::printRequest() const
+void	HTTPRequest::printRequest(bool printHeaders, bool printQueryStrs, bool printBody) const
 {
-	std::cerr << "Request: " << std::endl;
-	std::cerr << "  method: " << _method << std::endl;
+	std::cerr << "Request: " << _method << " (" << _httpVersion << ")" << std::endl;
+	//std::cerr << "  method: " << std::endl;
 	std::cerr << "  uri: " << _uri << std::endl;
-	std::cerr << "  uri without query string: " << _uriWithoutQString << std::endl;
-	std::cerr << "  http version: " << _httpVersion << std::endl;
-	std::cerr << "  Headers:\n";
-	for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
-			it != _headers.end(); ++it)
+	std::cerr << "  uri w/o Qstrs: " << _uriWithoutQString << std::endl;
+	//std::cerr << "  http version: " << _httpVersion << std::endl;
+	if (printHeaders)
 	{
-		std::cerr << "    " << it->first << ": " << it->second << std::endl;
+		std::cerr << "  Headers:\n";
+		for (map_str_cite it = _headers.begin();
+				it != _headers.end(); ++it)
+		{
+			std::cerr << "    " << it->first << ": " << it->second << std::endl;
+		}
 	}
-	std::cerr << "  Query strings:\n";
-	for (std::map<std::string, std::string>::const_iterator it = _queryStrings.begin();
-			it != _queryStrings.end(); ++it)
+	if (printQueryStrs)
 	{
-		std::cerr << "    " << it->first << ": " << it->second << std::endl;
+		std::cerr << "  Query strings:\n";
+		for (map_str_cite it = _queryStrings.begin();
+				it != _queryStrings.end(); ++it)
+		{
+			std::cerr << "    " << it->first << ": " << it->second << std::endl;
+		}
 	}
-	std::cerr << "  Body:\n" << _body << std::endl;
+	if (printBody)
+		std::cerr << "  Body:\n" << _body << std::endl;
 }

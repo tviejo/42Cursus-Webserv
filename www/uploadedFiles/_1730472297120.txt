@@ -1,4 +1,0 @@
-name=0
-pet_name=
-favnum=
-favcolor=#000000

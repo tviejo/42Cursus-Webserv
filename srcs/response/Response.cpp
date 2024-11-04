@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:44 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 15:21:22 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/03 17:09:08 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,16 +29,15 @@ void Response::setupContentTypeMap()
 std::string	Response::makeResponseHeader(uint32_t status,
 						 const std::string & statusMessage,
 						 const std::string & contentType,
-						 size_t contentLength, int clientSocket)
+						 size_t contentLength, int ID_cookie)
 {
 	std::ostringstream	response;
 
 	response << "HTTP/1.1 " << status << " " << statusMessage << "\r\n";
-	if (clientSocket != -1)
-		response << "Set-Cookie: ID=" << clientSocket << "; Path=/ \r\n";
+	if (ID_cookie != -1)
+		response << "Set-Cookie: ID=" << ID_cookie << "; Path=/ \r\n";
 	response << "Content-Type: " << contentType << "\r\n";
 	response << "Content-Length: " << contentLength << "\r\n";
-	//response << "Connection: Closed\r\n";
 	response << "\r\n";
 	return response.str();
 }
@@ -60,11 +59,29 @@ OutgoingData *	Response::makeResponse(uint32_t status,
 	return new OutgoingData(response.str(), content);
 }
 
-OutgoingData *Response::makeErrorResponse(uint32_t status, const std::string &statusMessage, const t_server &server, int clientSocket)
+OutgoingData *Response::makeErrorResponse(uint32_t status, const std::string &statusMessage, const t_server &server, int clientId)
 {
-	std::string filename = server.root + server.error;
-	ssize_t filesize = getFileSize(filename);
-
+	std::string	filename;
+	ssize_t		filesize;
+	
+	if (status == 404)  // 404 special error page (Amstrad CPC 464 style !)
+	{
+		filename = server.root + server.error;
+		size_t lastSlashPos = filename.find_last_of('/');
+		if (lastSlashPos != std::string::npos)
+		{
+			filename.erase(lastSlashPos);
+			filename += "/404.html";
+			if ((filesize = getFileSize(filename)) > 0)
+			{
+				//std::cout << "filename: " << filename << "   filesize: " << filesize << std::endl;
+				std::string header = makeResponseHeader(status, statusMessage, "text/html", filesize, clientId);
+				return new OutgoingData(header, filename, true);
+			}
+		}
+	}
+	filename = server.root + server.error;
+	filesize = getFileSize(filename);
 	if (filesize == -1)
 	{
 		std::ostringstream content;
@@ -82,33 +99,7 @@ OutgoingData *Response::makeErrorResponse(uint32_t status, const std::string &st
 	pos = htmlContent.find("{{errorMessage}}");
 	if (pos != std::string::npos)
 		htmlContent.replace(pos, 16, statusMessage);
-	std::string header = makeResponseHeader(status, statusMessage, getContentType("html"), htmlContent.size(), clientSocket);
-	return new OutgoingData(header, htmlContent);
-}
-
-OutgoingData *Response::makeErrorResponse(uint32_t status, const std::string &statusMessage, std::string root, std::string error, int clientSocket)
-{
-	std::string filename = root + error;
-	ssize_t filesize = getFileSize(filename);
-
-	if (filesize == -1)
-	{
-		std::ostringstream content;
-		content << status << " " << statusMessage;
-		return makeResponse(status, statusMessage, "text/plain", content.str());
-	}
-	std::ifstream file(filename.c_str());
-	std::string htmlContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	std::ostringstream statusCodeStr;
-	statusCodeStr << status;
-	size_t pos;
-	pos = htmlContent.find("{{statusCode}}");
-	if (pos != std::string::npos)
-		htmlContent.replace(pos, 14, statusCodeStr.str());
-	pos = htmlContent.find("{{errorMessage}}");
-	if (pos != std::string::npos)
-		htmlContent.replace(pos, 16, statusMessage);
-	std::string header = makeResponseHeader(status, statusMessage, getContentType("html"), htmlContent.size(), clientSocket);
+	std::string header = makeResponseHeader(status, statusMessage, getContentType("html"), htmlContent.size(), clientId);
 	return new OutgoingData(header, htmlContent);
 }
 
@@ -163,9 +154,13 @@ OutgoingData * Response::handleGet(const HTTPRequest & req, int clientSocket, Se
 	}
 	if (!route.cgi.empty())
 	{
-		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
-		return cgi.handleCgi(server.root, server.error, clientSocket);
+		Cgi cgi(route.cgi, req, clientSocket);
+		return cgi.handleCgi();
 	}
+	
+	// Test request for maximum upload size
+	if (route.path == "/upload" && !req.getQueryStrings("getMaxUploadSize").empty())
+		return makeResponse(200, ltoa(route.max_body_size), "", "");
 	
 	std::string filename;
 	if (uri == route.path && route.autoindex)
@@ -194,14 +189,12 @@ OutgoingData * Response::handleGet(const HTTPRequest & req, int clientSocket, Se
 	return new OutgoingData(header, filename, true);
 }
 
-OutgoingData * Response::handlePost(const HTTPRequest & req, int clientSocket)
+OutgoingData * Response::handlePost(HTTPRequest & req, int clientSocket)
 {
 	const t_server & server = req.getServer();
-	size_t	maxBodySize = server.max_body_size;
 	std::string			uri = req.getUriWithoutQString();
 	const t_route		*routeptr = getRouteFromUri(server, uri);
-	std::map<std::string, std::string>::const_iterator contentType = req.getHeaders().find("Content-Type");
-
+	
 	if (routeptr == NULL) {
 		std::cout << "     no route found from uri: " << uri << std::endl;
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
@@ -213,24 +206,36 @@ OutgoingData * Response::handlePost(const HTTPRequest & req, int clientSocket)
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
-//	req.printRequest();
+	size_t	maxBodySize = route.max_body_size;
+	map_str_cite it = req.getHeaders().find("Content-Type");
+	std::string contentType = (it == req.getHeaders().end()) ? "" : it->second;
+	
 	if (!route.cgi.empty())
 	{
-		Cgi cgi(route.cgi, req.get_method(), req.getFirstQueryString());
-		return cgi.handleCgi(server.root, server.error, clientSocket);
+		// POST form processing for CGI and store form fields to the request
+		if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
+		{
+			int status;
+			OutgoingData *resp = handleUrlEncodedForm(req, maxBodySize, &req.getForm(), &status);
+			if (status != 201)
+				return resp;
+			delete resp;  // POST form processing is OK ; now go with cgi
+		}
+		Cgi cgi(route.cgi, req, clientSocket);
+		return cgi.handleCgi();
 	}
-	else if (contentType == req.getHeaders().end())
+	else if (contentType.empty())
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
-	else if (contentType->second.find("text/plain") != std::string::npos)
+	else if (contentType.find("text/plain") != std::string::npos)
 		return handleTextPost(req, maxBodySize);
-	else if (contentType->second.find("multipart/form-data") != std::string::npos)
+	else if (contentType.find("multipart/form-data") != std::string::npos)
 		return handleFileUpload(req, maxBodySize);
-	else if (contentType->second.find("application/x-www-form-urlencoded") != std::string::npos)
+	else if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
 		return handleUrlEncodedForm(req, maxBodySize);
-	else if (contentType->second.find("application/json") != std::string::npos)
+	else if (contentType.find("application/json") != std::string::npos)
 		return handleJsonPost(req, maxBodySize);
 	else
-		return makeResponse(415, "Unsupported Media Type", "text/plain", "415 Unsupported Media Type: " + contentType->second);
+		return makeResponse(415, "Unsupported Media Type", "text/plain", "415 Unsupported Media Type: " + contentType);
 }
 
 OutgoingData * Response::handleDelete(const HTTPRequest & req, int clientSocket)
@@ -243,14 +248,13 @@ OutgoingData * Response::handleDelete(const HTTPRequest & req, int clientSocket)
 		std::cerr << "     no route found from uri: " << uri << std::endl;
 		return makeErrorResponse(404, "Not Found", server, clientSocket);
 	}
-	std::cerr << uri << std::endl;
 	const t_route &route = *routeptr;
+	std::cerr << "     route found: " << route.path << std::endl;
 	if (route.methods.find(req.get_method()) == route.methods.end())
 	{
 		std::cout << "     Unauthorized method: " << req.get_method() << " for route: " << route.path << std::endl;
 		return makeErrorResponse(405, "Method Not Allowed", server, clientSocket);
 	}
-	std::cerr << "     route found: " << route.path << std::endl;
 	if (route.path == "/delete")
 	{
 		if (req.getFirstQueryString().find("..") != std::string::npos)

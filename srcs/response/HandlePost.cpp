@@ -154,7 +154,7 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t ma
 {
 	try 
 	{
-		std::map<std::string, std::string>::const_iterator headerIt = req.getHeaders().find("Content-Type");
+		map_str_cite headerIt = req.getHeaders().find("Content-Type");
 		if (headerIt == req.getHeaders().end())
 			return makeResponse(400, "Bad Request", "text/plain",
 					   "No boundary found in multipart/form-data");
@@ -168,7 +168,7 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t ma
 		std::vector<formPart>	parts = parseMultipartForm(req.getBody(), boundary);
 
 		std::string				uploadDir = getUpldFilesDir(req.getServer());
-		stringvec				uploadedFiles;
+		vec_str				uploadedFiles;
 		for (std::vector<formPart>::iterator it = parts.begin(); it != parts.end(); it++)
 		{
 			if (it->fileName.empty())
@@ -192,7 +192,7 @@ OutgoingData*	Response::handleFileUpload(const HTTPRequest& req, const size_t ma
 					   "No files were uploaded");
 		std::ostringstream ossResponse;
 		ossResponse << "Successfully uploaded " << uploadedFiles.size() << " file(s):\n";
-		for (stringvec::const_iterator it = uploadedFiles.begin(); it != uploadedFiles.end(); it++)
+		for (vec_str::const_iterator it = uploadedFiles.begin(); it != uploadedFiles.end(); it++)
 			ossResponse << " - " << *it << "\n";
 		//ossResponse << "\r\n";  // this solve the problem of missing last char for last file name
 		return makeResponse(201, "Created", "text/plain", ossResponse.str());
@@ -226,14 +226,29 @@ std::string Response::urlDecode(const std::string& encoded)
 	return result;
 }
 
-OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxBodySize)
+/* if 'toForm' is not null, decode to 'toForm'
+ * if 'toFileName' is not empty, write to it
+ * if 'toForm' is null and 'toFileName 'is empty, create file in upload directory
+ * if respStatus is not null, write HTTP response status code into it
+*/
+OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxBodySize,
+											   map_str *toForm, int *respStatus,
+											   std::string toFileName)
 {
 	std::string							body = req.getBody();
-	std::string							fileName = getDate(body) + extractFilename(req.getBody(), "filename=");
-	std::map<std::string, std::string>	formData;
 	size_t								start = 0;
 	size_t								end = body.find('&');
 
+	if (body.length() > maxBodySize) {
+		if (respStatus)
+			*respStatus = 413;
+		return makeResponse(413, "Payload Too Large", "text/plain",
+				"Form size exceeds maximum allowed");
+	}
+	if (respStatus)
+		*respStatus = 201;
+	map_str &formData = toForm ? *toForm : *new std::map<std::string, std::string>;
+	
 	while (start < body.length())
 	{
 		std::string	pair = body.substr(start, end - start);
@@ -250,18 +265,25 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxB
 		start = end + 1;
 		end = body.find('&', start);
 	}
+	if (toForm && toFileName.empty())
+		return makeResponse(201, "OK", "text/plain", "Form received succesfully");
+
 	std::stringstream	ss;
-	ss << "Received form data:\n";
-	std::map<std::string, std::string>::const_iterator it = formData.begin();
+	//ss << "Received form data:\n";
+	map_str_cite it = formData.begin();
 	while (it != formData.end())
 	{
 		ss << it->first << ": " << it->second << "\n";
 		it++;
 	}
-	if (ss.str().length() > maxBodySize)
-		return makeResponse(413, "Payload Too Large", "text/plain",
-				"File size exceeds maximum allowed");
-	std::string fullPath = getUpldFilesDir(req.getServer()) + "/" + sanitizeFileName(fileName) + "_" + ltoa(get_time());
+	if (toForm == NULL)
+		delete &formData;
+	
+	std::string fullPath = toFileName;
+	if (fullPath.empty()) {
+		std::string	fileName = getDate(body) + sanitizeFileName(extractFilename(body, "filename="));
+		fullPath = getUpldFilesDir(req.getServer()) + "/" + fileName + "_" + ltoa(get_time());
+	}
 	std::ofstream outFile(fullPath.c_str(), std::ios::binary);
 	if (!outFile)
 		throw std::runtime_error("Failed to create outFile: " + fullPath);
@@ -270,7 +292,7 @@ OutgoingData*	Response::handleUrlEncodedForm(const HTTPRequest& req, size_t maxB
 	outFile.close();
 	if (!outFile)
 		throw std::runtime_error("Failed to write to outFile: " + fullPath);
-	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath /*+ "\r\n"*/);
+	return makeResponse(201, "OK", "text/plain", "Form created succesfully: " + fullPath);
 }
 
 OutgoingData*	Response::handleJsonPost(const HTTPRequest& req, const size_t maxBodySize)
