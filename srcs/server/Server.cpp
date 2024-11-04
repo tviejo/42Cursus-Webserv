@@ -155,15 +155,20 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	request.printRequest();
 	OutgoingData *response;
 
-	std::cerr << " METHOD: " << request.get_method() << std::endl;
-	if (request.get_method() == "GET")
+	if (request.getUri().empty() || request.get_method().empty())
+		response = Response::makeErrorResponse(400, "Bad Request", request.getServer(), clientSocket);
+	else if (request.get_method() == "INVALID")
+		response = Response::makeErrorResponse(405, "Method Not Allowed", request.getServer(), clientSocket);
+	else if (request.getHttpVersion() != "HTTP/1.1")
+		response = Response::makeErrorResponse(505, "HTTP Version Not Supported", request.getServer(), clientSocket);
+	else if (request.get_method() == "GET")
 		response = Response::handleGet(request, clientSocket, *this);
 	else if (request.get_method() == "POST")
 		response = Response::handlePost(request, clientSocket);
 	else if (request.get_method() == "DELETE")
 		response = Response::handleDelete(request, clientSocket);
 	else
-		response = Response::makeErrorResponse(405, "Method Not Allowed", request.getServer(), clientSocket);
+		response = Response::makeErrorResponse(400, "Bad Request", request.getServer(), clientSocket);
 	sendResponse(clientSocket, response);
 }
 
@@ -243,6 +248,12 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 					_partialRequest.erase(clientSocket);
 					sendResponse(clientSocket, Response::makeResponse(413, "Entity Too Large", "text/plain", "Maximum headers size exceeded."));
 					//closeConnection(clientSocket, event);
+				}
+				else
+				{
+					const t_server& server = *_sockets[clientSocket].server;
+					OutgoingData* response = Response::makeErrorResponse(400, "Bad Request", server, clientSocket);
+					sendResponse(clientSocket, response);
 				}
 			}
 			else if (bytesRead == 0)
