@@ -225,7 +225,7 @@ OutgoingData * Response::handlePost(HTTPRequest & req, int clientSocket)
 		return cgi.handleCgi();
 	}
 	else if (contentType.empty())
-		return makeErrorResponse(404, "Not Found", server, clientSocket);
+		return makeErrorResponse(204, "No Content", server, clientSocket);
 	else if (contentType.find("text/plain") != std::string::npos)
 		return handleTextPost(req, maxBodySize);
 	else if (contentType.find("multipart/form-data") != std::string::npos)
