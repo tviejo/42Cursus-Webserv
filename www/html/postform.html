@@ -107,6 +107,9 @@
             font-size: 0.9rem;
             color: #888;
         }
+        .navy {
+            color: navy;
+        }
     </style>
     <script>
         function validate(cgiform) {
@@ -138,8 +141,8 @@
             Data will be sent to the server via POST method and saved to file.
         </p>
         
-        <form action="/form" method="POST" enctype="application/x-www-form-urlencoded">
-            <label for="name">application/x-www-form-urlencoded</label>
+        <form action="/upload" method="POST" enctype="application/x-www-form-urlencoded">
+            <label class="navy" for="name">application/x-www-form-urlencoded</label>
             <input type="text" name="name" required placeholder="Your Name">
             <input type="text" name="pet_name" placeholder="Pet Name">
             <label for="number">Your lucky number :</label>
@@ -149,8 +152,8 @@
             <input type="submit" value="Submit">
         </form>
 
-        <form action="/form" method="POST" enctype="text/plain">
-            <label for="name">text/plain</label>
+        <form action="/upload" method="POST" enctype="text/plain">
+            <label class="navy" for="name">text/plain</label>
             <input type="text" name="name" required placeholder="Your Name">
             <input type="text" name="pet_name" placeholder="Pet Name">
             <label for="number">Your lucky number :</label>
@@ -162,7 +165,7 @@
     </main>
 
     <footer>
-        &copy; 2024 Webserv 42 - ade-sarr jteissie tviejo - All Rights Reserved
+        &copy; 2024 Webserv 42 - ade-sarr & jteissie & tviejo - All Rights Reserved
     </footer>
 
 </body>

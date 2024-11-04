@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:17 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 10:48:47 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/03 17:11:11 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ bool isDirectory(const std::string& name)
 
 /* Read a directory and store all entries in the 'sv' string vector
 */
-void readDirectory(const std::string& name, stringvec& sv)
+void readDirectory(const std::string& name, vec_str& sv)
 {
     DIR* dirp = opendir(name.c_str());
     struct dirent * dp;

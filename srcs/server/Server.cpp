@@ -151,7 +151,8 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	std::cout << "processRequest()   socket: " << clientSocket << "\n";
 	
 	HTTPRequest	request(clientRequest, *_sockets[clientSocket].server);
-	std::cout << "  -> " << request << std::endl;
+	//std::cout << "  -> " << request << std::endl;
+	request.printRequest();
 	OutgoingData *response;
 
 	std::cerr << " METHOD: " << request.get_method() << std::endl;
@@ -204,29 +205,44 @@ void	Server::handleClientEvent(int clientSocket, uint32_t event)
 			if (bytesRead > 0)
 			{
 				std::cout << "   [EPOLLIN] " << bytesRead << " bytes received\n";
-				_partialRequest[clientSocket].append(buffer, bytesRead);
-				size_t headerEndPos = _partialRequest[clientSocket].find("\r\n\r\n");
+				std::string &preq = _partialRequest[clientSocket];
+				t_server &server = *_sockets[clientSocket].server;
+				
+				preq.append(buffer, bytesRead);
+				size_t headerEndPos = preq.find("\r\n\r\n");
 				if (headerEndPos != std::string::npos)
 				{
-					size_t contentLengthPos = _partialRequest[clientSocket].find("Content-Length: ");
+					size_t contentLengthPos = preq.find("Content-Length: ");
 					if (contentLengthPos != std::string::npos)
 					{
 						contentLengthPos += 16;
-						size_t contentLengthEnd = _partialRequest[clientSocket].find("\r\n", contentLengthPos);
-						std::string contentLengthStr = _partialRequest[clientSocket].substr(contentLengthPos, contentLengthEnd);
+						size_t contentLengthEnd = preq.find("\r\n", contentLengthPos);
+						std::string contentLengthStr = preq.substr(contentLengthPos, contentLengthEnd);
 						size_t contentLength = atol(contentLengthStr.c_str());
+						//std::cerr << " + contentLength = " << contentLength << std::endl;
 						size_t bodyStartPos = headerEndPos + 4;
-						if (_partialRequest[clientSocket].size() >= bodyStartPos + contentLength)
+						if (preq.size() >= bodyStartPos + contentLength)
 						{
-							processRequest(clientSocket, _partialRequest[clientSocket]);
+							processRequest(clientSocket, preq);
 							_partialRequest.erase(clientSocket);
 						}
+						else if (contentLength > server.max_body_size)
+						{
+							_partialRequest.erase(clientSocket);
+							sendResponse(clientSocket, Response::makeResponse(413, "Entity Too Large", "text/plain", "Maximum body size exceeded."));
+							//closeConnection(clientSocket, event);
+						}
 					}
-					else
-					{
-						processRequest(clientSocket, _partialRequest[clientSocket]);
+					else {
+						processRequest(clientSocket, preq);
 						_partialRequest.erase(clientSocket);
 					}
+				}
+				else if (preq.size() > MAX_HEADER_SIZE)
+				{
+					_partialRequest.erase(clientSocket);
+					sendResponse(clientSocket, Response::makeResponse(413, "Entity Too Large", "text/plain", "Maximum headers size exceeded."));
+					//closeConnection(clientSocket, event);
 				}
 			}
 			else if (bytesRead == 0)

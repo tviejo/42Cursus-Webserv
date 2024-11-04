@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:50:59 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 05:01:01 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/03 17:33:22 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,24 +14,15 @@
 # define CGI_HPP
 
 # include "webserv.hpp"
-# include <iostream>
-# include <sstream>
-# include <string>
-# include <string>
-# include <cstring>
-# include <cstdlib>
-# include <vector>
-# include <unistd.h>
-# include <stdlib.h>
-# include <sys/types.h>
+# include <string.h>
 # include <sys/wait.h>
 
 class Cgi
 {
 	private:
-		Cgi();
-		Cgi(const Cgi &copy);
-		Cgi &operator=(const Cgi &copy);
+		//Cgi();
+		//Cgi(const Cgi &copy);
+		//Cgi &operator=(const Cgi &copy);
 		char **getEnvp();
 		void    deleteEnvp(char **envp);
 
@@ -40,10 +31,11 @@ class Cgi
 		std::string GetHeader() { return _header; }
         std::string GetResponse() { return _response; }
 		std::string createHeader(size_t status, std::string message, std::string contentType, size_t contentLength, std::string cookie);
+		int			_clientId;
+		const class HTTPRequest &_request;
 		std::string _env;
-		std::string _path;
-		std::string _method;
-		std::string _type;
+		int 		_nbVarsEnv;
+		std::string _execPath;
 		std::string _response;
 		std::string _header;
 		size_t _contentLength;
@@ -51,9 +43,9 @@ class Cgi
 		bool _isDone;
 	
 	public:
-		Cgi(std::string path, std::string method, std::string info);
-		~Cgi();
-		class OutgoingData *handleCgi(std::string root, std::string error, int clientSocket);
+		Cgi(std::string execPath, const class HTTPRequest &req, int clientId);
+		class OutgoingData *handleCgi();
+		//~Cgi();
 };
 
 class TimeoutException : public std::exception

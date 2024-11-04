@@ -10,6 +10,7 @@
 #define MAX_SOCKETS 1024
 #define MAX_EVENTS 10
 #define IO_BUFFER_SIZE 8192
+#define MAX_HEADER_SIZE 8192
 
 struct SockInfos
 {
@@ -23,10 +24,8 @@ class Server
 		const Config					_config;
 		int								_epollFd;
 		std::map<int, SockInfos>		_sockets;   // map for all sockets (servers listened and connected to client)
-		std::map<int, std::string>		_partialRequest; // TODO: replace _partialRequest with _requestStreams 
-														 // for efficiency and mandatory to handle binary stuff (POST bin file)
-		//std::map<int, std::ofstream>	_requestStreams;
-		
+		std::map<int, std::string>		_partialRequest; // TODO: replace _partialRequest with _requests
+		//std::map<int, class IngoingData *>	_requests;
 		std::map<int, class OutgoingData *>	_responses;
 		std::string		_displayDirHtmlPart1;
 		std::string		_displayDirHtmlPart2;

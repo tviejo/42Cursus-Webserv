@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/08 12:48:07 by tviejo            #+#    #+#             */
-/*   Updated: 2024/11/01 15:05:58 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/03 17:27:21 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "webserv.hpp"
 #include <sstream>
 
+
 class HTTPRequest
 {
 	private:
@@ -22,9 +23,10 @@ class HTTPRequest
 		std::string	_method;
 		std::string	_uri;
 		std::string	_uriWithoutQString;
-		std::map<std::string, std::string> _queryStrings;
+		map_str 	_queryStrings;
+		map_str 	_form;
 		std::string	_httpVersion;
-		std::map<std::string, std::string> _headers;
+		map_str 	_headers;
 		std::string	_body;
 		std::string	_empty_string;
 	public:
@@ -39,17 +41,20 @@ class HTTPRequest
 		const std::string	&get_method() const;
 		const std::string	&getUri() const;
 		const std::string	&getUriWithoutQString() const;
-		const std::map<std::string, std::string> &getQueryStrings() const;
 		const std::string	&getHttpVersion() const;
 		const std::string	&getBody() const;
-		const std::map<std::string, std::string>	&getHeaders() const;
-		//const std::map<std::string, std::string>	&getQueryStrings() const;
+		const map_str		&getHeaders() const;
+		const map_str		&getQueryStrings() const;
 		const std::string	getQueryStrings(const std::string &key, bool decoded = false) const;
 		const std::string	getFirstQueryString(bool decoded = false) const;
 		const t_server		&getServer() const;
 		bool				hasBody();
 		void				parseBody(std::istringstream& lineStream);
-		void printRequest() const;
+		map_str				&getForm() { return _form; }
+		const map_str		&getForm() const { return _form; }
+		const std::string	&getFormField(const std::string &key) const;
+		const std::string	&getFirstFormField() const;
+		void 				printRequest(bool printHeaders = true, bool printQueryStrs = true, bool printBody = false) const;
 };
 
 std::ostream & operator << (std::ostream &, const HTTPRequest &);

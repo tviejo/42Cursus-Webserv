@@ -1,0 +1,4 @@
+name=Kamala
+pet_name=Trump
+favnum=123789
+favcolor=#8080ff

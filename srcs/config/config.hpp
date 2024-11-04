@@ -6,7 +6,7 @@
 /*   By: ade-sarr <ade-sarr@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/07 12:57:38 by tviejo            #+#    #+#             */
-/*   Updated: 2024/10/30 14:38:39 by ade-sarr         ###   ########.fr       */
+/*   Updated: 2024/11/04 00:21:00 by ade-sarr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,13 @@ typedef struct server
 	std::string         root;          // server root directory (absolute or relative exple: '/srv/www', 'www')
 	std::string         error;         // default error page
 	size_t              max_body_size;
-	std::map<std::string, t_route> routes;  // map<path, t_route>
-	std::map<std::string, std::string> redirs;  // redirections (send 301 HTTP response)
+	std::map<std::string, t_route> routes;  // map<path, t_route &>
+// TODO: in future to support multiple path for each route
+//   we can replace the actual 'routes' map with :
+	//std::vector<t_route>			_vroutes; // vecteur des routes
+	//std::map<std::string, t_route &> routes;  // map<path, t_route &> : index des routes sur le route path
+	
+	map_str redirs;  // redirections (send 301 HTTP response)
 } t_server;
 
 class Config
