@@ -72,10 +72,24 @@ Cgi::Cgi(std::string path, std::string method, std::string info)
 
 char **Cgi::getEnvp()
 {
-	char **envp = new char*[2];
-	envp[0] = strdup(this->_env.c_str());
-	envp[1] = NULL;
-	return envp;
+    std::vector<std::string> envVars;
+    for (char **env = environ; *env != NULL; env++)
+	{
+        envVars.push_back(*env);
+    }
+    char **envp = new char*[envVars.size() + 2];
+    for (size_t i = 0; i < envVars.size(); i++)
+	{
+        size_t length = envVars[i].length() + 1;
+        envp[i] = new char[length];
+        std::memcpy(envp[i], envVars[i].c_str(), length);
+    }
+    std::string customEnvVar = this->_env;
+    size_t customLength = customEnvVar.length() + 1;
+    envp[envVars.size()] = new char[customLength];
+    std::memcpy(envp[envVars.size()], customEnvVar.c_str(), customLength);
+    envp[envVars.size() + 1] = NULL;
+    return envp;
 }
 
 void Cgi::deleteEnvp(char **envp)
@@ -100,7 +114,7 @@ void Cgi::execute()
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGALRM, &sa, NULL);
 	timeout_flag = 0;
-	alarm(1);
+	alarm(5);
 	int pid = fork();
 	if (pid == 0)
 	{
