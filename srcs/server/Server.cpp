@@ -155,8 +155,11 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	request.printRequest();
 	OutgoingData *response;
 
-	std::cerr << " METHOD: " << request.get_method() << std::endl;
-	if (request.get_method() == "GET")
+	if (request.getUri().empty() || request.get_method().empty())
+		response = Response::makeErrorResponse(400, "Bad Request", request.getServer(), clientSocket);
+	else if (request.getHttpVersion() != "HTTP/1.1")
+		response = Response::makeErrorResponse(505, "HTTP Version Not Supported", request.getServer(), clientSocket);
+	else if (request.get_method() == "GET")
 		response = Response::handleGet(request, clientSocket, *this);
 	else if (request.get_method() == "POST")
 		response = Response::handlePost(request, clientSocket);
