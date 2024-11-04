@@ -157,6 +157,8 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 
 	if (request.getUri().empty() || request.get_method().empty())
 		response = Response::makeErrorResponse(400, "Bad Request", request.getServer(), clientSocket);
+	else if (request.get_method() == "INVALID")
+		response = Response::makeErrorResponse(405, "Method Not Allowed", request.getServer(), clientSocket);
 	else if (request.getHttpVersion() != "HTTP/1.1")
 		response = Response::makeErrorResponse(505, "HTTP Version Not Supported", request.getServer(), clientSocket);
 	else if (request.get_method() == "GET")
@@ -166,7 +168,7 @@ void	Server::processRequest(int clientSocket, const std::string& clientRequest)
 	else if (request.get_method() == "DELETE")
 		response = Response::handleDelete(request, clientSocket);
 	else
-		response = Response::makeErrorResponse(405, "Method Not Allowed", request.getServer(), clientSocket);
+		response = Response::makeErrorResponse(400, "Bad Request", request.getServer(), clientSocket);
 	sendResponse(clientSocket, response);
 }
 

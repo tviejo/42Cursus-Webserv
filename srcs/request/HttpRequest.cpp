@@ -56,6 +56,8 @@ HTTPRequest::HTTPRequest(const std::string& request, t_server &server): _server(
 	std::istringstream	lineStream(request_line);
 
 	lineStream >> _method >> _uri >> _httpVersion;
+	if (_method != "GET" && _method != "POST" && _method != "DELETE")
+		_method = "INVALID";
 	while (std::getline(stream, request_line) && request_line != "\r")
 	{
 		size_t	sepPos = request_line.find(':');
